@@ -28,7 +28,7 @@ export default function Navbar() {
             </Link>
             
             <Link 
-              href="/admin/dashboard" 
+              href="/dashboard" 
               className="text-zinc-400 hover:text-white transition-colors duration-200 text-sm font-medium"
             >
               Dashboard
