@@ -67,7 +67,7 @@ export default function VehicleCard({
       {/* Book Now Button */}
       <div className="p-6 pt-0">
         <Link
-          href={`/checkout/${id}`}
+          href={`/book/${id}`}
           className="block w-full text-center text-xs font-bold uppercase tracking-wider bg-white text-zinc-950 py-3 rounded-full hover:bg-zinc-200 active:scale-[0.98] transition-all"
         >
           Book Now
