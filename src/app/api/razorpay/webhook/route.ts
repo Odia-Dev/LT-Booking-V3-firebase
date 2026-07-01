@@ -1,43 +1,37 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, doc, updateDoc } from "firebase/firestore";
 import admin from "firebase-admin";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "");
 
-// Safely initialize the Firebase Admin app (ignoring security rules)
-const getAdminDb = () => {
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+// Strict check: If these don't exist, we MUST stop. 
+// Do NOT fallback to Client SDK here.
+if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_PRIVATE_KEY) {
+  console.error("FATAL: Firebase environment variables are NOT loaded in Hostinger.");
+  throw new Error("Missing Firebase Config");
+}
 
-  if (projectId && clientEmail && privateKey) {
-    try {
-      // Ensure the Admin SDK is initialized only once using !admin.apps.length check
-      if (!admin.apps.length) {
-        // Strip any wrapping quotes from env loading, and format literal newlines
-        const formattedPrivateKey = privateKey
-          .replace(/^["']|["']$/g, "")
-          .replace(/\\n/g, "\n");
+if (!admin.apps.length) {
+  try {
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY
+      .replace(/\\n/g, "\n")
+      .replace(/^["']|["']$/g, "");
 
-        admin.initializeApp({
-          credential: admin.credential.cert({
-            projectId,
-            clientEmail,
-            privateKey: formattedPrivateKey,
-          }),
-        });
-      }
-      return admin.firestore();
-    } catch (e) {
-      console.error("Error initializing Firebase Admin App in webhook:", e);
-      return null;
-    }
+    admin.initializeApp({
+      credential: admin.credential.cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: privateKey,
+      }),
+    });
+  } catch (error) {
+    console.error("Critical: Initialization crashed:", error);
+    throw error;
   }
-  return null;
-};
+}
+
+const db = admin.firestore();
 
 export async function POST(request: Request) {
   try {
@@ -73,43 +67,25 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "No order_id found" }, { status: 200 });
     }
 
-    // Initialize Firebase Admin
-    const adminDb = getAdminDb();
     let bookingId = "";
     let bookingData: any = null;
 
-    // 2. Fetch Document using either Admin SDK or client SDK fallback
-    if (adminDb) {
-      console.log("Using Firebase Admin SDK for Webhook transaction processing.");
-      const bookingsSnap = await adminDb
-        .collection("bookings")
-        .where("razorpay_order_id", "==", orderId)
-        .limit(1)
-        .get();
+    // 2. Fetch Document strictly using Admin SDK
+    console.log("Using Firebase Admin SDK for Webhook transaction processing.");
+    const bookingsSnap = await db
+      .collection("bookings")
+      .where("razorpay_order_id", "==", orderId)
+      .limit(1)
+      .get();
 
-      if (bookingsSnap.empty) {
-        console.error(`No booking found matching razorpay_order_id: ${orderId} (Admin)`);
-        return NextResponse.json({ error: "Booking not found" }, { status: 404 });
-      }
-
-      const docRef = bookingsSnap.docs[0];
-      bookingId = docRef.id;
-      bookingData = docRef.data();
-    } else {
-      console.warn("Admin SDK environment keys missing. Falling back to Client Firestore SDK.");
-      const bookingsRef = collection(db, "bookings");
-      const q = query(bookingsRef, where("razorpay_order_id", "==", orderId));
-      const querySnapshot = await getDocs(q);
-
-      if (querySnapshot.empty) {
-        console.error(`No booking found matching razorpay_order_id: ${orderId} (Client)`);
-        return NextResponse.json({ error: "Booking not found" }, { status: 404 });
-      }
-
-      const docRef = querySnapshot.docs[0];
-      bookingId = docRef.id;
-      bookingData = docRef.data();
+    if (bookingsSnap.empty) {
+      console.error(`No booking found matching razorpay_order_id: ${orderId} (Admin)`);
+      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
+
+    const docRef = bookingsSnap.docs[0];
+    bookingId = docRef.id;
+    bookingData = docRef.data();
 
     // 3. Idempotency Check: Avoid processing if already Paid/Failed
     if (bookingData.status === "Paid" || bookingData.status === "Failed") {
@@ -198,19 +174,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Ignored event" }, { status: 200 });
     }
 
-    // 5. Save Status Update (Admin SDK or Client SDK fallback)
-    if (adminDb) {
-      await adminDb.collection("bookings").doc(bookingId).update({
-        status: nextStatus,
-        razorpay_payment_id: paymentId,
-      });
-    } else {
-      const clientBookingRef = doc(db, "bookings", bookingId);
-      await updateDoc(clientBookingRef, {
-        status: nextStatus,
-        razorpay_payment_id: paymentId,
-      });
-    }
+    // 5. Save Status Update (Strict Admin SDK)
+    await db.collection("bookings").doc(bookingId).update({
+      status: nextStatus,
+      razorpay_payment_id: paymentId,
+    });
 
     // 6. Send Receipt email via Resend
     if (bookingData.customerEmail) {
