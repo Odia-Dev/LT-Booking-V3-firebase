@@ -1,10 +1,32 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { db } from "@/lib/firebase";
-import { collection, query, where, getDocs, doc, updateDoc } from "firebase/firestore";
+import { db, isConfigured } from "@/lib/firebase";
+import { collection, query, where, getDocs, doc, updateDoc, getDoc } from "firebase/firestore";
+import admin from "firebase-admin";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "");
+
+// Safely initialize the Firebase Admin app (ignoring security rules)
+const getAdminDb = () => {
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+  if (projectId && clientEmail && privateKey) {
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey: privateKey.replace(/\\n/g, "\n"),
+        }),
+      });
+    }
+    return admin.firestore();
+  }
+  return null;
+};
 
 export async function POST(request: Request) {
   try {
@@ -40,23 +62,47 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "No order_id found" }, { status: 200 });
     }
 
-    // 2. Query Firestore by razorpay_order_id
-    const bookingsRef = collection(db, "bookings");
-    const q = query(bookingsRef, where("razorpay_order_id", "==", orderId));
-    const querySnapshot = await getDocs(q);
+    // Initialize Firebase Admin
+    const adminDb = getAdminDb();
+    let bookingId = "";
+    let bookingData: any = null;
 
-    if (querySnapshot.empty) {
-      console.error(`No booking found matching razorpay_order_id: ${orderId}`);
-      return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+    // 2. Fetch Document using either Admin SDK or client SDK fallback
+    if (adminDb) {
+      console.log("Using Firebase Admin SDK for Webhook transaction processing.");
+      const bookingsSnap = await adminDb
+        .collection("bookings")
+        .where("razorpay_order_id", "==", orderId)
+        .limit(1)
+        .get();
+
+      if (bookingsSnap.empty) {
+        console.error(`No booking found matching razorpay_order_id: ${orderId} (Admin)`);
+        return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+      }
+
+      const docRef = bookingsSnap.docs[0];
+      bookingId = docRef.id;
+      bookingData = docRef.data();
+    } else {
+      console.warn("Admin SDK environment keys missing. Falling back to Client Firestore SDK.");
+      const bookingsRef = collection(db, "bookings");
+      const q = query(bookingsRef, where("razorpay_order_id", "==", orderId));
+      const querySnapshot = await getDocs(q);
+
+      if (querySnapshot.empty) {
+        console.error(`No booking found matching razorpay_order_id: ${orderId} (Client)`);
+        return NextResponse.json({ error: "Booking not found" }, { status: 404 });
+      }
+
+      const docRef = querySnapshot.docs[0];
+      bookingId = docRef.id;
+      bookingData = docRef.data();
     }
 
-    const bookingDoc = querySnapshot.docs[0];
-    const bookingId = bookingDoc.id;
-    const bookingData = bookingDoc.data();
-
-    // 3. Idempotency check: If Paid or Failed, return 200 early
+    // 3. Idempotency Check: Avoid processing if already Paid/Failed
     if (bookingData.status === "Paid" || bookingData.status === "Failed") {
-      console.log(`Booking ${bookingId} already marked as ${bookingData.status}. Skipping duplicate processing.`);
+      console.log(`Booking ${bookingId} already marked as ${bookingData.status}. Skipping webhook.`);
       return NextResponse.json({ message: "Webhook already processed" }, { status: 200 });
     }
 
@@ -64,7 +110,7 @@ export async function POST(request: Request) {
     let emailSubject = "";
     let emailHtml = "";
 
-    // 4. Determine status and construct HTML email
+    // 4. Construct templates
     if (event === "payment.captured") {
       nextStatus = "Paid";
       emailSubject = `Reservation Confirmed - Laxmi Toyota [Ref: ${bookingId}]`;
@@ -78,7 +124,7 @@ export async function POST(request: Request) {
           <h1 style="color: #ffffff; border-bottom: 1px solid #27272a; padding-bottom: 20px; font-size: 22px; font-weight: 700;">Booking Deposit Confirmed</h1>
           
           <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">Dear ${bookingData.customerName || "Valued Customer"},</p>
-          <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">Thank you for reserving your vehicle. We have successfully received your booking deposit of <strong>₹${amount.toLocaleString("en-IN")}</strong> for the <strong>${bookingData.vehicleName}</strong>.</p>
+          <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">We have successfully received your booking deposit of <strong>₹${amount.toLocaleString("en-IN")}</strong> for the <strong>${bookingData.vehicleName}</strong>.</p>
           
           <div style="background-color: #18181b; border: 1px solid #27272a; padding: 24px; border-radius: 12px; margin: 25px 0;">
             <h3 style="color: #ffffff; margin-top: 0; margin-bottom: 15px; font-size: 15px; border-bottom: 1px solid #27272a; padding-bottom: 8px;">Order Details</h3>
@@ -101,24 +147,24 @@ export async function POST(request: Request) {
               </tr>
               <tr>
                 <td style="padding: 8px 0; color: #71717a;">Reservation Status:</td>
-                <td style="padding: 8px 0; text-align: right; font-weight: 800; color: #10b981;">CONFIRMED</td>
+                <td style="padding: 8px 0; text-align: right; font-weight: 800; color: #10b981;">PAID & CONFIRMED</td>
               </tr>
             </table>
           </div>
 
-          <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">Our representative from the ${bookingData.branch} Branch will connect with you within 24 hours to schedule test drives and finalize delivery timelines.</p>
+          <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">Our representative from the ${bookingData.branch} Branch will contact you within 24 hours.</p>
           
           <div style="text-align: center; margin: 35px 0 20px 0;">
             <a href="https://laxmitoyota.co.in" style="background-color: #ffffff; color: #09090b; padding: 12px 30px; border-radius: 9999px; text-decoration: none; font-size: 13px; font-weight: 700; display: inline-block;">Visit Digital Dealership</a>
           </div>
 
           <hr style="border: 0; border-top: 1px solid #27272a; margin: 30px 0;" />
-          <p style="color: #71717a; font-size: 11px; text-align: center;">Laxmi Toyota. This is an auto-generated confirmation. Please do not reply directly to this mail.</p>
+          <p style="color: #71717a; font-size: 11px; text-align: center;">Laxmi Toyota. Powered under Portal V3.</p>
         </div>
       `;
     } else if (event === "payment.failed") {
       nextStatus = "Failed";
-      emailSubject = `Action Required: Reservation Payment Failed - Laxmi Toyota`;
+      emailSubject = `Reservation Payment Failed - Laxmi Toyota`;
       emailHtml = `
         <div style="font-family: Arial, sans-serif; background-color: #09090b; color: #f4f4f5; padding: 40px; border-radius: 16px; max-width: 600px; margin: 20px auto; border: 1px solid #27272a;">
           <div style="text-align: center; margin-bottom: 30px;">
@@ -129,35 +175,33 @@ export async function POST(request: Request) {
           <h1 style="color: #ffffff; border-bottom: 1px solid #27272a; padding-bottom: 20px; font-size: 22px; font-weight: 700; border-left: 4px solid #ef4444; padding-left: 10px;">Booking Payment Failed</h1>
           
           <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">Dear ${bookingData.customerName || "Valued Customer"},</p>
-          <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">We were unable to process the reservation deposit of <strong>₹${amount.toLocaleString("en-IN")}</strong> for the <strong>${bookingData.vehicleName}</strong>. The payment transaction was flagged as failed.</p>
+          <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">We were unable to process the reservation deposit of <strong>₹${amount.toLocaleString("en-IN")}</strong> for the <strong>${bookingData.vehicleName}</strong>.</p>
           
-          <div style="background-color: #18181b; border: 1px solid #27272a; padding: 24px; border-radius: 12px; margin: 25px 0;">
-            <h3 style="color: #ffffff; margin-top: 0; margin-bottom: 15px; font-size: 15px;">Next Steps</h3>
-            <ol style="color: #d4d4d8; font-size: 13px; line-height: 1.6; padding-left: 20px; margin: 0;">
-              <li style="margin-bottom: 8px;">Verify that your cards or accounts have international/e-commerce payments enabled.</li>
-              <li style="margin-bottom: 8px;">Ensure there are sufficient funds to complete the transaction.</li>
-              <li style="margin-bottom: 8px;">Re-attempt checkout from our catalog page.</li>
-            </ol>
-          </div>
-
-          <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">If funds were deducted from your bank, please do not worry. They will be auto-refunded to your account in 3-5 business days. Please contact our support team if you require assistance.</p>
+          <p style="color: #a1a1aa; font-size: 14px; line-height: 1.6;">Please re-attempt the booking transaction, or contact support if funds were deducted from your bank account.</p>
           
           <hr style="border: 0; border-top: 1px solid #27272a; margin: 30px 0;" />
-          <p style="color: #71717a; font-size: 11px; text-align: center;">Laxmi Toyota. Under Portal V3.</p>
+          <p style="color: #71717a; font-size: 11px; text-align: center;">Laxmi Toyota. Powered under Portal V3.</p>
         </div>
       `;
     } else {
       return NextResponse.json({ message: "Ignored event" }, { status: 200 });
     }
 
-    // 5. Update Firestore Database document using the found document ID
-    const bookingRefDoc = doc(db, "bookings", bookingId);
-    await updateDoc(bookingRefDoc, {
-      status: nextStatus,
-      razorpay_payment_id: paymentId,
-    });
+    // 5. Save Status Update (Admin SDK or Client SDK fallback)
+    if (adminDb) {
+      await adminDb.collection("bookings").doc(bookingId).update({
+        status: nextStatus,
+        razorpay_payment_id: paymentId,
+      });
+    } else {
+      const clientBookingRef = doc(db, "bookings", bookingId);
+      await updateDoc(clientBookingRef, {
+        status: nextStatus,
+        razorpay_payment_id: paymentId,
+      });
+    }
 
-    // 6. Send HTML email via Resend
+    // 6. Send Receipt email via Resend
     if (bookingData.customerEmail) {
       await resend.emails.send({
         from: "Laxmi Toyota <onboarding@resend.dev>",

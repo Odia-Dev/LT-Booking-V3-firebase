@@ -2,12 +2,34 @@ import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { db, isConfigured } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
+import admin from "firebase-admin";
 
 // Initialize Razorpay SDK using the server environment keys
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID || "",
   key_secret: process.env.RAZORPAY_KEY_SECRET || "",
 });
+
+// Safely initialize the Firebase Admin app (ignoring security rules)
+const getAdminDb = () => {
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+  if (projectId && clientEmail && privateKey) {
+    if (!admin.apps.length) {
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId,
+          clientEmail,
+          privateKey: privateKey.replace(/\\n/g, "\n"),
+        }),
+      });
+    }
+    return admin.firestore();
+  }
+  return null;
+};
 
 export async function POST(request: Request) {
   try {
@@ -51,11 +73,21 @@ export async function POST(request: Request) {
     const order = await razorpay.orders.create(options);
 
     // Update the corresponding Firestore lead document with the Razorpay order details
-    const bookingRef = doc(db, "bookings", bookingId);
-    await updateDoc(bookingRef, {
-      razorpay_order_id: order.id,
-      status: "Pending Payment",
-    });
+    const adminDb = getAdminDb();
+    if (adminDb) {
+      console.log("Using Firebase Admin SDK for Order Creation document update.");
+      await adminDb.collection("bookings").doc(bookingId).update({
+        razorpay_order_id: order.id,
+        status: "Pending Payment",
+      });
+    } else {
+      console.warn("Admin SDK environment keys missing. Falling back to Client Firestore SDK in create-order.");
+      const bookingRef = doc(db, "bookings", bookingId);
+      await updateDoc(bookingRef, {
+        razorpay_order_id: order.id,
+        status: "Pending Payment",
+      });
+    }
 
     return NextResponse.json({
       id: order.id,
