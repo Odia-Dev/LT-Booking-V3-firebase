@@ -1,37 +1,21 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import admin from "firebase-admin";
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "");
 
-// Strict check: If these don't exist, we MUST stop. 
-// Do NOT fallback to Client SDK here.
-if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_PRIVATE_KEY) {
-  console.error("FATAL: Firebase environment variables are NOT loaded in Hostinger.");
-  throw new Error("Missing Firebase Config");
+const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
+  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
+  : null;
+
+if (serviceAccount && !getApps().length) {
+  initializeApp({
+    credential: cert(serviceAccount)
+  });
 }
-
-if (!admin.apps.length) {
-  try {
-    const privateKey = process.env.FIREBASE_PRIVATE_KEY
-      .replace(/\\n/g, "\n")
-      .replace(/^["']|["']$/g, "");
-
-    admin.initializeApp({
-      credential: admin.credential.cert({
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: privateKey,
-      }),
-    });
-  } catch (error) {
-    console.error("Critical: Initialization crashed:", error);
-    throw error;
-  }
-}
-
-const db = admin.firestore();
+const db = getApps().length ? getFirestore() : null as any;
 
 export async function POST(request: Request) {
   try {

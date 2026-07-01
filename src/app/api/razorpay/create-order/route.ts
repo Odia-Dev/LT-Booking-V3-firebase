@@ -1,46 +1,48 @@
 import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
-import { db, isConfigured } from "@/lib/firebase";
+import { db as clientDb, isConfigured } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import admin from "firebase-admin";
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+
+const admin = {
+  get apps() {
+    return getApps();
+  },
+  initializeApp,
+  credential: {
+    cert,
+  },
+  firestore: getFirestore,
+};
+
+// Use a self-executing function to handle initialization cleanly
+const initializeFirebase = () => {
+  if (!admin.apps.length) {
+    try {
+      const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+      
+      admin.initializeApp({
+        credential: admin.credential.cert({
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: privateKey,
+        }),
+      });
+    } catch (error) {
+      console.error("Firebase Admin Init Error:", error);
+    }
+  }
+  return admin.apps.length ? admin.firestore() : null as any;
+};
+
+const db = initializeFirebase();
 
 // Initialize Razorpay SDK using the server environment keys
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID || "",
   key_secret: process.env.RAZORPAY_KEY_SECRET || "",
 });
-
-// Safely initialize the Firebase Admin app (ignoring security rules)
-const getAdminDb = () => {
-  const projectId = process.env.FIREBASE_PROJECT_ID;
-  const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-  const privateKey = process.env.FIREBASE_PRIVATE_KEY;
-
-  if (projectId && clientEmail && privateKey) {
-    try {
-      // Ensure the Admin SDK is initialized only once using !admin.apps.length check
-      if (!admin.apps.length) {
-        // Strip any wrapping quotes from env loading, and format literal newlines
-        const formattedPrivateKey = privateKey
-          .replace(/^["']|["']$/g, "")
-          .replace(/\\n/g, "\n");
-
-        admin.initializeApp({
-          credential: admin.credential.cert({
-            projectId,
-            clientEmail,
-            privateKey: formattedPrivateKey,
-          }),
-        });
-      }
-      return admin.firestore();
-    } catch (e) {
-      console.error("Error initializing Firebase Admin App in create-order:", e);
-      return null;
-    }
-  }
-  return null;
-};
 
 export async function POST(request: Request) {
   try {
@@ -84,7 +86,7 @@ export async function POST(request: Request) {
     const order = await razorpay.orders.create(options);
 
     // Update the corresponding Firestore lead document with the Razorpay order details
-    const adminDb = getAdminDb();
+    const adminDb = db;
     if (adminDb) {
       console.log("Using Firebase Admin SDK for Order Creation document update.");
       await adminDb.collection("bookings").doc(bookingId).update({
@@ -93,7 +95,7 @@ export async function POST(request: Request) {
       });
     } else {
       console.warn("Admin SDK environment keys missing. Falling back to Client Firestore SDK in create-order.");
-      const bookingRef = doc(db, "bookings", bookingId);
+      const bookingRef = doc(clientDb, "bookings", bookingId);
       await updateDoc(bookingRef, {
         razorpay_order_id: order.id,
         status: "Pending Payment",
