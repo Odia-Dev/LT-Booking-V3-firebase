@@ -20,13 +20,26 @@ const admin = {
 const initializeFirebase = () => {
   if (!admin.apps.length) {
     try {
-      const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
-      
+      let projectId = process.env.FIREBASE_PROJECT_ID;
+      let clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+      let privateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+      if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
+        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+        projectId = serviceAccount.project_id;
+        clientEmail = serviceAccount.client_email;
+        privateKey = serviceAccount.private_key;
+      }
+
+      if (privateKey) {
+        privateKey = privateKey.replace(/\\n/g, '\n');
+      }
+
       admin.initializeApp({
         credential: admin.credential.cert({
-          projectId: process.env.FIREBASE_PROJECT_ID,
-          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: privateKey,
+          projectId,
+          clientEmail,
+          privateKey,
         }),
       });
     } catch (error) {
