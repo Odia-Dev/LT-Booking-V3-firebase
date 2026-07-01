@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { db, isConfigured } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import { getApps, initializeApp, cert } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
+import admin from "firebase-admin";
 
 // Initialize Razorpay SDK using the server environment keys
 const razorpay = new Razorpay({
@@ -19,18 +18,24 @@ const getAdminDb = () => {
 
   if (projectId && clientEmail && privateKey) {
     try {
-      if (getApps().length === 0) {
-        initializeApp({
-          credential: cert({
+      // Ensure the Admin SDK is initialized only once using !admin.apps.length check
+      if (!admin.apps.length) {
+        // Strip any wrapping quotes from env loading, and format literal newlines
+        const formattedPrivateKey = privateKey
+          .replace(/^["']|["']$/g, "")
+          .replace(/\\n/g, "\n");
+
+        admin.initializeApp({
+          credential: admin.credential.cert({
             projectId,
             clientEmail,
-            privateKey: privateKey.replace(/\\n/g, "\n"),
+            privateKey: formattedPrivateKey,
           }),
         });
       }
-      return getFirestore();
+      return admin.firestore();
     } catch (e) {
-      console.error("Error initializing Firebase Admin App:", e);
+      console.error("Error initializing Firebase Admin App in create-order:", e);
       return null;
     }
   }
