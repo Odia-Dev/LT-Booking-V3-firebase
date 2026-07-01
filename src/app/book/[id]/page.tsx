@@ -124,6 +124,21 @@ export default function BookPage() {
     }
   };
 
+  const loadRazorpayScript = () => {
+    return new Promise((resolve) => {
+      if ((window as any).Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.async = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
   const handleProceed = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -157,11 +172,81 @@ export default function BookPage() {
     };
 
     try {
-      await addBooking(bookingData);
-      setSuccess(true);
+      // 1. Save initial booking document
+      const savedBooking = await addBooking(bookingData);
+      const bookingId = savedBooking.id;
+
+      // 2. Call local API endpoint to initialize Razorpay Order
+      const response = await fetch("/api/razorpay/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingId, amount: vehicle.bookingAmount }),
+      });
+      const orderData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(orderData.error || "Failed to create payment order");
+      }
+
+      // 3. Fallback for mock environment checkout
+      if (orderData.mock) {
+        console.log("Mock Payment Mode active. Auto-capturing payment.");
+        if (!isConfigured) {
+          const existingRaw = localStorage.getItem("laxmi_toyota_bookings");
+          if (existingRaw) {
+            const existing = JSON.parse(existingRaw);
+            const index = existing.findIndex((b: any) => b.id === bookingId);
+            if (index !== -1) {
+              existing[index].status = "Paid";
+              localStorage.setItem("laxmi_toyota_bookings", JSON.stringify(existing));
+            }
+          }
+        }
+        setSuccess(true);
+        return;
+      }
+
+      // 4. Inject Razorpay JS script
+      const scriptLoaded = await loadRazorpayScript();
+      if (!scriptLoaded) {
+        throw new Error("Razorpay SDK failed to load. Please verify your internet connection.");
+      }
+
+      // 5. Open checkout payment dialog modal
+      const options = {
+        key: orderData.key,
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Laxmi Toyota",
+        description: `Booking deposit for ${vehicle.name}`,
+        order_id: orderData.id,
+        handler: async function (response: any) {
+          console.log("Razorpay Payment Success Callback:", response);
+          setSuccess(true);
+        },
+        prefill: {
+          name: fullName,
+          email: user.email,
+          contact: phone,
+        },
+        notes: {
+          bookingId: bookingId,
+        },
+        theme: {
+          color: "#ef4444",
+        },
+      };
+
+      const paymentObject = new (window as any).Razorpay(options);
+      paymentObject.on("payment.failed", function (response: any) {
+        console.error("Razorpay Payment Failed:", response.error);
+        setError(`Payment Failed: ${response.error.description}`);
+      });
+      paymentObject.open();
+
     } catch (err: any) {
-      console.error("Booking write error:", err);
-      setError("Failed to save booking details. Please try again.");
+      console.error("Checkout submission error:", err);
+      setError(err.message || "Failed to process booking reservation. Please try again.");
     } finally {
       setSubmitting(false);
     }
