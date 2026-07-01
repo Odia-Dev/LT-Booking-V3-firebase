@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     // Update the corresponding Firestore lead document with the Razorpay order details
     const bookingRef = doc(db, "bookings", bookingId);
     await updateDoc(bookingRef, {
-      razorpayOrderId: order.id,
+      razorpay_order_id: order.id,
       status: "Pending Payment",
     });
 

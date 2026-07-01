@@ -59,7 +59,7 @@ export default function BookPage() {
   const [branch, setBranch] = useState("Berhampur");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const vehicle = VEHICLE_DATA[id];
 
@@ -154,7 +154,7 @@ export default function BookPage() {
       return;
     }
 
-    setSubmitting(true);
+    setIsProcessing(true);
 
     const bookingData = {
       userUid: user.uid,
@@ -248,7 +248,7 @@ export default function BookPage() {
       console.error("Checkout submission error:", err);
       setError(err.message || "Failed to process booking reservation. Please try again.");
     } finally {
-      setSubmitting(false);
+      setIsProcessing(false);
     }
   };
 
@@ -399,10 +399,10 @@ export default function BookPage() {
 
             <button
               type="submit"
-              disabled={submitting}
+              disabled={isProcessing}
               className="w-full rounded-full bg-gradient-to-r from-red-600 to-red-500 py-3.5 text-sm font-bold uppercase tracking-wider text-white shadow-xl hover:from-red-500 hover:to-red-400 disabled:opacity-50 transition-all"
             >
-              {submitting ? "Processing Allocation..." : "Proceed"}
+              {isProcessing ? "Processing Allocation..." : "Proceed to Payment"}
             </button>
 
             <p className="text-[10px] text-zinc-500 text-center leading-relaxed">
