@@ -1,23 +1,39 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import * as admin from 'firebase-admin';
 import { getFirestore } from 'firebase-admin/firestore';
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "");
 
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_KEY
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY)
-  : null;
-
-if (serviceAccount && !getApps().length) {
-  initializeApp({
-    credential: cert(serviceAccount)
-  });
-}
-const db = getApps().length ? getFirestore() : null as any;
+const getDb = () => {
+    if (!admin.getApps().length) {
+        try {
+            const privateKey = process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+            admin.initializeApp({
+                credential: admin.cert({
+                    projectId: process.env.FIREBASE_PROJECT_ID,
+                    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+                    privateKey: privateKey,
+                }),
+            });
+        } catch (e) {
+            return null; // Failed to init
+        }
+    }
+    return getFirestore();
+};
 
 export async function POST(request: Request) {
+  console.log("LOG: Webhook Request Received");
+  const db = getDb();
+  
+  // THE FIX: Add this safety check
+  if (!db) {
+      console.error("LOG: Webhook Error: Database not initialized!");
+      return new Response("Database Error", { status: 500 });
+  }
+
   try {
     const rawBody = await request.text();
     const signature = request.headers.get("x-razorpay-signature") || "";
@@ -30,15 +46,18 @@ export async function POST(request: Request) {
       .digest("hex");
 
     if (signature !== expectedSignature) {
-      console.error("Webhook signature verification failed.");
+      console.error("LOG: Webhook signature verification failed.");
       return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
     }
 
     const payload = JSON.parse(rawBody);
     const event = payload.event;
+    console.log("LOG: Webhook signature verified successfully. Event:", event);
+
     const paymentEntity = payload.payload?.payment?.entity;
 
     if (!paymentEntity) {
+      console.error("LOG: Invalid payload format");
       return NextResponse.json({ error: "Invalid payload format" }, { status: 400 });
     }
 
@@ -47,7 +66,7 @@ export async function POST(request: Request) {
     const amount = paymentEntity.amount / 100;
 
     if (!orderId) {
-      console.warn("Webhook received without order_id. Skipping.");
+      console.warn("LOG: Webhook received without order_id. Skipping.");
       return NextResponse.json({ message: "No order_id found" }, { status: 200 });
     }
 
@@ -55,7 +74,7 @@ export async function POST(request: Request) {
     let bookingData: any = null;
 
     // 2. Fetch Document strictly using Admin SDK
-    console.log("Using Firebase Admin SDK for Webhook transaction processing.");
+    console.log("LOG: Fetching booking document matching razorpay_order_id:", orderId);
     const bookingsSnap = await db
       .collection("bookings")
       .where("razorpay_order_id", "==", orderId)
@@ -63,17 +82,18 @@ export async function POST(request: Request) {
       .get();
 
     if (bookingsSnap.empty) {
-      console.error(`No booking found matching razorpay_order_id: ${orderId} (Admin)`);
+      console.error(`LOG: No booking found matching razorpay_order_id: ${orderId} (Admin)`);
       return NextResponse.json({ error: "Booking not found" }, { status: 404 });
     }
 
     const docRef = bookingsSnap.docs[0];
     bookingId = docRef.id;
     bookingData = docRef.data();
+    console.log("LOG: Booking document fetched successfully. bookingId:", bookingId);
 
     // 3. Idempotency Check: Avoid processing if already Paid/Failed
     if (bookingData.status === "Paid" || bookingData.status === "Failed") {
-      console.log(`Booking ${bookingId} already marked as ${bookingData.status}. Skipping webhook.`);
+      console.log(`LOG: Booking ${bookingId} already marked as ${bookingData.status}. Skipping webhook.`);
       return NextResponse.json({ message: "Webhook already processed" }, { status: 200 });
     }
 
@@ -155,28 +175,27 @@ export async function POST(request: Request) {
         </div>
       `;
     } else {
+      console.log("LOG: Ignored event");
       return NextResponse.json({ message: "Ignored event" }, { status: 200 });
     }
 
     // 5. Save Status Update (Strict Admin SDK)
-    await db.collection("bookings").doc(bookingId).update({
-      status: nextStatus,
-      razorpay_payment_id: paymentId,
-    });
-
-    // 6. Send Receipt email via Resend
-    if (bookingData.customerEmail) {
-      await resend.emails.send({
-        from: "Laxmi Toyota <onboarding@resend.dev>",
-        to: bookingData.customerEmail,
-        subject: emailSubject,
-        html: emailHtml,
+    console.log("LOG: Updating database status for booking:", bookingId);
+    const bookingRef = db.collection("bookings").doc(bookingId);
+    try {
+      await bookingRef.update({
+        status: 'Paid',
+        payment_verified_at: new Date().toISOString()
       });
+      console.log("LOG: Firebase updated. Returning OK.");
+      return new Response("OK", { status: 200 });
+    } catch (error: any) {
+      console.error("LOG: Firestore Update Failed:", error.message);
+      // Return 500 so Razorpay knows to retry later
+      return new Response("Internal Server Error", { status: 500 });
     }
-
-    return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error("Webhook integration error:", error);
+    console.error("LOG: Webhook integration error:", error);
     return NextResponse.json(
       { error: error.message || "Internal Server Error" },
       { status: 500 }
