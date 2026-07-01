@@ -16,34 +16,25 @@ const admin = {
   firestore: getFirestore,
 };
 
-// Use a self-executing function to handle initialization cleanly
 const initializeFirebase = () => {
   if (!admin.apps.length) {
     try {
-      let projectId = process.env.FIREBASE_PROJECT_ID;
-      let clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-      let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-
-      if (process.env.FIREBASE_SERVICE_ACCOUNT_KEY) {
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-        projectId = serviceAccount.project_id;
-        clientEmail = serviceAccount.client_email;
-        privateKey = serviceAccount.private_key;
-      }
-
-      if (privateKey) {
-        privateKey = privateKey.replace(/\\n/g, '\n');
-      }
+      // FORCE the newlines back if they were stripped by Hostinger
+      const rawKey = process.env.FIREBASE_PRIVATE_KEY || "";
+      const formattedKey = rawKey.includes("\\n") 
+          ? rawKey.replace(/\\n/g, '\n') 
+          : rawKey;
 
       admin.initializeApp({
         credential: admin.credential.cert({
-          projectId,
-          clientEmail,
-          privateKey,
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: formattedKey,
         }),
       });
+      console.log("LOG: Firebase Admin Initialized Successfully");
     } catch (error) {
-      console.error("Firebase Admin Init Error:", error);
+      console.error("LOG: Firebase Admin Init Error:", error);
     }
   }
   return admin.apps.length ? admin.firestore() : null as any;
