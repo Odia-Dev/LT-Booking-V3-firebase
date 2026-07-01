@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import Razorpay from "razorpay";
 import { db, isConfigured } from "@/lib/firebase";
 import { doc, updateDoc } from "firebase/firestore";
-import admin from "firebase-admin";
+import { getApps, initializeApp, cert } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 
 // Initialize Razorpay SDK using the server environment keys
 const razorpay = new Razorpay({
@@ -17,16 +18,21 @@ const getAdminDb = () => {
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
   if (projectId && clientEmail && privateKey) {
-    if (!admin.apps.length) {
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId,
-          clientEmail,
-          privateKey: privateKey.replace(/\\n/g, "\n"),
-        }),
-      });
+    try {
+      if (getApps().length === 0) {
+        initializeApp({
+          credential: cert({
+            projectId,
+            clientEmail,
+            privateKey: privateKey.replace(/\\n/g, "\n"),
+          }),
+        });
+      }
+      return getFirestore();
+    } catch (e) {
+      console.error("Error initializing Firebase Admin App:", e);
+      return null;
     }
-    return admin.firestore();
   }
   return null;
 };

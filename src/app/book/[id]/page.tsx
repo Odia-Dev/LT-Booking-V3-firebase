@@ -111,6 +111,7 @@ export default function BookPage() {
 
   // Firestore Utility function
   const addBooking = async (bookingData: any) => {
+    console.log("DEBUG [addBooking]: isConfigured =", isConfigured, "db =", db);
     if (isConfigured) {
       return await addDoc(collection(db, "bookings"), bookingData);
     } else {

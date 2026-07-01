@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import crypto from "crypto";
-import { db, isConfigured } from "@/lib/firebase";
-import { collection, query, where, getDocs, doc, updateDoc, getDoc } from "firebase/firestore";
-import admin from "firebase-admin";
+import { db } from "@/lib/firebase";
+import { collection, query, where, getDocs, doc, updateDoc } from "firebase/firestore";
+import { getApps, initializeApp, cert } from "firebase-admin/app";
+import { getFirestore } from "firebase-admin/firestore";
 import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY || "");
@@ -14,16 +15,21 @@ const getAdminDb = () => {
   const privateKey = process.env.FIREBASE_PRIVATE_KEY;
 
   if (projectId && clientEmail && privateKey) {
-    if (!admin.apps.length) {
-      admin.initializeApp({
-        credential: admin.credential.cert({
-          projectId,
-          clientEmail,
-          privateKey: privateKey.replace(/\\n/g, "\n"),
-        }),
-      });
+    try {
+      if (getApps().length === 0) {
+        initializeApp({
+          credential: cert({
+            projectId,
+            clientEmail,
+            privateKey: privateKey.replace(/\\n/g, "\n"),
+          }),
+        });
+      }
+      return getFirestore();
+    } catch (e) {
+      console.error("Error initializing Firebase Admin App in webhook:", e);
+      return null;
     }
-    return admin.firestore();
   }
   return null;
 };
