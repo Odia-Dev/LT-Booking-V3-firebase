@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import React, { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, deleteDoc, getDoc } from "firebase/firestore";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { 
@@ -22,8 +22,10 @@ import {
   CheckCircle,
   AlertCircle,
   Calculator,
-  Landmark
+  Landmark,
+  BadgeCheck
 } from "lucide-react";
+import PhoneVerifier from "@/components/PhoneVerifier";
 
 interface Booking {
   id: string;
@@ -57,6 +59,33 @@ export default function DashboardPage() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Phone verification states
+  const [profile, setProfile] = useState<{ phone?: string; isPhoneVerified?: boolean } | null>(null);
+  const [showVerifier, setShowVerifier] = useState(false);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) return;
+      if (isConfigured) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", user.uid));
+          if (userDoc.exists()) {
+            setProfile(userDoc.data() as any);
+          }
+        } catch (error) {
+          console.error("Error loading user profile:", error);
+        }
+      } else {
+        const mockUsersRaw = localStorage.getItem("laxmi_toyota_users") || "{}";
+        const mockUsers = JSON.parse(mockUsersRaw);
+        if (mockUsers[user.uid]) {
+          setProfile(mockUsers[user.uid]);
+        }
+      }
+    };
+    fetchUserProfile();
+  }, [user, isConfigured]);
 
   const handleMarkAsPaid = async (bookingId: string) => {
     setActionLoadingId(bookingId);
@@ -227,7 +256,12 @@ export default function DashboardPage() {
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-zinc-800/80 pb-6 gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">Your Reservation Desk</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-extrabold text-white tracking-tight">Your Reservation Desk</h1>
+              {profile?.isPhoneVerified && (
+                <BadgeCheck className="h-6 w-6 text-blue-500 fill-blue-100 shrink-0" title="Verified Customer" />
+              )}
+            </div>
             <p className="text-zinc-500 text-xs mt-1">Logged in as: <span className="text-zinc-300 font-semibold">{user?.email}</span></p>
           </div>
           <div className="flex items-center gap-3">
@@ -245,6 +279,36 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        {/* VIP phone verification promotion banner */}
+        {!profile?.isPhoneVerified && (
+          <div className="bg-blue-950/30 border border-blue-900/40 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-sm">
+            <div className="space-y-1 text-center sm:text-left">
+              <h3 className="text-xs font-bold text-blue-400 uppercase tracking-widest">VIP Customer Status</h3>
+              <p className="text-xs text-zinc-400">
+                Verify your mobile number to get the VIP Blue Badge and fast-track your bookings.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowVerifier(true)}
+              className="px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all"
+            >
+              Verify Mobile Number
+            </button>
+          </div>
+        )}
+
+        {/* OTP Verification Modal */}
+        {showVerifier && (
+          <PhoneVerifier
+            userId={user?.uid}
+            onClose={() => setShowVerifier(false)}
+            onSuccess={(verifiedPhone) => {
+              setProfile({ phone: verifiedPhone, isPhoneVerified: true });
+              setShowVerifier(false);
+            }}
+          />
+        )}
         {/* Error/Success Feedback Banners */}
         {(errorMessage || successMessage) && (
           <div className="space-y-4">
