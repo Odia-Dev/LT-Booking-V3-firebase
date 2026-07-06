@@ -10,7 +10,8 @@
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.8",
-    "ai": "^4.0.22",
+    "@ai-sdk/react": "^4.0.17",
+    "ai": "^7.0.16",
     "browser-image-compression": "^2.0.2",
     "firebase": "^12.15.0",
     "firebase-admin": "^14.1.0",
