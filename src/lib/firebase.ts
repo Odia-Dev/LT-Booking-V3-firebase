@@ -1,6 +1,7 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -15,12 +16,14 @@ const isConfigured = !!process.env.NEXT_PUBLIC_FIREBASE_API_KEY;
 
 let auth: any;
 let db: any;
+let storage: any;
 const googleProvider = new GoogleAuthProvider();
 
 if (isConfigured) {
   const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
   auth = getAuth(app);
   db = getFirestore(app);
+  storage = getStorage(app);
 } else {
   // Graceful stub for local development without credentials
   auth = {
@@ -31,7 +34,8 @@ if (isConfigured) {
     },
   };
   db = {};
+  storage = {};
 }
 
-export { auth, db, googleProvider, isConfigured };
+export { auth, db, storage, googleProvider, isConfigured };
 
