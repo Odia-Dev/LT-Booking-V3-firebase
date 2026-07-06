@@ -35,12 +35,30 @@ interface Booking {
 }
 
 export default function AdminDashboard() {
-  const { user, loading, loginWithGoogle, isConfigured } = useAuth();
+  const { user, loading, loginWithGoogle, loginWithEmail, logout, isConfigured } = useAuth();
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [fetching, setFetching] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
+  
+  const [emailInput, setEmailInput] = useState("");
+  const [passwordInput, setPasswordInput] = useState("");
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authLoading, setAuthLoading] = useState(false);
+
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError(null);
+    try {
+      await loginWithEmail(emailInput, passwordInput);
+    } catch (err: any) {
+      setAuthError(err?.message || "Invalid credentials. Please try again.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   const updateBookingStatus = async (bookingId: string, newStatus: string) => {
     setUpdatingId(bookingId);
@@ -115,21 +133,97 @@ export default function AdminDashboard() {
     );
   }
 
+  // Access Control check
+  if (user && user.email !== "admin@laxmitoyota.co.in") {
+    return (
+      <div className="min-h-[85vh] flex items-center justify-center bg-zinc-950 px-4">
+        <div className="max-w-md w-full border border-red-500/20 bg-zinc-900/40 p-8 rounded-2xl text-center space-y-6 backdrop-blur-md">
+          <div className="h-12 w-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto text-red-500">
+            <ShieldCheck className="h-6 w-6" />
+          </div>
+          <h2 className="text-xl font-bold text-white tracking-tight">Access Denied</h2>
+          <p className="text-zinc-400 text-sm">
+            The account <strong className="text-white">{user.email}</strong> is not authorized to access the Admin Dashboard.
+          </p>
+          <button
+            onClick={() => logout()}
+            className="w-full rounded-full bg-zinc-800 hover:bg-zinc-700 py-3 text-sm font-semibold text-white transition-all duration-200"
+          >
+            Sign Out & Switch Account
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   // Protection Gate
   if (!user) {
     return (
       <div className="min-h-[85vh] flex items-center justify-center bg-zinc-950 px-4">
-        <div className="max-w-md w-full border border-zinc-800/80 bg-zinc-900/40 p-8 rounded-2xl text-center space-y-6 backdrop-blur-md">
-          <div className="h-12 w-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto text-red-500">
-            <ShieldCheck className="h-6 w-6" />
+        <div className="max-w-md w-full border border-zinc-800/80 bg-zinc-900/40 p-8 rounded-2xl space-y-6 backdrop-blur-md">
+          <div className="text-center space-y-2">
+            <div className="h-12 w-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto text-red-500">
+              <ShieldCheck className="h-6 w-6" />
+            </div>
+            <h2 className="text-xl font-bold text-white tracking-tight">Admin Authentication Required</h2>
+            <p className="text-zinc-500 text-xs">Please sign in with your authorized admin email credentials to view bookings.</p>
           </div>
-          <h2 className="text-xl font-bold text-white">Admin Authentication Required</h2>
-          <p className="text-zinc-400 text-sm">Please sign in with your authorized credentials to view the dealership bookings dashboard.</p>
+          
+          <form onSubmit={handleEmailSubmit} className="space-y-4 text-left">
+            {authError && (
+              <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-center font-medium">
+                {authError}
+              </div>
+            )}
+            
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Email Address</label>
+              <input
+                type="email"
+                required
+                placeholder="admin@laxmitoyota.co.in"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                className="w-full bg-zinc-950 border border-zinc-850 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
+              />
+            </div>
+            
+            <div className="space-y-1.5">
+              <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Password</label>
+              <input
+                type="password"
+                required
+                placeholder="••••••••"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                className="w-full bg-zinc-950 border border-zinc-855 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
+              />
+            </div>
+            
+            <button
+              type="submit"
+              disabled={authLoading}
+              className="w-full flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-red-600 to-red-500 py-3 text-sm font-semibold text-white shadow-xl hover:from-red-500 hover:to-red-400 disabled:opacity-50 transition-all duration-200"
+            >
+              {authLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin text-white" />
+              ) : (
+                "Sign In to Admin Dashboard"
+              )}
+            </button>
+          </form>
+
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-zinc-800"></div>
+            <span className="flex-shrink mx-4 text-[10px] text-zinc-600 uppercase tracking-widest">or</span>
+            <div className="flex-grow border-t border-zinc-800"></div>
+          </div>
+
           <button
             onClick={loginWithGoogle}
-            className="w-full rounded-full bg-gradient-to-r from-red-600 to-red-500 py-3 text-sm font-semibold text-white shadow-xl hover:from-red-500 hover:to-red-400 transition-all duration-200"
+            className="w-full rounded-lg bg-zinc-900 border border-zinc-800 py-3 text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-850 transition-all duration-200"
           >
-            Sign In to Access Dashboard
+            Sign In with Google Account
           </button>
         </div>
       </div>
