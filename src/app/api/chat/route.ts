@@ -1,24 +1,45 @@
-import { NextResponse } from "next/server";
+import { google } from '@ai-sdk/google';
+import { streamText } from 'ai';
 
-export async function POST(request: Request) {
-  try {
-    const { message } = await request.json();
-    const query = (message || "").toLowerCase();
+// Allow streaming responses up to 30 seconds
+export const maxDuration = 30;
 
-    let responseText = "";
+export async function POST(req: Request) {
+  const { messages } = await req.json();
 
-    if (query.includes("mileage") || query.includes("average")) {
-      responseText = "Namaskar! Our advanced Self-Charging Hybrid Electric engines (like in the Hyryder or Innova Hycross) deliver an exceptional mileage of up to 27.97 km/l! This offers unmatched fuel efficiency. Lock in your hybrid allocation today to start saving: http://localhost:3000/book/hyryder";
-    } else if (query.includes("glanza") || query.includes("stock") || query.includes("in stock")) {
-      responseText = "Toyota Glanza is highly demanded with only 2 units remaining for immediate delivery this month! Don't miss out. Claim your ₹5,000 online-exclusive invoice discount by reserving your Glanza now: http://localhost:3000/book/glanza";
-    } else if (query.includes("book") || query.includes("how to") || query.includes("payment")) {
-      responseText = "Booking online is 100% secure and self-serve! Simply select your vehicle on our showroom page, select the variant & color, and complete the refundable deposit via Razorpay. Reserve your vehicle in under 60 seconds here: http://localhost:3000/";
-    } else {
-      responseText = "Namaskar! Laxmi Toyota is offering a limited-time ₹5,000 direct discount on your final invoice when you book online today. With immediate delivery slots running low, we recommend reserving your car right away. Choose your model and start: http://localhost:3000/";
-    }
+  const systemPrompt = `
+    You are an elite, empathetic, and enthusiastic Digital Sales Assistant for Laxmi Toyota (Odisha).
+    You speak English, Hindi, Odia, and Telugu. Always reply in the language the user speaks to you.
+    
+    YOUR GOAL: Answer questions about Toyota vehicles, generate FOMO (Fear Of Missing Out), and drive users to book online to claim a ₹5,000 digital-exclusive discount.
+    
+    KNOWLEDGE BASE (Available Models & Links):
+    - /vehicles/toyota-glanza
+    - /vehicles/toyota-urban-cruiser-taisor
+    - /vehicles/toyota-rumion
+    - /vehicles/toyota-urban-cruiser-hyryder
+    - /vehicles/toyota-urban-cruiser-ebella
+    - /vehicles/toyota-innova-crysta
+    - /vehicles/toyota-innova-hycross
+    - /vehicles/toyota-fortuner
+    - /vehicles/toyota-fortuner-legender
+    - /vehicles/toyota-hilux
+    - /vehicles/toyota-camry
+    - /vehicles/toyota-vellfire
+    - /vehicles/toyota-landcruiser300
 
-    return NextResponse.json({ response: responseText });
-  } catch (error) {
-    return NextResponse.json({ response: "Namaskar! Our servers are busy. Please secure your booking directly to claim your ₹5,000 online discount!" }, { status: 500 });
-  }
+    RULES:
+    1. Keep responses concise (2-3 short sentences).
+    2. Always mention the "₹5,000 online booking discount" when discussing prices or reservations.
+    3. Use emojis to make the conversation engaging.
+    4. HUMAN HANDOFF RULE: If the user asks a very specific technical question you don't know, asks for exact on-road pricing for a specific pin code, or explicitly asks to speak to a human, apologize politely and say you will connect them with a Sales Officer. THEN, YOU MUST append exactly this string at the very end of your response: [SHOW_FORM]
+  `;
+
+  const result = await streamText({
+    model: google('gemini-1.5-flash'),
+    system: systemPrompt,
+    messages,
+  });
+
+  return result.toDataStreamResponse();
 }
