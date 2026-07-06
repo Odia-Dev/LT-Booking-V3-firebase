@@ -452,6 +452,14 @@ export default function AdminDashboard() {
     maximumFractionDigits: 0,
   }).format(totalRevenue);
 
+  const formatINR = (value: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
   // Filter logic based on active tab
   const getFilteredList = () => {
     const q = searchQuery.toLowerCase();
