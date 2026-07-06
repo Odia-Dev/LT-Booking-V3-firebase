@@ -2,16 +2,20 @@ export interface VehicleBasicInfo {
   brand: string;
   name: string;
   slug: string;
-  type: string;
-  description: string;
+  category: string;
+  shortDesc: string;
+  longDesc: string;
+  tagline: string;
+  launchYear: number;
   status: "Draft" | "Published" | "Archived";
+  isFeatured: boolean;
 }
 
 export interface VehiclePricing {
-  basePrice: string;
+  startingPrice: string;
   bookingAmount: number;
-  roadTax: number;
-  insurance: number;
+  isRefundable: boolean;
+  refundNotes: string;
 }
 
 export interface VehicleSEO {
@@ -21,19 +25,25 @@ export interface VehicleSEO {
 }
 
 export interface VehicleMedia {
-  images: string[];
+  heroImage: string;
+  thumbnail: string;
+  gallery: string[];
+  brochureUrl: string;
 }
 
 export interface VehicleInventory {
-  stockCount: number;
-  stockStatus: "In Stock" | "Waitlisted";
-  waitingPeriodWeeks: number;
+  stockStatus: string;
+  totalUnits: number;
+  waitingPeriod: string;
+  branches: string[];
 }
 
 export interface VehicleVariant {
-  id: string;
   name: string;
-  price: string;
+  engine: string;
+  fuel: string;
+  transmission: string;
+  exShowroom: string;
 }
 
 export interface VehicleColor {
@@ -48,6 +58,13 @@ export interface VehicleOffer {
   type: string;
 }
 
+export interface VehicleFeatures {
+  safety: string[];
+  interior: string[];
+  exterior: string[];
+  technology: string[];
+}
+
 export interface VehicleMaster {
   id?: string;
   basicInfo: VehicleBasicInfo;
@@ -57,7 +74,7 @@ export interface VehicleMaster {
   inventory: VehicleInventory;
   variants: VehicleVariant[];
   colors: VehicleColor[];
-  features: string[];
+  features: VehicleFeatures;
   offers: VehicleOffer[];
   createdAt?: string;
   updatedAt?: string;

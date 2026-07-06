@@ -10,7 +10,7 @@ import {
 import imageCompression from "browser-image-compression";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { storage } from "@/lib/firebase";
-import { VehicleMaster, VehicleVariant, VehicleColor, VehicleOffer } from "@/types/vehicle";
+import { VehicleMaster, VehicleVariant, VehicleColor, VehicleOffer, VehicleFeatures } from "@/types/vehicle";
 
 interface VehicleManagerProps {
   initialVehicle?: VehicleMaster;
@@ -35,7 +35,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
   const [unsavedChanges, setUnsavedChanges] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
 
-  // Map state fields to initial values if provided
+  // Initialize PIM State matching the master schema fields
   const [basicInfo, setBasicInfo] = useState(initialVehicle?.basicInfo || {
     brand: "Toyota",
     name: "",
@@ -56,29 +56,40 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
   });
 
   const [pricing, setPricing] = useState(initialVehicle?.pricing || {
-    basePrice: "", // mapped to startingPrice
+    startingPrice: "",
     bookingAmount: 11000,
-    roadTax: 0,
-    insurance: 0
+    isRefundable: true,
+    refundNotes: "100% refundable before allocation."
   });
 
-  const [variants, setVariants] = useState<any[]>(initialVehicle?.variants || []);
+  const [variants, setVariants] = useState<VehicleVariant[]>(initialVehicle?.variants || []);
   const [colors, setColors] = useState<VehicleColor[]>(initialVehicle?.colors || []);
+  
   const [media, setMedia] = useState(initialVehicle?.media || {
-    images: [] // mapped to gallery
+    heroImage: "",
+    thumbnail: "",
+    gallery: [],
+    brochureUrl: ""
   });
 
   const [inventory, setInventory] = useState(initialVehicle?.inventory || {
-    stockCount: 0, // mapped to totalUnits
-    stockStatus: "In Stock" as const, // mapped to stockStatus
-    waitingPeriodWeeks: 0 // mapped to waitingPeriod
+    stockStatus: "Available",
+    totalUnits: 0,
+    waitingPeriod: "0 Weeks",
+    branches: BRANCHES // default to all branches selected
   });
 
   const [offers, setOffers] = useState<VehicleOffer[]>(initialVehicle?.offers || []);
   
-  // Custom features categorized matching specification fields
-  const [features, setFeatures] = useState<string[]>(initialVehicle?.features || []);
+  const [features, setFeatures] = useState<VehicleFeatures>(initialVehicle?.features || {
+    safety: [],
+    interior: [],
+    exterior: [],
+    technology: []
+  });
+
   const [newFeature, setNewFeature] = useState("");
+  const [featureCategory, setFeatureCategory] = useState<keyof VehicleFeatures>("safety");
 
   const updateBasicInfo = (field: string, value: any) => {
     setBasicInfo(prev => ({ ...prev, [field]: value }));
@@ -104,7 +115,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
   const addVariant = () => {
     setVariants(prev => [
       ...prev,
-      { id: `var-${Date.now()}`, name: "", fuel: "Petrol", transmission: "Manual (MT)", price: "" }
+      { name: "", engine: "", fuel: "Petrol", transmission: "Manual", exShowroom: "" }
     ]);
     setUnsavedChanges(true);
   };
@@ -114,7 +125,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
     setUnsavedChanges(true);
   };
 
-  const updateVariantField = (index: number, field: string, value: string) => {
+  const updateVariantField = (index: number, field: keyof VehicleVariant, value: string) => {
     setVariants(prev => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
@@ -134,7 +145,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
     setUnsavedChanges(true);
   };
 
-  const updateColorField = (index: number, field: string, value: string) => {
+  const updateColorField = (index: number, field: keyof VehicleColor, value: string) => {
     setColors(prev => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
@@ -154,7 +165,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
     setUnsavedChanges(true);
   };
 
-  const updateOfferField = (index: number, field: string, value: any) => {
+  const updateOfferField = (index: number, field: keyof VehicleOffer, value: any) => {
     setOffers(prev => {
       const next = [...prev];
       next[index] = { ...next[index], [field]: value };
@@ -166,13 +177,19 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
   // Features helpers
   const addFeature = () => {
     if (!newFeature.trim()) return;
-    setFeatures([...features, newFeature.trim()]);
+    setFeatures(prev => ({
+      ...prev,
+      [featureCategory]: [...prev[featureCategory], newFeature.trim()]
+    }));
     setNewFeature("");
     setUnsavedChanges(true);
   };
 
-  const removeFeature = (index: number) => {
-    setFeatures(features.filter((_, i) => i !== index));
+  const removeFeature = (category: keyof VehicleFeatures, index: number) => {
+    setFeatures(prev => ({
+      ...prev,
+      [category]: prev[category].filter((_, i) => i !== index)
+    }));
     setUnsavedChanges(true);
   };
 
@@ -202,7 +219,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
       
       setMedia(prev => ({
         ...prev,
-        images: [...prev.images, downloadUrl]
+        gallery: [...prev.gallery, downloadUrl]
       }));
       setUnsavedChanges(true);
     } catch (err: any) {
@@ -211,6 +228,16 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
     } finally {
       setIsUploading(false);
     }
+  };
+
+  // Branch Selection handler
+  const handleBranchToggle = (branch: string) => {
+    const isSelected = inventory.branches.includes(branch);
+    const updated = isSelected 
+      ? inventory.branches.filter(b => b !== branch)
+      : [...inventory.branches, branch];
+    
+    updateInventory("branches", updated);
   };
 
   // API Call to save Draft or Publish
@@ -227,7 +254,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
       seo,
       media,
       inventory,
-      variants: variants.map(v => ({ id: v.id || `var-${Date.now()}`, name: v.name, price: v.price })),
+      variants,
       colors,
       features,
       offers
@@ -357,8 +384,8 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
               <IndianRupee className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
               <input 
                 type="text" 
-                value={pricing.basePrice} 
-                onChange={(e) => updatePricing("basePrice", e.target.value)}
+                value={pricing.startingPrice} 
+                onChange={(e) => updatePricing("startingPrice", e.target.value)}
                 className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
                 placeholder="e.g. ₹11.14 Lakh" 
               />
@@ -401,14 +428,14 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                   placeholder="Offer Title (e.g. ₹5,000 Online Bonus)"
                   value={offer.title}
                   onChange={(e) => updateOfferField(idx, "title", e.target.value)}
-                  className="flex-grow bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900"
+                  className="flex-grow bg-slate-55 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900 text-xs"
                 />
                 <input
                   type="number"
                   placeholder="Value"
                   value={offer.discount}
                   onChange={(e) => updateOfferField(idx, "discount", parseInt(e.target.value) || 0)}
-                  className="w-32 bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900"
+                  className="w-32 bg-slate-55 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900 text-xs"
                 />
                 <button onClick={() => removeOffer(idx)} className="text-red-500">
                   <Trash2 className="w-4 h-4" />
@@ -443,38 +470,58 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
           <div className="space-y-4">
             {variants.map((v, idx) => (
               <div key={idx} className="flex flex-col md:flex-row gap-4 p-4 border border-slate-200 rounded-lg bg-slate-50 items-center">
-                <div className="flex-1">
+                <div className="flex-grow">
                    <label className="block text-[10px] font-bold text-slate-400 uppercase">Variant Name</label>
                    <input 
                      type="text" 
                      value={v.name} 
                      onChange={(e) => updateVariantField(idx, "name", e.target.value)}
-                     className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-sm outline-none text-slate-900" 
+                     className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-900" 
                      placeholder="e.g. S E-CNG" 
                    />
                 </div>
-                <div className="w-32">
-                   <label className="block text-[10px] font-bold text-slate-400 uppercase">Trans. / Trim</label>
+                <div className="w-24">
+                   <label className="block text-[10px] font-bold text-slate-400 uppercase">Engine</label>
                    <input 
                      type="text" 
-                     value={v.fuel || ""} 
+                     value={v.engine} 
+                     onChange={(e) => updateVariantField(idx, "engine", e.target.value)}
+                     className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-900" 
+                     placeholder="1462 cc" 
+                   />
+                </div>
+                <div className="w-24">
+                   <label className="block text-[10px] font-bold text-slate-400 uppercase">Fuel</label>
+                   <input 
+                     type="text" 
+                     value={v.fuel} 
                      onChange={(e) => updateVariantField(idx, "fuel", e.target.value)}
-                     className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-sm outline-none text-slate-900" 
-                     placeholder="Fuel/Trans" 
+                     className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-900" 
+                     placeholder="Petrol" 
+                   />
+                </div>
+                <div className="w-28">
+                   <label className="block text-[10px] font-bold text-slate-400 uppercase">Trans.</label>
+                   <input 
+                     type="text" 
+                     value={v.transmission} 
+                     onChange={(e) => updateVariantField(idx, "transmission", e.target.value)}
+                     className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-900" 
+                     placeholder="Manual" 
                    />
                 </div>
                 <div className="w-32">
                    <label className="block text-[10px] font-bold text-slate-400 uppercase">Ex-Showroom Price</label>
                    <input 
                      type="text" 
-                     value={v.price} 
-                     onChange={(e) => updateVariantField(idx, "price", e.target.value)}
-                     className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-sm outline-none text-slate-900" 
-                     placeholder="e.g. ₹12.82 Lakh" 
+                     value={v.exShowroom} 
+                     onChange={(e) => updateVariantField(idx, "exShowroom", e.target.value)}
+                     className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-900" 
+                     placeholder="₹11.14 Lakh" 
                    />
                 </div>
                 <button onClick={() => removeVariant(idx)} className="text-red-400 hover:text-red-650 p-2 mt-4 md:mt-0">
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             ))}
@@ -534,18 +581,18 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
               onChange={(e) => updateInventory("stockStatus", e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900"
             >
-              <option value="In Stock">In Stock (Available immediately)</option>
-              <option value="Waitlisted">Waitlisted (Booking required)</option>
+              <option value="Available">Available (In Stock)</option>
+              <option value="Waitlist">Waitlist (Allocations only)</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Average Waiting Weeks</label>
+            <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Average Waiting Period</label>
             <input 
-              type="number" 
-              value={inventory.waitingPeriodWeeks} 
-              onChange={(e) => updateInventory("waitingPeriodWeeks", parseInt(e.target.value) || 0)}
+              type="text" 
+              value={inventory.waitingPeriod} 
+              onChange={(e) => updateInventory("waitingPeriod", e.target.value)}
               className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
-              placeholder="e.g. 12" 
+              placeholder="e.g. 12 Weeks" 
             />
           </div>
         </div>
@@ -555,12 +602,20 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
         <h3 className="text-lg font-bold text-slate-900 mb-4">Showroom Availability</h3>
         <p className="text-xs text-slate-500 mb-4">Select which showrooms are authorized to sell and display this vehicle.</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {BRANCHES.map(branch => (
-            <label key={branch} className="flex items-center p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
-              <input type="checkbox" className="w-4 h-4 text-[#EB0A1E] rounded border-gray-300 focus:ring-[#EB0A1E]" defaultChecked />
-              <span className="ml-2 text-sm font-medium text-slate-700">{branch}</span>
-            </label>
-          ))}
+          {BRANCHES.map(branch => {
+            const isSelected = inventory.branches.includes(branch);
+            return (
+              <label key={branch} className="flex items-center p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
+                <input 
+                  type="checkbox" 
+                  checked={isSelected}
+                  onChange={() => handleBranchToggle(branch)}
+                  className="w-4 h-4 text-[#EB0A1E] rounded border-gray-300 focus:ring-[#EB0A1E]" 
+                />
+                <span className="ml-2 text-sm font-medium text-slate-700">{branch}</span>
+              </label>
+            );
+          })}
         </div>
       </div>
     </div>
@@ -641,7 +696,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
               <h3 className="text-lg font-bold text-slate-900 mb-4">Media Library</h3>
               
-              <div className="flex items-center justify-center border-2 border-dashed border-slate-200 hover:border-red-500 rounded-xl p-8 transition-colors relative cursor-pointer bg-slate-50">
+              <div className="flex items-center justify-center border-2 border-dashed border-slate-200 hover:border-red-500 rounded-xl p-8 transition-colors relative cursor-pointer bg-slate-55">
                 <input
                   type="file"
                   accept="image/*"
@@ -662,13 +717,13 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                 </div>
               </div>
 
-              {media.images.length > 0 && (
+              {media.gallery.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                  {media.images.map((img, i) => (
+                  {media.gallery.map((img, i) => (
                     <div key={i} className="relative aspect-video rounded-xl overflow-hidden border border-slate-200 group">
                       <img src={img} alt="Vehicle gallery" className="w-full h-full object-cover" />
                       <button
-                        onClick={() => setMedia(prev => ({ ...prev, images: prev.images.filter((_, idx) => idx !== i) }))}
+                        onClick={() => setMedia(prev => ({ ...prev, gallery: prev.gallery.filter((_, idx) => idx !== i) }))}
                         className="absolute inset-0 bg-red-600/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       >
                         <Trash2 className="w-5 h-5" />
@@ -685,36 +740,55 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
             <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
               <h3 className="text-lg font-bold text-slate-900 mb-4 font-black">Specs & Feature Checklist</h3>
               
-              <div className="flex gap-2">
+              <div className="flex gap-4">
+                <select
+                  value={featureCategory}
+                  onChange={(e) => setFeatureCategory(e.target.value as any)}
+                  className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900 text-xs font-bold"
+                >
+                  <option value="safety">Safety</option>
+                  <option value="interior">Interior</option>
+                  <option value="exterior">Exterior</option>
+                  <option value="technology">Technology</option>
+                </select>
                 <input
                   type="text"
                   placeholder="Add a product feature (e.g. Panoramic sunroof)"
                   value={newFeature}
                   onChange={(e) => setNewFeature(e.target.value)}
-                  className="flex-grow bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900"
+                  className="flex-grow bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900 text-xs"
                 />
                 <button
                   onClick={addFeature}
                   className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-wider transition-all"
                 >
-                  Add Feature
+                  Add
                 </button>
               </div>
 
-              {features.length === 0 ? (
-                <p className="text-sm text-slate-500 italic">No features configured.</p>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-                  {features.map((feature, idx) => (
-                    <div key={idx} className="flex justify-between items-center p-3 border border-slate-200 rounded-lg bg-slate-50 text-xs font-semibold text-slate-800">
-                      <span>{feature}</span>
-                      <button onClick={() => removeFeature(idx)} className="text-slate-400 hover:text-red-500 transition-colors">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              {/* Categorized Features list */}
+              {["safety", "interior", "exterior", "technology"].map(cat => {
+                const list = features[cat as keyof VehicleFeatures] || [];
+                return (
+                  <div key={cat} className="space-y-2 border-t border-slate-100 pt-4">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">{cat} Features</h4>
+                    {list.length === 0 ? (
+                      <p className="text-xs text-slate-400 italic">No {cat} features added.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {list.map((item, idx) => (
+                          <div key={idx} className="flex justify-between items-center p-3 border border-slate-200 rounded-lg bg-slate-50 text-xs font-semibold text-slate-800">
+                            <span>{item}</span>
+                            <button onClick={() => removeFeature(cat as any, idx)} className="text-slate-400 hover:text-red-500 transition-colors">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
