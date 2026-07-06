@@ -9,7 +9,7 @@ import Link from "next/link";
 import imageCompression from "browser-image-compression";
 import { 
   Car, User, Phone, Calendar, Gauge, Image as ImageIcon,
-  Camera, UploadCloud, CheckCircle2, ArrowRight, Loader2, ArrowLeft 
+  Camera, UploadCloud, CheckCircle2, ArrowRight, Loader2, ArrowLeft, ShieldAlert
 } from "lucide-react";
 
 export default function CarExchangeValuationPage() {
