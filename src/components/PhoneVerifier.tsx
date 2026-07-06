@@ -90,6 +90,8 @@ export default function PhoneVerifier({ onSuccess, onClose, userId }: PhoneVerif
       console.error("Send OTP Error:", err);
       if (err.code === "auth/too-many-requests") {
         setError("Too many requests. Please wait a few minutes before trying again.");
+      } else if (err.code === "auth/operation-not-allowed") {
+        setError("Firebase Phone Authentication is not enabled. Action Required: Go to your Firebase Console > Authentication > Sign-in method, click 'Add new provider', select 'Phone', enable it, and save. Also check that your SMS region settings permit sending to +91.");
       } else {
         setError(err.message || "Failed to send OTP. Please check your network and try again.");
       }
