@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
+import { useAuth } from '@/context/AuthContext';
 import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
 import Lenis from 'lenis';
 import { 
@@ -135,6 +137,7 @@ const TESTIMONIALS = [
 
 export default function UltimateStorefront() {
   useLenis();
+  const { user, loading, loginWithGoogle, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
 
@@ -146,32 +149,93 @@ export default function UltimateStorefront() {
         <span>⚡ ONLINE EXCLUSIVE: Get ₹5,000 instant discount on your final invoice when you book online today.</span>
       </div>
 
+      {/* FLOATING MOBILE BOOK NOW BUTTON (Left corner on mobile to avoid chatbot overlap) */}
+      <div className="fixed bottom-6 left-6 lg:hidden z-50">
+        <Link
+          href="/#vehicles"
+          className="bg-[#EB0A1E] text-white font-black uppercase tracking-widest text-[10px] px-5 py-3 rounded-full shadow-2xl flex items-center gap-1 active:scale-95 transition-all border border-red-500/20"
+        >
+          Book Now
+        </Link>
+      </div>
+
       {/* --- NAVIGATION --- */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
             {/* Logo */}
-            <div className="flex-shrink-0 flex items-center cursor-pointer">
+            <Link href="/" className="flex-shrink-0 flex items-center cursor-pointer">
               <span className="text-[#EB0A1E] text-2xl font-black tracking-tight">Laxmi Toyota</span>
-            </div>
+            </Link>
             
-            {/* Navigation links */}
-            <div className="hidden lg:flex space-x-8 items-center">
-              {['Vehicles', 'How it Works', 'Offers', 'Branches', 'FAQ'].map((item) => (
-                <a key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`} className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
-                  {item}
-                </a>
-              ))}
-              <Link href="/dashboard" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
-                CRM Portal
+            {/* Core / Revenue Page links */}
+            <div className="hidden lg:flex space-x-6 items-center">
+              <Link href="/" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
+                Home
+              </Link>
+              <Link href="/#vehicles" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
+                Vehicles
+              </Link>
+              <Link href="/book-test-drive" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
+                Test Drive
+              </Link>
+              <Link href="/toyota-emi-calculator" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
+                EMI Check
+              </Link>
+              <Link href="/#offers" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
+                Offer
+              </Link>
+              <Link href="/#contact-us" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
+                Contact
+              </Link>
+              <Link href="/blog" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
+                Blog
               </Link>
             </div>
 
-            {/* CTA action */}
-            <div className="hidden lg:flex items-center space-x-6">
-              <a href="#vehicles" className="bg-[#EB0A1E] text-white px-6 py-2.5 rounded text-sm font-bold shadow-md hover:bg-red-700 transition-all">
-                Book Online
-              </a>
+            {/* Right Side Buttons (Book Now, Login) */}
+            <div className="hidden lg:flex items-center space-x-4">
+              <Link
+                href="/#vehicles"
+                className="bg-[#EB0A1E] text-white px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest shadow-md hover:bg-red-700 transition-all text-center"
+              >
+                Book Now
+              </Link>
+
+              {loading ? (
+                <div className="h-8 w-8 rounded-full border border-gray-200 bg-gray-100 animate-pulse" />
+              ) : user ? (
+                <div className="flex items-center space-x-3">
+                  <Link href="/dashboard" className="relative group cursor-pointer shrink-0">
+                    {user.photoURL ? (
+                      <Image
+                        src={user.photoURL}
+                        alt={user.displayName || "Profile"}
+                        width={32}
+                        height={32}
+                        className="rounded-full border border-gray-200"
+                      />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-[#EB0A1E] flex items-center justify-center text-white font-bold text-xs">
+                        {user.displayName ? user.displayName.charAt(0).toUpperCase() : "U"}
+                      </div>
+                    )}
+                  </Link>
+                  <button
+                    onClick={logout}
+                    className="border border-gray-250 hover:border-[#EB0A1E] bg-white text-slate-700 hover:text-[#EB0A1E] px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all"
+                  >
+                    Logout
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={loginWithGoogle}
+                  className="bg-slate-900 hover:bg-slate-800 text-white px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest shadow-md transition-all text-center"
+                >
+                  Login
+                </button>
+              )}
             </div>
 
             {/* Mobile hamburger */}
@@ -185,19 +249,56 @@ export default function UltimateStorefront() {
 
         {/* Mobile Menu dropdown */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-white border-b border-gray-100 px-4 py-4 space-y-4 shadow-lg absolute w-full">
-            {['Vehicles', 'How it Works', 'Offers', 'Branches', 'FAQ'].map((item) => (
-              <a key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`} className="block text-base font-semibold text-slate-800 hover:text-[#EB0A1E]">
-                {item}
-              </a>
-            ))}
-            <Link href="/dashboard" className="block text-base font-semibold text-slate-800 hover:text-[#EB0A1E]">
-              CRM Portal
+          <div className="lg:hidden bg-white border-b border-gray-100 px-4 py-4 space-y-3.5 shadow-lg absolute w-full text-left">
+            <Link href="/" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
+              Home
             </Link>
-            <div className="pt-4 border-t border-gray-100">
-              <a href="#vehicles" className="block w-full text-center bg-[#EB0A1E] text-white px-6 py-3 rounded text-sm font-bold shadow-md">
-                Book Online
-              </a>
+            <Link href="/#vehicles" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
+              Vehicles
+            </Link>
+            <Link href="/book-test-drive" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
+              Test Drive
+            </Link>
+            <Link href="/toyota-emi-calculator" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
+              EMI Check
+            </Link>
+            <Link href="/#offers" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
+              Offer
+            </Link>
+            <Link href="/#contact-us" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
+              Contact
+            </Link>
+            <Link href="/blog" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
+              Blog
+            </Link>
+            
+            <div className="pt-4 border-t border-gray-100 flex flex-col gap-2">
+              <Link
+                href="/#vehicles"
+                onClick={() => setMobileMenuOpen(false)}
+                className="w-full text-center bg-[#EB0A1E] text-white py-3 rounded-lg text-xs font-bold uppercase tracking-wider shadow-md"
+              >
+                Book Now
+              </Link>
+              {user ? (
+                <Link
+                  href="/dashboard"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full text-center bg-slate-900 text-white py-3 rounded-lg text-xs font-bold uppercase tracking-wider"
+                >
+                  My Dashboard
+                </Link>
+              ) : (
+                <button
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    loginWithGoogle();
+                  }}
+                  className="w-full text-center bg-slate-900 text-white py-3 rounded-lg text-xs font-bold uppercase tracking-wider"
+                >
+                  Login
+                </button>
+              )}
             </div>
           </div>
         )}
