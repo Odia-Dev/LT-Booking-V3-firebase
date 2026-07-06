@@ -100,11 +100,11 @@ export default function PremiumStorefront() {
       <section className="bg-slate-900 pt-28 pb-40 px-4 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
         <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h1 className="text-5xl md:text-7xl font-extrabold text-white tracking-tight mb-6 leading-tight">
-            Awaken your drive
+          <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-6 leading-tight">
+            Reserve Your Toyota Car Online in Just 2 Minutes
           </h1>
-          <p className="text-lg md:text-xl text-slate-300 mb-10 max-w-2xl mx-auto font-light">
-            Experience the perfect blend of innovation, reliability, and performance with Toyota.
+          <p className="text-base md:text-lg text-slate-300 mb-10 max-w-2xl mx-auto font-light">
+            Secure your preferred variant and color with an authorized Toyota dealer serving South Odisha.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
             <a href="#lineup" className="w-full sm:w-auto bg-[#EB0A1E] text-white px-8 py-3.5 rounded-md text-sm font-bold shadow-lg hover:bg-red-700 transition-colors flex items-center justify-center">
@@ -113,6 +113,26 @@ export default function PremiumStorefront() {
             <a href="#lineup" className="w-full sm:w-auto bg-transparent border-2 border-white text-white px-8 py-3.5 rounded-md text-sm font-bold hover:bg-white hover:text-slate-900 transition-colors flex items-center justify-center">
               Book a Test Drive
             </a>
+          </div>
+
+          {/* Trust Row */}
+          <div className="mt-12 pt-8 border-t border-slate-800/80 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto text-left md:text-center text-xs md:text-sm text-slate-300 font-medium">
+            <div className="flex items-center md:justify-center gap-2">
+              <span className="text-emerald-500 shrink-0">✅</span>
+              <span>Secure Online Payments</span>
+            </div>
+            <div className="flex items-center md:justify-center gap-2">
+              <span className="text-emerald-500 shrink-0">✅</span>
+              <span>Instant Booking Confirmation</span>
+            </div>
+            <div className="flex items-center md:justify-center gap-2">
+              <span className="text-emerald-500 shrink-0">✅</span>
+              <span>Official Toyota Dealer</span>
+            </div>
+            <div className="flex items-center md:justify-center gap-2">
+              <span className="text-emerald-500 shrink-0">✅</span>
+              <span>8 Locations Across Odisha</span>
+            </div>
           </div>
         </div>
       </section>
