@@ -14,31 +14,45 @@ const VEHICLE_DATA: Record<
 > = {
   glanza: {
     name: "Toyota Glanza",
-    price: "₹6.46 Lakh",
+    price: "₹6.86 Lakh",
     bookingAmount: 11000,
     type: "Hatchback",
     imageUrl: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=600",
   },
-  hyryder: {
-    name: "Urban Cruiser Hyryder",
-    price: "₹10.99 Lakh",
-    bookingAmount: 21000,
-    type: "SUV",
+  taisor: {
+    name: "Toyota Taisor",
+    price: "₹7.74 Lakh",
+    bookingAmount: 11000,
+    type: "Compact SUV",
     imageUrl: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=600",
   },
-  hycross: {
-    name: "Innova Hycross",
-    price: "₹18.70 Lakh",
-    bookingAmount: 51000,
+  rumion: {
+    name: "Toyota Rumion",
+    price: "₹10.44 Lakh",
+    bookingAmount: 21000,
     type: "MPV",
     imageUrl: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=600",
   },
-  fortuner: {
-    name: "Toyota Fortuner",
-    price: "₹34.76 Lakh",
-    bookingAmount: 100000,
+  hyryder: {
+    name: "Urban Cruiser Hyryder",
+    price: "₹11.14 Lakh",
+    bookingAmount: 21000,
     type: "SUV",
     imageUrl: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=600",
+  },
+  fortuner: {
+    name: "Toyota Fortuner",
+    price: "₹33.43 Lakh",
+    bookingAmount: 100000,
+    type: "SUV",
+    imageUrl: "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=600",
+  },
+  hycross: {
+    name: "Innova Hycross",
+    price: "₹19.77 Lakh",
+    bookingAmount: 50000,
+    type: "MPV",
+    imageUrl: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=600",
   },
   landcruiser: {
     name: "Land Cruiser 300",

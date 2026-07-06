@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import React, { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import Link from "next/link";
 import { 
   TrendingUp, 
@@ -15,7 +15,11 @@ import {
   User as UserIcon,
   Phone,
   ShieldCheck,
-  RefreshCw
+  RefreshCw,
+  Trash2,
+  Loader2,
+  CheckCircle,
+  AlertCircle
 } from "lucide-react";
 
 interface Booking {
@@ -38,6 +42,69 @@ export default function DashboardPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [fetching, setFetching] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  const handleMarkAsPaid = async (bookingId: string) => {
+    setActionLoadingId(bookingId);
+    setErrorMessage(null);
+    try {
+      if (isConfigured) {
+        const docRef = doc(db, "bookings", bookingId);
+        await updateDoc(docRef, { status: "Paid" });
+      } else {
+        const existingRaw = localStorage.getItem("laxmi_toyota_bookings");
+        const list: Booking[] = existingRaw ? JSON.parse(existingRaw) : [];
+        const updatedList = list.map((bk) =>
+          bk.id === bookingId ? { ...bk, status: "Paid" } : bk
+        );
+        localStorage.setItem("laxmi_toyota_bookings", JSON.stringify(updatedList));
+      }
+      
+      // Update local state
+      setBookings((prev) =>
+        prev.map((bk) => (bk.id === bookingId ? { ...bk, status: "Paid" } : bk))
+      );
+      setSuccessMessage("Booking marked as Paid successfully!");
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (error: any) {
+      console.error("Error marking booking as paid:", error);
+      setErrorMessage(error?.message || "Failed to mark booking as paid. Permission denied or database error.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
+
+  const handleDelete = async (bookingId: string) => {
+    if (!window.confirm("Are you sure you want to permanently delete this booking lead?")) {
+      return;
+    }
+    
+    setActionLoadingId(bookingId);
+    setErrorMessage(null);
+    try {
+      if (isConfigured) {
+        const docRef = doc(db, "bookings", bookingId);
+        await deleteDoc(docRef);
+      } else {
+        const existingRaw = localStorage.getItem("laxmi_toyota_bookings");
+        const list: Booking[] = existingRaw ? JSON.parse(existingRaw) : [];
+        const updatedList = list.filter((bk) => bk.id !== bookingId);
+        localStorage.setItem("laxmi_toyota_bookings", JSON.stringify(updatedList));
+      }
+      
+      // Update local state
+      setBookings((prev) => prev.filter((bk) => bk.id !== bookingId));
+      setSuccessMessage("Booking deleted successfully.");
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (error: any) {
+      console.error("Error deleting booking:", error);
+      setErrorMessage(error?.message || "Failed to delete booking. Permission denied or database error.");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
 
   const loadData = async () => {
     setFetching(true);
@@ -198,6 +265,36 @@ export default function DashboardPage() {
           </div>
         </div>
 
+        {/* Error/Success Feedback Banners */}
+        {(errorMessage || successMessage) && (
+          <div className="space-y-4">
+            {errorMessage && (
+              <div className="flex items-center gap-3 p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-sm">
+                <AlertCircle className="h-5 w-5 shrink-0" />
+                <div className="flex-1 font-medium">{errorMessage}</div>
+                <button 
+                  onClick={() => setErrorMessage(null)} 
+                  className="text-xs hover:underline uppercase font-bold text-red-500"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+            {successMessage && (
+              <div className="flex items-center gap-3 p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-sm">
+                <CheckCircle className="h-5 w-5 shrink-0" />
+                <div className="flex-1 font-medium">{successMessage}</div>
+                <button 
+                  onClick={() => setSuccessMessage(null)} 
+                  className="text-xs hover:underline uppercase font-bold text-emerald-500"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Task 3: Modern Table Section */}
         <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/10 backdrop-blur-sm overflow-hidden">
           
@@ -231,6 +328,7 @@ export default function DashboardPage() {
                     <th className="py-4 px-6">Vehicle</th>
                     <th className="py-4 px-6">Branch</th>
                     <th className="py-4 px-6 text-center">Status</th>
+                    <th className="py-4 px-6 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm text-zinc-300 divide-y divide-zinc-850">
@@ -270,9 +368,45 @@ export default function DashboardPage() {
                       </td>
                       <td className="py-4 px-6 font-medium text-white">{bk.branch}</td>
                       <td className="py-4 px-6 text-center">
-                        <span className="inline-flex items-center text-[10px] font-bold uppercase bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 text-amber-400">
-                          {bk.status}
-                        </span>
+                        <div className="flex flex-col items-center gap-1.5">
+                          <span className={`inline-flex items-center text-[10px] font-bold uppercase px-2.5 py-1 rounded-full border ${
+                            bk.status.toLowerCase() === "paid"
+                              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                              : bk.status.toLowerCase() === "pending" || bk.status.toLowerCase() === "pending payment"
+                              ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                              : "bg-zinc-800 border-zinc-700 text-zinc-400"
+                          }`}>
+                            {bk.status}
+                          </span>
+                          {(bk.status.toLowerCase() === "pending" || bk.status.toLowerCase() === "pending payment") && (
+                            <button
+                              onClick={() => handleMarkAsPaid(bk.id)}
+                              disabled={actionLoadingId !== null}
+                              className="inline-flex items-center gap-1 text-[10px] font-bold uppercase rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white px-2 py-0.5 transition-colors"
+                            >
+                              {actionLoadingId === bk.id ? (
+                                <Loader2 className="h-2.5 w-2.5 animate-spin text-white" />
+                              ) : (
+                                <CheckCircle className="h-2.5 w-2.5" />
+                              )}
+                              Mark as Paid
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        <button
+                          onClick={() => handleDelete(bk.id)}
+                          disabled={actionLoadingId !== null}
+                          className="inline-flex items-center justify-center p-2 rounded-lg text-zinc-600 hover:text-red-500 hover:bg-red-500/10 disabled:opacity-50 transition-all duration-150"
+                          title="Delete Lead"
+                        >
+                          {actionLoadingId === bk.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </button>
                       </td>
                     </tr>
                   ))}

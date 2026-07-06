@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import React, { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
 import Link from "next/link";
 import { 
   TrendingUp, 
@@ -14,7 +14,9 @@ import {
   Calendar, 
   User as UserIcon,
   Phone,
-  ShieldCheck
+  ShieldCheck,
+  CheckCircle,
+  Loader2
 } from "lucide-react";
 
 interface Booking {
@@ -37,6 +39,40 @@ export default function AdminDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [fetching, setFetching] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [successId, setSuccessId] = useState<string | null>(null);
+
+  const updateBookingStatus = async (bookingId: string, newStatus: string) => {
+    setUpdatingId(bookingId);
+    try {
+      if (isConfigured) {
+        const docRef = doc(db, "bookings", bookingId);
+        await updateDoc(docRef, { status: newStatus });
+      } else {
+        const existingRaw = localStorage.getItem("laxmi_toyota_bookings");
+        const list: Booking[] = existingRaw ? JSON.parse(existingRaw) : [];
+        const updatedList = list.map((bk) =>
+          bk.id === bookingId ? { ...bk, status: newStatus } : bk
+        );
+        localStorage.setItem("laxmi_toyota_bookings", JSON.stringify(updatedList));
+      }
+      
+      // Update local state immediately
+      setBookings((prev) =>
+        prev.map((bk) => (bk.id === bookingId ? { ...bk, status: newStatus } : bk))
+      );
+      
+      // Trigger success feedback
+      setSuccessId(bookingId);
+      setTimeout(() => {
+        setSuccessId(null);
+      }, 3000);
+    } catch (error) {
+      console.error("Error updating booking status:", error);
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   useEffect(() => {
     if (!user) {
@@ -228,6 +264,7 @@ export default function AdminDashboard() {
                     <th className="py-4 px-6">Branch</th>
                     <th className="py-4 px-6">Deposit</th>
                     <th className="py-4 px-6 text-center">Status</th>
+                    <th className="py-4 px-6 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm text-zinc-300 divide-y divide-zinc-800/40">
@@ -267,9 +304,36 @@ export default function AdminDashboard() {
                       <td className="py-4 px-6 font-medium text-white">{bk.branch}</td>
                       <td className="py-4 px-6 font-semibold text-emerald-400">{bk.bookingAmount}</td>
                       <td className="py-4 px-6 text-center">
-                        <span className="inline-flex items-center text-xs font-semibold bg-amber-500/10 px-2.5 py-1 rounded-full border border-amber-500/20 text-amber-400">
+                        <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full border ${
+                          bk.status.toLowerCase() === "paid"
+                            ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                            : "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                        }`}>
                           {bk.status}
                         </span>
+                      </td>
+                      <td className="py-4 px-6 text-right">
+                        {successId === bk.id ? (
+                          <div className="flex justify-end items-center gap-1 text-xs text-emerald-400 font-semibold animate-pulse">
+                            <CheckCircle className="h-4 w-4" />
+                            Success
+                          </div>
+                        ) : bk.status === "Pending Payment" ? (
+                          <button
+                            onClick={() => updateBookingStatus(bk.id, "Paid")}
+                            disabled={updatingId === bk.id}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-800/80 disabled:opacity-50 text-xs font-semibold text-white px-3 py-1.5 border border-zinc-800 hover:border-zinc-750 transition-all duration-150"
+                          >
+                            {updatingId === bk.id ? (
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-500" />
+                            ) : (
+                              <CheckCircle className="h-3.5 w-3.5 text-zinc-500 hover:text-emerald-400 transition-colors" />
+                            )}
+                            Mark as Paid
+                          </button>
+                        ) : (
+                          <span className="text-xs text-zinc-700 font-mono">-</span>
+                        )}
                       </td>
                     </tr>
                   ))}
