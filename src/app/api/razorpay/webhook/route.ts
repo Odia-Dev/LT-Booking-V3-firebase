@@ -11,9 +11,12 @@ const getDb = () => {
         try {
             // FORCE the newlines back if they were stripped by Hostinger
             const rawKey = process.env.FIREBASE_PRIVATE_KEY || "";
-            const formattedKey = rawKey.includes("\\n") 
+            let formattedKey = rawKey.includes("\\n") 
                 ? rawKey.replace(/\\n/g, '\n') 
                 : rawKey;
+            if (formattedKey.startsWith('"') && formattedKey.endsWith('"')) {
+                formattedKey = formattedKey.slice(1, -1);
+            }
 
             admin.initializeApp({
                 credential: admin.cert({
