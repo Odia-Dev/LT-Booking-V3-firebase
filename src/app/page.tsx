@@ -1,73 +1,79 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import { 
   Search, ShoppingCart, MapPin, Phone, Mail, 
   CheckCircle2, Star, ChevronRight, PlayCircle,
-  Menu, X
+  Menu, X, Car, CreditCard, ShieldCheck, 
+  Clock, ThumbsUp, HelpCircle, ChevronDown, MessageCircle
 } from 'lucide-react';
 
 const VEHICLES = [
-  { id: 'glanza', name: 'Glanza', desc: 'Premium Hatchback', price: '6.81 Lakh', img: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=800', badge: 'Sale' },
-  { id: 'hyryder', name: 'Hyryder', desc: 'Self-Charging Hybrid Electric SUV', price: '11.14 Lakh', img: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fd?auto=format&fit=crop&q=80&w=800', badge: 'New' },
-  { id: 'hycross', name: 'Innova Hycross', desc: 'Advanced MPV with Hybrid Tech', price: '19.77 Lakh', img: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=800', badge: 'Popular' },
-  { id: 'fortuner', name: 'Fortuner', desc: 'Legendary SUV', price: '33.43 Lakh', img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800', badge: 'Sale' },
-  { id: 'camry', name: 'Camry', desc: 'Luxury Hybrid Sedan', price: '46.17 Lakh', img: 'https://images.unsplash.com/photo-1503376710915-18861d9a2638?auto=format&fit=crop&q=80&w=800', badge: '' },
-  { id: 'hilux', name: 'Hilux', desc: 'Unbeatable Lifestyle Utility', price: '30.40 Lakh', img: 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=800', badge: 'Sale' },
-];
-
-const FEATURES = [
-  { title: 'Trusted dealership', desc: 'Over 20 years of delivering smiles and premium Toyota experiences to our customers.', icon: <CheckCircle2 className="w-6 h-6 text-[#EB0A1E]" /> },
-  { title: 'Multiple locations', desc: 'Conveniently located branches across South Odisha to serve you better.', icon: <MapPin className="w-6 h-6 text-[#EB0A1E]" /> },
-  { title: 'Expert maintenance', desc: 'Toyota certified technicians ensuring your vehicle performs at its absolute best.', icon: <Search className="w-6 h-6 text-[#EB0A1E]" /> },
-  { title: 'Highest standards', desc: 'We adhere strictly to Toyota global quality and customer service standards.', icon: <Star className="w-6 h-6 text-[#EB0A1E]" /> },
+  { id: 'glanza', name: 'Glanza', desc: 'Premium Hatchback', price: '6.81 Lakh', booking: '11,000', img: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=800', badge: 'Sale' },
+  { id: 'hyryder', name: 'Hyryder', desc: 'Self-Charging Hybrid Electric SUV', price: '11.14 Lakh', booking: '21,000', img: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fd?auto=format&fit=crop&q=80&w=800', badge: 'Popular' },
+  { id: 'hycross', name: 'Innova Hycross', desc: 'Advanced MPV with Hybrid Tech', price: '19.77 Lakh', booking: '50,000', img: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=800', badge: 'High Demand' },
+  { id: 'fortuner', name: 'Fortuner', desc: 'Legendary SUV', price: '33.43 Lakh', booking: '1,00,000', img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800', badge: 'Iconic' },
 ];
 
 const BRANCHES = [
-  { name: 'Aska Branch', address: 'NH-59, Aska Main Road, Ganjam', phone: '+91 98765 43210', email: 'aska@laxmitoyota.co.in' },
-  { name: 'Bargarh Branch', address: 'Bargarh Main Road, Near Toll Gate', phone: '+91 98765 43211', email: 'bargarh@laxmitoyota.co.in' },
-  { name: 'Berhampur (HQ)', address: 'NH-16, Haladiapadar, Berhampur', phone: '+91 98765 43212', email: 'sales@laxmitoyota.co.in' },
-  { name: 'Bhubaneswar Branch', address: 'Patia Industrial Estate, KIIT Square', phone: '+91 98765 43213', email: 'bbsr@laxmitoyota.co.in' },
-  { name: 'Jeypore Branch', address: 'NH-26, Jeypore Main Road, Koraput', phone: '+91 98765 43214', email: 'jeypore@laxmitoyota.co.in' },
-  { name: 'Paralakhemundi Branch', address: 'Gajapati Main Road, Near Bus Stand', phone: '+91 98765 43215', email: 'pkd@laxmitoyota.co.in' },
+  { name: 'Brahmapur (HQ)', address: 'NH-16, Haladiapadar', phone: '+91 98765 43212' },
+  { name: 'Jeypore', address: 'NH-26, Jeypore Main Road', phone: '+91 98765 43214' },
+  { name: 'Bargarh', address: 'Bargarh Main Road', phone: '+91 98765 43211' },
+  { name: 'Balangir', address: 'Balangir Highway', phone: '+91 98765 43215' },
 ];
 
-export default function PremiumStorefront() {
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
+const OFFERS = [
+  { title: 'Exchange Bonus', desc: 'Get up to ₹70,000 bonus on exchanging your old car.', valid: 'Ends in 5 days' },
+  { title: 'Hybrid Benefits', desc: 'Special warranty & benefits up to ₹1.60 Lakh on Hyryder.', valid: 'Limited Time' },
+  { title: 'Corporate Discount', desc: 'Exclusive pricing for registered corporate employees.', valid: 'Ongoing' },
+];
+
+const FAQS = [
+  { q: "Is online booking secure?", a: "Yes, we use Razorpay's 128-bit encryption. Your payment is 100% safe and directly credited to Laxmi Toyota's official account." },
+  { q: "Is the booking amount refundable?", a: "Absolutely. 100% of your booking amount is refundable until the vehicle is invoiced and allocated to you." },
+  { q: "Can I change my variant or color later?", a: "Yes! You can change your variant or color anytime before the final allocation by contacting your dedicated sales advisor." },
+  { q: "How quickly will someone contact me?", a: "A dedicated relationship manager will contact you within 2 working hours of your successful online booking." },
+];
+
+const TESTIMONIALS = [
+  { name: "Rahul Dash", location: "Brahmapur", text: "Booked my Hyryder completely online. The transparency and speed of Laxmi Toyota's digital process is unmatched.", rating: 5 },
+  { name: "Priyanka Sahu", location: "Jeypore", text: "Got instant confirmation for my Glanza. The sales team called within an hour to explain the next steps. Very premium experience.", rating: 5 },
+  { name: "Amit Patnaik", location: "Bargarh", text: "I was skeptical about booking a Fortuner online, but the Razorpay gateway and instant official receipt gave me total confidence.", rating: 5 },
+];
+
+export default function UltimateStorefront() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openFaq, setOpenFaq] = useState(0);
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] font-sans text-slate-900 selection:bg-[#EB0A1E] selection:text-white">
+    <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-[#EB0A1E] selection:text-white pb-20 lg:pb-0">
       
       {/* --- NAVIGATION --- */}
-      <nav className="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            {/* Logo */}
             <div className="flex-shrink-0 flex items-center cursor-pointer">
               <span className="text-[#EB0A1E] text-2xl font-black tracking-tight">Laxmi Toyota</span>
             </div>
             
-            {/* Desktop Menu - Centered */}
             <div className="hidden lg:flex space-x-8 items-center">
-              {['Vehicles', 'Services', 'About', 'Offers', 'Finance', 'Contact'].map((item) => (
-                <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-semibold text-slate-600 hover:text-[#EB0A1E] transition-colors">
+              {['Vehicles', 'How it Works', 'Offers', 'Branches', 'FAQ'].map((item) => (
+                <a key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`} className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
                   {item}
                 </a>
               ))}
-              <Link href="/dashboard" className="text-sm font-semibold text-slate-600 hover:text-[#EB0A1E] transition-colors">
+              <Link href="/dashboard" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
                 CRM Portal
               </Link>
             </div>
 
-            {/* Right Actions */}
             <div className="hidden lg:flex items-center space-x-6">
-              <a href="#lineup" className="bg-[#EB0A1E] text-white px-6 py-2.5 rounded-md text-sm font-bold shadow-md hover:bg-red-700 transition-all transform hover:scale-105">
-                Book Now
+              <a href="#vehicles" className="bg-[#EB0A1E] text-white px-6 py-2.5 rounded text-sm font-bold shadow-md hover:bg-red-700 transition-all flex items-center justify-center">
+                Book Online
               </a>
             </div>
 
-            {/* Mobile menu button */}
             <div className="lg:hidden flex items-center">
               <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-slate-600">
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -79,8 +85,8 @@ export default function PremiumStorefront() {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-white border-b border-gray-100 px-4 py-4 space-y-4 shadow-lg absolute w-full">
-            {['Vehicles', 'Services', 'About', 'Offers', 'Finance', 'Contact'].map((item) => (
-              <a key={item} href={`#${item.toLowerCase()}`} className="block text-base font-semibold text-slate-800 hover:text-[#EB0A1E]">
+            {['Vehicles', 'How it Works', 'Offers', 'Branches', 'FAQ'].map((item) => (
+              <a key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`} className="block text-base font-semibold text-slate-800 hover:text-[#EB0A1E]">
                 {item}
               </a>
             ))}
@@ -88,8 +94,8 @@ export default function PremiumStorefront() {
               CRM Portal
             </Link>
             <div className="pt-4 border-t border-gray-100">
-              <a href="#lineup" className="block w-full text-center bg-[#EB0A1E] text-white px-6 py-3 rounded-md text-sm font-bold shadow-md">
-                Book Now
+              <a href="#vehicles" className="block w-full text-center bg-[#EB0A1E] text-white px-6 py-3 rounded text-sm font-bold shadow-md">
+                Book Online
               </a>
             </div>
           </div>
@@ -97,215 +103,250 @@ export default function PremiumStorefront() {
       </nav>
 
       {/* --- HERO SECTION --- */}
-      <section className="bg-slate-900 pt-28 pb-40 px-4 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white via-transparent to-transparent"></div>
-        <div className="max-w-4xl mx-auto text-center relative z-10">
-          <h1 className="text-4xl md:text-6xl font-extrabold text-white tracking-tight mb-6 leading-tight">
-            Reserve Your Toyota Car Online in Just 2 Minutes
+      <section className="bg-slate-50 pt-20 pb-24 px-4 relative border-b border-gray-100">
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <div className="inline-flex items-center space-x-2 bg-red-50 text-[#EB0A1E] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
+            <ShieldCheck className="w-4 h-4" />
+            <span>Official Toyota Dealer for South Odisha</span>
+          </div>
+          <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 tracking-tight mb-6 leading-tight">
+            Reserve Your Toyota Car Online <br/>in Just 2 Minutes
           </h1>
-          <p className="text-base md:text-lg text-slate-300 mb-10 max-w-2xl mx-auto font-light">
+          <p className="text-sm md:text-base text-slate-600 mb-10 max-w-2xl mx-auto">
             Secure your preferred variant and color with an authorized Toyota dealer serving South Odisha.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-            <a href="#lineup" className="w-full sm:w-auto bg-[#EB0A1E] text-white px-8 py-3.5 rounded-md text-sm font-bold shadow-lg hover:bg-red-700 transition-colors flex items-center justify-center">
-              View Vehicles
+            <a href="#vehicles" className="w-full sm:w-auto bg-[#EB0A1E] text-white px-8 py-4 rounded text-sm font-bold shadow-lg hover:bg-red-700 transition-colors flex items-center justify-center">
+              Explore Vehicles <ChevronRight className="w-4 h-4 ml-1" />
             </a>
-            <a href="#lineup" className="w-full sm:w-auto bg-transparent border-2 border-white text-white px-8 py-3.5 rounded-md text-sm font-bold hover:bg-white hover:text-slate-900 transition-colors flex items-center justify-center">
-              Book a Test Drive
-            </a>
-          </div>
-
-          {/* Trust Row */}
-          <div className="mt-12 pt-8 border-t border-slate-800/80 grid grid-cols-2 md:grid-cols-4 gap-4 max-w-3xl mx-auto text-left md:text-center text-xs md:text-sm text-slate-300 font-medium">
-            <div className="flex items-center md:justify-center gap-2">
-              <span className="text-emerald-500 shrink-0">✅</span>
-              <span>Secure Online Payments</span>
-            </div>
-            <div className="flex items-center md:justify-center gap-2">
-              <span className="text-emerald-500 shrink-0">✅</span>
-              <span>Instant Booking Confirmation</span>
-            </div>
-            <div className="flex items-center md:justify-center gap-2">
-              <span className="text-emerald-500 shrink-0">✅</span>
-              <span>Official Toyota Dealer</span>
-            </div>
-            <div className="flex items-center md:justify-center gap-2">
-              <span className="text-emerald-500 shrink-0">✅</span>
-              <span>8 Locations Across Odisha</span>
-            </div>
           </div>
         </div>
       </section>
 
-      {/* --- FLOATING SEARCH BAR --- */}
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 -mt-16 relative z-20">
-        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 flex flex-col items-center">
-          <h2 className="text-2xl font-bold text-slate-900 mb-2">Find your perfect Toyota</h2>
-          <p className="text-sm text-slate-500 mb-8">Select your preferences below to quickly find your next vehicle.</p>
-          
-          <div className="w-full grid grid-cols-1 md:grid-cols-4 gap-4 lg:gap-6 items-end">
-            <div className="w-full">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Body Type</label>
-              <select className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#EB0A1E]/20 focus:border-[#EB0A1E] appearance-none">
-                <option>All Types</option>
-                <option>Hatchback</option>
-                <option>SUV</option>
-                <option>Sedan</option>
-                <option>MPV</option>
-              </select>
+      {/* --- TRUST BAR --- */}
+      <div className="bg-white border-b border-gray-100 py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div className="flex flex-col items-center justify-center">
+              <ThumbsUp className="w-6 h-6 text-[#EB0A1E] mb-2" />
+              <p className="text-xl font-black text-slate-900">10,000+</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Secure Online Payments</p>
             </div>
-            <div className="w-full">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Fuel Type</label>
-              <select className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#EB0A1E]/20 focus:border-[#EB0A1E] appearance-none">
-                <option>All Fuel Types</option>
-                <option>Petrol</option>
-                <option>Hybrid</option>
-                <option>Diesel</option>
-              </select>
+            <div className="flex flex-col items-center justify-center">
+              <MapPin className="w-6 h-6 text-[#EB0A1E] mb-2" />
+              <p className="text-xl font-black text-slate-900">8</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Locations Across Odisha</p>
             </div>
-            <div className="w-full">
-              <label className="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Price Range</label>
-              <select className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#EB0A1E]/20 focus:border-[#EB0A1E] appearance-none">
-                <option>Any Price</option>
-                <option>Under 10 Lakh</option>
-                <option>10L - 20L</option>
-                <option>Above 20L</option>
-              </select>
+            <div className="flex flex-col items-center justify-center">
+              <Star className="w-6 h-6 text-[#EB0A1E] mb-2" />
+              <p className="text-xl font-black text-slate-900">4.8</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Instant Confirmation</p>
             </div>
-            <div className="w-full">
-              <button className="w-full bg-[#EB0A1E] text-white rounded-lg px-4 py-3 text-sm font-bold shadow-md hover:bg-red-700 transition-colors flex justify-center items-center h-[46px]">
-                <Search className="w-4 h-4 mr-2" /> Search
-              </button>
+            <div className="flex flex-col items-center justify-center">
+              <ShieldCheck className="w-6 h-6 text-[#EB0A1E] mb-2" />
+              <p className="text-xl font-black text-slate-900">20+ Years</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Official Toyota Dealer</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* --- FEATURED VEHICLES --- */}
-      <section id="lineup" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-extrabold text-slate-900 mb-4">Featured vehicles</h2>
-          <p className="text-slate-500 max-w-2xl mx-auto">Explore our most popular Toyota models, perfectly suited for Indian roads.</p>
+      <section id="vehicles" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl font-extrabold text-slate-900 mb-4">Choose Your Toyota</h2>
+          <p className="text-slate-500 text-sm">Select a model to view variants, colors, and secure your booking.</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {VEHICLES.map((vehicle) => (
-            <div key={vehicle.id} className="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300 group flex flex-col justify-between">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {VEHICLES.map((v) => (
+            <div key={v.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all group flex flex-col justify-between">
               <div>
-                <div className="relative h-64 overflow-hidden bg-slate-100">
-                  {vehicle.badge && (
-                    <div className="absolute top-4 right-4 z-10 bg-[#EB0A1E] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded-full shadow-md">
-                      {vehicle.badge}
-                    </div>
-                  )}
-                  <img 
-                    src={vehicle.img} 
-                    alt={vehicle.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                  />
+                <div className="relative h-48 bg-slate-100 overflow-hidden">
+                  <div className="absolute top-3 right-3 z-10 bg-[#EB0A1E] text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded">
+                    {v.badge}
+                  </div>
+                  <img src={v.img} alt={v.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-slate-900 mb-1">{vehicle.name}</h3>
-                  <p className="text-sm text-slate-500 mb-6 h-10">{vehicle.desc}</p>
+                <div className="p-5">
+                  <h3 className="text-lg font-bold text-slate-900">{v.name}</h3>
+                  <p className="text-xs text-slate-500 mb-4 h-8">{v.desc}</p>
                 </div>
               </div>
-
-              <div className="p-6 pt-0">
-                <div className="flex justify-between items-end pt-4 border-t border-slate-55">
+              
+              <div className="p-5 pt-0">
+                <div className="flex justify-between items-end mb-4 pt-4 border-t border-gray-50">
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Starting at</p>
-                    <p className="text-lg font-black text-[#EB0A1E]">₹ {vehicle.price}</p>
+                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Starts At</p>
+                    <p className="text-sm font-bold text-slate-900">₹ {v.price}</p>
                   </div>
-                  <Link 
-                    href={`/book/${vehicle.id}`}
-                    className="bg-slate-900 text-white px-5 py-2.5 rounded-md text-xs font-bold hover:bg-[#EB0A1E] transition-colors flex items-center justify-center"
-                  >
-                    Book Now
-                  </Link>
+                  <div className="text-right">
+                    <p className="text-[10px] text-[#EB0A1E] uppercase font-bold tracking-wider">Booking Amt.</p>
+                    <p className="text-sm font-black text-[#EB0A1E]">₹ {v.booking}</p>
+                  </div>
                 </div>
+                
+                <Link 
+                  href={`/book/${v.id}`}
+                  className="w-full bg-slate-900 text-white py-2.5 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#EB0A1E] transition-colors flex items-center justify-center"
+                >
+                  Select Variant & Book
+                </Link>
               </div>
             </div>
           ))}
         </div>
       </section>
 
-      {/* --- WHY CHOOSE US --- */}
-      <section className="py-24 bg-white border-t border-gray-100">
+      {/* --- HOW ONLINE BOOKING WORKS --- */}
+      <section id="how-it-works" className="py-20 bg-slate-50 border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-extrabold text-slate-900 mb-4">Why choose Laxmi Toyota</h2>
+            <h2 className="text-3xl font-extrabold text-slate-900 mb-4">How Online Booking Works</h2>
+            <p className="text-slate-500 text-sm">A seamless, transparent process designed to give you priority allocation.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {FEATURES.map((feature, idx) => (
-              <div key={idx} className="bg-[#F9FAFB] p-8 rounded-2xl flex items-start space-x-6 border border-slate-50 hover:border-slate-200 transition-colors">
-                <div className="flex-shrink-0 w-14 h-14 bg-red-50 rounded-xl flex items-center justify-center">
-                  {feature.icon}
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {[
+              { icon: <Car className="w-6 h-6 text-[#EB0A1E]"/>, title: 'Choose Toyota', desc: 'Select your preferred model, variant, and color.' },
+              { icon: <CreditCard className="w-6 h-6 text-[#EB0A1E]"/>, title: 'Secure Payment', desc: 'Pay the official booking amount securely via Razorpay.' },
+              { icon: <CheckCircle2 className="w-6 h-6 text-[#EB0A1E]"/>, title: 'Instant Confirmation', desc: 'Receive your official booking ID and receipt immediately.' },
+              { icon: <Phone className="w-6 h-6 text-[#EB0A1E]"/>, title: 'Advisor Contact', desc: 'Your dedicated RM calls you to arrange finance and delivery.' }
+            ].map((step, i) => (
+              <div key={i} className="bg-white p-6 rounded-xl border border-gray-100 text-center relative">
+                <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                  {step.icon}
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-2">{feature.title}</h3>
-                  <p className="text-sm text-slate-600 leading-relaxed">{feature.desc}</p>
-                </div>
+                <h3 className="font-bold text-slate-900 mb-2">{step.title}</h3>
+                <p className="text-xs text-slate-500 leading-relaxed">{step.desc}</p>
+                {i !== 3 && <div className="hidden md:block absolute top-1/2 -right-4 w-8 border-t-2 border-dashed border-gray-200"></div>}
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* --- RED BANNER CTA --- */}
-      <section className="bg-[#EB0A1E] py-20 px-4 text-center">
-        <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-6">Experience Toyota firsthand</h2>
-          <p className="text-red-100 text-lg mb-10">Book a test drive today and feel the difference of driving a Toyota.</p>
-          <a href="#lineup" className="bg-white text-[#EB0A1E] px-8 py-4 rounded-md font-bold shadow-lg hover:bg-slate-50 transition-colors inline-flex items-center">
-            Schedule Test Drive <PlayCircle className="w-5 h-5 ml-2" />
-          </a>
+      {/* --- CURRENT OFFERS --- */}
+      <section id="offers" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="text-3xl font-extrabold text-slate-900 mb-8 text-center">Exclusive Online Offers</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {OFFERS.map((offer, i) => (
+            <div key={i} className="border border-[#EB0A1E]/20 bg-red-50/30 p-6 rounded-xl relative overflow-hidden">
+              <div className="absolute top-0 right-0 bg-[#EB0A1E] text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-bl-lg">
+                {offer.valid}
+              </div>
+              <h3 className="text-lg font-bold text-[#EB0A1E] mb-2">{offer.title}</h3>
+              <p className="text-sm text-slate-700">{offer.desc}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* --- TESTIMONIALS --- */}
+      <section className="py-20 bg-slate-900 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-extrabold mb-12 text-center">What our customers say</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {TESTIMONIALS.map((t, i) => (
+              <div key={i} className="bg-slate-800 p-6 rounded-xl border border-slate-700">
+                <div className="flex text-[#F59E0B] mb-4">
+                  {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-4 h-4 fill-current" />)}
+                </div>
+                <p className="text-sm text-slate-300 italic mb-6">"{t.text}"</p>
+                <div>
+                  <p className="font-bold text-sm">{t.name}</p>
+                  <p className="text-xs text-slate-400">{t.location}</p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* --- BRANCHES --- */}
-      <section className="py-24 bg-[#F9FAFB]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-extrabold text-slate-900 mb-4">Visit our branches</h2>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {BRANCHES.map((branch, idx) => (
-              <div key={idx} className="bg-white p-8 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-shadow flex flex-col h-full justify-between">
-                <div>
-                  <h3 className="text-xl font-bold text-slate-900 mb-4">{branch.name}</h3>
-                  <div className="space-y-4 mb-8 flex-grow">
-                    <div className="flex items-start text-sm text-slate-600">
-                      <MapPin className="w-4 h-4 mr-3 mt-1 flex-shrink-0 text-[#EB0A1E]" />
-                      <span>{branch.address}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-slate-600">
-                      <Phone className="w-4 h-4 mr-3 flex-shrink-0 text-[#EB0A1E]" />
-                      <span>{branch.phone}</span>
-                    </div>
-                    <div className="flex items-center text-sm text-slate-600">
-                      <Mail className="w-4 h-4 mr-3 flex-shrink-0 text-[#EB0A1E]" />
-                      <span>{branch.email}</span>
-                    </div>
-                  </div>
-                </div>
-                <a href="#lineup" className="w-full bg-slate-50 text-slate-900 border border-slate-200 py-3 rounded-md text-sm font-bold hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors flex items-center justify-center">
-                  Visit Branch
-                </a>
+      <section id="branches" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="text-3xl font-extrabold text-slate-900 mb-2 text-center">Serving South Odisha</h2>
+        <p className="text-center text-slate-500 text-sm mb-12">Select your nearest branch during checkout.</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {BRANCHES.map((b, i) => (
+            <div key={i} className="border border-gray-200 p-5 rounded-xl hover:border-[#EB0A1E] transition-colors cursor-default">
+              <h3 className="font-bold text-slate-900 mb-2">{b.name}</h3>
+              <div className="flex items-start text-xs text-slate-500 mb-2">
+                <MapPin className="w-3 h-3 mr-2 mt-0.5 text-[#EB0A1E]" /> {b.address}
               </div>
-            ))}
+              <div className="flex items-center text-xs text-slate-500">
+                <Phone className="w-3 h-3 mr-2 text-[#EB0A1E]" /> {b.phone}
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* --- FAQ & REFUND POLICY --- */}
+      <section id="faq" className="py-20 bg-slate-50 border-t border-gray-100">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-12">
+            <div>
+              <h2 className="text-2xl font-extrabold text-slate-900 mb-6">Frequently Asked Questions</h2>
+              <div className="space-y-4">
+                {FAQS.map((faq, i) => (
+                  <div key={i} className="bg-white border border-gray-200 rounded-lg overflow-hidden">
+                    <button 
+                      onClick={() => setOpenFaq(openFaq === i ? -1 : i)}
+                      className="w-full text-left px-5 py-4 font-bold text-sm text-slate-900 flex justify-between items-center"
+                    >
+                      {faq.q}
+                      <ChevronDown className={`w-4 h-4 transition-transform ${openFaq === i ? 'rotate-180' : ''}`} />
+                    </button>
+                    {openFaq === i && (
+                      <div className="px-5 pb-4 text-xs text-slate-600 leading-relaxed border-t border-gray-50 pt-3">
+                        {faq.a}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+            
+            <div>
+              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm sticky top-28">
+                <ShieldCheck className="w-8 h-8 text-[#EB0A1E] mb-4" />
+                <h3 className="text-lg font-bold text-slate-900 mb-3">100% Refund Policy</h3>
+                <ul className="text-xs text-slate-600 space-y-3 mb-6">
+                  <li className="flex items-start"><CheckCircle2 className="w-4 h-4 mr-2 text-green-500 shrink-0"/> Booking amount is fully refundable.</li>
+                  <li className="flex items-start"><CheckCircle2 className="w-4 h-4 mr-2 text-green-500 shrink-0"/> Refunds processed to original payment method within 5-7 working days.</li>
+                  <li className="flex items-start"><CheckCircle2 className="w-4 h-4 mr-2 text-green-500 shrink-0"/> Change variant/color anytime before invoicing.</li>
+                </ul>
+                <button className="text-[10px] uppercase tracking-widest font-bold text-[#EB0A1E] hover:underline">
+                  Read Full Policy
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* --- PRE-FOOTER CTA --- */}
-      <section className="bg-slate-900 py-20 px-4 text-center border-b border-slate-800">
+      {/* --- FINAL CTA --- */}
+      <section className="py-24 px-4 text-center">
         <div className="max-w-3xl mx-auto">
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-6">Ready to bring home your Toyota?</h2>
-          <a href="#lineup" className="inline-block bg-[#EB0A1E] text-white px-10 py-4 rounded-md font-bold shadow-lg hover:bg-red-700 transition-colors mt-6">
-            Book Online Now
+          <h2 className="text-3xl md:text-4xl font-extrabold text-slate-900 mb-4">Ready to secure your Toyota?</h2>
+          <p className="text-slate-500 text-sm mb-8">Join thousands of happy customers in Odisha. Book online for priority allocation.</p>
+          <a href="#vehicles" className="inline-block bg-[#EB0A1E] text-white px-10 py-4 rounded text-sm font-bold shadow-lg hover:bg-red-700 transition-colors">
+            Start Your Booking
           </a>
         </div>
       </section>
+
+      {/* --- STICKY MOBILE CTA --- */}
+      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-3 flex gap-3 lg:hidden z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+        <a href="#vehicles" className="flex-grow flex-1 bg-[#EB0A1E] text-white rounded py-3 text-xs font-bold uppercase tracking-widest justify-center items-center flex">
+          Book Now
+        </a>
+        <a href="https://wa.me/919876543212" target="_blank" rel="noopener noreferrer" className="w-12 bg-green-500 text-white rounded flex justify-center items-center shrink-0">
+          <MessageCircle className="w-5 h-5" />
+        </a>
+      </div>
+
     </div>
   );
 }
