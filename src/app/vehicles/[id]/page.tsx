@@ -19,8 +19,116 @@ const vehicleDatabase: Record<string, {
   variants: { id: string; name: string; price: string }[];
   colors: { id: string; name: string; hex: string }[];
 }> = {
+  'toyota-glanza': {
+    checkoutId: 'toyota-glanza',
+    name: 'Toyota Glanza',
+    desc: 'Hatchback Hatchback with Advanced Features',
+    basePrice: '₹6.81 Lakh',
+    bookingAmount: '₹11,000',
+    images: ['https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'In Stock',
+    variants: [
+      { id: 's', name: 'S MT', price: '₹6.81 Lakh' },
+      { id: 'g', name: 'G MT', price: '₹7.50 Lakh' },
+      { id: 'v', name: 'V AMT', price: '₹8.99 Lakh' }
+    ],
+    colors: [
+      { id: 'cafe-white', name: 'Cafe White', hex: '#F5F5F5' },
+      { id: 'sportin-red', name: 'Sportin Red', hex: '#DC2626' }
+    ]
+  },
+  'glanza': {
+    checkoutId: 'toyota-glanza',
+    name: 'Toyota Glanza',
+    desc: 'Hatchback Hatchback with Advanced Features',
+    basePrice: '₹6.81 Lakh',
+    bookingAmount: '₹11,000',
+    images: ['https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'In Stock',
+    variants: [
+      { id: 's', name: 'S MT', price: '₹6.81 Lakh' },
+      { id: 'g', name: 'G MT', price: '₹7.50 Lakh' },
+      { id: 'v', name: 'V AMT', price: '₹8.99 Lakh' }
+    ],
+    colors: [
+      { id: 'cafe-white', name: 'Cafe White', hex: '#F5F5F5' },
+      { id: 'sportin-red', name: 'Sportin Red', hex: '#DC2626' }
+    ]
+  },
+  'toyota-urban-cruiser-taisor': {
+    checkoutId: 'toyota-urban-cruiser-taisor',
+    name: 'Toyota Taisor',
+    desc: 'Compact SUV Built for Urban Adventures',
+    basePrice: '₹7.74 Lakh',
+    bookingAmount: '₹11,000',
+    images: ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'In Stock',
+    variants: [
+      { id: 'e', name: 'E MT', price: '₹7.74 Lakh' },
+      { id: 's', name: 'S MT', price: '₹8.60 Lakh' },
+      { id: 'v', name: 'V Turbo', price: '₹11.90 Lakh' }
+    ],
+    colors: [
+      { id: 'orange', name: 'Lucent Orange', hex: '#EA580C' },
+      { id: 'white', name: 'Pearl White', hex: '#FFFFFF' }
+    ]
+  },
+  'taisor': {
+    checkoutId: 'toyota-urban-cruiser-taisor',
+    name: 'Toyota Taisor',
+    desc: 'Compact SUV Built for Urban Adventures',
+    basePrice: '₹7.74 Lakh',
+    bookingAmount: '₹11,000',
+    images: ['https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'In Stock',
+    variants: [
+      { id: 'e', name: 'E MT', price: '₹7.74 Lakh' },
+      { id: 's', name: 'S MT', price: '₹8.60 Lakh' },
+      { id: 'v', name: 'V Turbo', price: '₹11.90 Lakh' }
+    ],
+    colors: [
+      { id: 'orange', name: 'Lucent Orange', hex: '#EA580C' },
+      { id: 'white', name: 'Pearl White', hex: '#FFFFFF' }
+    ]
+  },
+  'toyota-rumion': {
+    checkoutId: 'toyota-rumion',
+    name: 'Toyota Rumion',
+    desc: 'Spacious MPV for the Whole Family',
+    basePrice: '₹10.44 Lakh',
+    bookingAmount: '₹21,000',
+    images: ['https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
+    variants: [
+      { id: 's', name: 'S MT (Petrol)', price: '₹10.44 Lakh' },
+      { id: 'g', name: 'G MT (Petrol)', price: '₹11.60 Lakh' },
+      { id: 'v', name: 'V AT', price: '₹13.73 Lakh' }
+    ],
+    colors: [
+      { id: 'silver', name: 'Metallic Silver', hex: '#94A3B8' },
+      { id: 'blue', name: 'Deep Blue', hex: '#1E3A8A' }
+    ]
+  },
+  'rumion': {
+    checkoutId: 'toyota-rumion',
+    name: 'Toyota Rumion',
+    desc: 'Spacious MPV for the Whole Family',
+    basePrice: '₹10.44 Lakh',
+    bookingAmount: '₹21,000',
+    images: ['https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
+    variants: [
+      { id: 's', name: 'S MT (Petrol)', price: '₹10.44 Lakh' },
+      { id: 'g', name: 'G MT (Petrol)', price: '₹11.60 Lakh' },
+      { id: 'v', name: 'V AT', price: '₹13.73 Lakh' }
+    ],
+    colors: [
+      { id: 'silver', name: 'Metallic Silver', hex: '#94A3B8' },
+      { id: 'blue', name: 'Deep Blue', hex: '#1E3A8A' }
+    ]
+  },
   'toyota-urban-cruiser-hyryder': {
-    checkoutId: 'hyryder',
+    checkoutId: 'toyota-urban-cruiser-hyryder',
     name: 'Urban Cruiser Hyryder',
     desc: 'Self-Charging Hybrid Electric SUV',
     basePrice: '₹11.14 Lakh',
@@ -41,7 +149,7 @@ const vehicleDatabase: Record<string, {
     ]
   },
   'hyryder': {
-    checkoutId: 'hyryder',
+    checkoutId: 'toyota-urban-cruiser-hyryder',
     name: 'Urban Cruiser Hyryder',
     desc: 'Self-Charging Hybrid Electric SUV',
     basePrice: '₹11.14 Lakh',
@@ -61,8 +169,80 @@ const vehicleDatabase: Record<string, {
       { id: 'midnight-black', name: 'Midnight Black', hex: '#000000' }
     ]
   },
+  'toyota-urban-cruiser-ebella': {
+    checkoutId: 'toyota-urban-cruiser-ebella',
+    name: 'Urban Cruiser Ebella',
+    desc: '100% Electric Urban Compact SUV',
+    basePrice: '₹12.00 Lakh',
+    bookingAmount: '₹25,000',
+    images: ['https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'In Stock',
+    variants: [
+      { id: 'std-range', name: 'Standard Range EV', price: '₹12.00 Lakh' },
+      { id: 'ext-range', name: 'Extended Range EV', price: '₹14.50 Lakh' }
+    ],
+    colors: [
+      { id: 'electric-blue', name: 'Electric Blue', hex: '#2563EB' },
+      { id: 'pearl-white', name: 'Pearl White', hex: '#FFFFFF' }
+    ]
+  },
+  'ebella': {
+    checkoutId: 'toyota-urban-cruiser-ebella',
+    name: 'Urban Cruiser Ebella',
+    desc: '100% Electric Urban Compact SUV',
+    basePrice: '₹12.00 Lakh',
+    bookingAmount: '₹25,000',
+    images: ['https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'In Stock',
+    variants: [
+      { id: 'std-range', name: 'Standard Range EV', price: '₹12.00 Lakh' },
+      { id: 'ext-range', name: 'Extended Range EV', price: '₹14.50 Lakh' }
+    ],
+    colors: [
+      { id: 'electric-blue', name: 'Electric Blue', hex: '#2563EB' },
+      { id: 'pearl-white', name: 'Pearl White', hex: '#FFFFFF' }
+    ]
+  },
+  'toyota-innova-crysta': {
+    checkoutId: 'toyota-innova-crysta',
+    name: 'Toyota Innova Crysta',
+    desc: 'The Legendary Tough & Comfortable MPV',
+    basePrice: '₹19.99 Lakh',
+    bookingAmount: '₹50,000',
+    images: ['https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
+    variants: [
+      { id: 'gx-diesel', name: 'GX Diesel 7STR', price: '₹19.99 Lakh' },
+      { id: 'vx-diesel', name: 'VX Diesel 7STR', price: '₹24.80 Lakh' },
+      { id: 'zx-diesel', name: 'ZX Diesel 7STR', price: '₹26.30 Lakh' }
+    ],
+    colors: [
+      { id: 'super-white', name: 'Super White', hex: '#FFFFFF' },
+      { id: 'silver', name: 'Silver Metallic', hex: '#E2E8F0' },
+      { id: 'black', name: 'Attitude Black', hex: '#111111' }
+    ]
+  },
+  'crysta': {
+    checkoutId: 'toyota-innova-crysta',
+    name: 'Toyota Innova Crysta',
+    desc: 'The Legendary Tough & Comfortable MPV',
+    basePrice: '₹19.99 Lakh',
+    bookingAmount: '₹50,000',
+    images: ['https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
+    variants: [
+      { id: 'gx-diesel', name: 'GX Diesel 7STR', price: '₹19.99 Lakh' },
+      { id: 'vx-diesel', name: 'VX Diesel 7STR', price: '₹24.80 Lakh' },
+      { id: 'zx-diesel', name: 'ZX Diesel 7STR', price: '₹26.30 Lakh' }
+    ],
+    colors: [
+      { id: 'super-white', name: 'Super White', hex: '#FFFFFF' },
+      { id: 'silver', name: 'Silver Metallic', hex: '#E2E8F0' },
+      { id: 'black', name: 'Attitude Black', hex: '#111111' }
+    ]
+  },
   'toyota-innova-hycross': {
-    checkoutId: 'hycross',
+    checkoutId: 'toyota-innova-hycross',
     name: 'Innova Hycross',
     desc: 'Advanced MPV with Hybrid Tech',
     basePrice: '₹18.86 Lakh',
@@ -81,7 +261,7 @@ const vehicleDatabase: Record<string, {
     ]
   },
   'hycross': {
-    checkoutId: 'hycross',
+    checkoutId: 'toyota-innova-hycross',
     name: 'Innova Hycross',
     desc: 'Advanced MPV with Hybrid Tech',
     basePrice: '₹18.86 Lakh',
@@ -97,6 +277,202 @@ const vehicleDatabase: Record<string, {
       { id: 'platinum-white', name: 'Platinum White Pearl', hex: '#FAFAFA' },
       { id: 'attitude-black', name: 'Attitude Black Mica', hex: '#111111' },
       { id: 'ageha-glass', name: 'Blackish Ageha Glass Flake', hex: '#1E3A8A' }
+    ]
+  },
+  'toyota-fortuner': {
+    checkoutId: 'toyota-fortuner',
+    name: 'Toyota Fortuner',
+    desc: 'The Unrivaled King of the SUV Segment',
+    basePrice: '₹33.43 Lakh',
+    bookingAmount: '₹1,00,000',
+    images: ['https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
+    variants: [
+      { id: 'std-2wd', name: 'Standard 2WD MT (Diesel)', price: '₹35.99 Lakh' },
+      { id: 'std-4wd', name: 'Standard 4WD AT (Diesel)', price: '₹42.60 Lakh' }
+    ],
+    colors: [
+      { id: 'white', name: 'Super White', hex: '#FFFFFF' },
+      { id: 'black', name: 'Attitude Black', hex: '#111111' }
+    ]
+  },
+  'fortuner': {
+    checkoutId: 'toyota-fortuner',
+    name: 'Toyota Fortuner',
+    desc: 'The Unrivaled King of the SUV Segment',
+    basePrice: '₹33.43 Lakh',
+    bookingAmount: '₹1,00,000',
+    images: ['https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
+    variants: [
+      { id: 'std-2wd', name: 'Standard 2WD MT (Diesel)', price: '₹35.99 Lakh' },
+      { id: 'std-4wd', name: 'Standard 4WD AT (Diesel)', price: '₹42.60 Lakh' }
+    ],
+    colors: [
+      { id: 'white', name: 'Super White', hex: '#FFFFFF' },
+      { id: 'black', name: 'Attitude Black', hex: '#111111' }
+    ]
+  },
+  'toyota-fortuner-legender': {
+    checkoutId: 'toyota-fortuner-legender',
+    name: 'Toyota Fortuner Legender',
+    desc: 'Highly Premium Flagship Off-Road SUV',
+    basePrice: '₹43.66 Lakh',
+    bookingAmount: '₹1,00,000',
+    images: ['https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
+    variants: [
+      { id: 'leg-2wd', name: 'Legender 4x2 AT', price: '₹43.66 Lakh' },
+      { id: 'leg-4wd', name: 'Legender 4x4 AT', price: '₹47.64 Lakh' }
+    ],
+    colors: [
+      { id: 'mono-white', name: 'Platinum White Dual Tone', hex: '#EAEAEA' }
+    ]
+  },
+  'legender': {
+    checkoutId: 'toyota-fortuner-legender',
+    name: 'Toyota Fortuner Legender',
+    desc: 'Highly Premium Flagship Off-Road SUV',
+    basePrice: '₹43.66 Lakh',
+    bookingAmount: '₹1,00,000',
+    images: ['https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
+    variants: [
+      { id: 'leg-2wd', name: 'Legender 4x2 AT', price: '₹43.66 Lakh' },
+      { id: 'leg-4wd', name: 'Legender 4x4 AT', price: '₹47.64 Lakh' }
+    ],
+    colors: [
+      { id: 'mono-white', name: 'Platinum White Dual Tone', hex: '#EAEAEA' }
+    ]
+  },
+  'toyota-hilux': {
+    checkoutId: 'toyota-hilux',
+    name: 'Toyota Hilux',
+    desc: 'The Extreme Off-Road Pickup Utility Vehicle',
+    basePrice: '₹30.40 Lakh',
+    bookingAmount: '₹1,00,000',
+    images: ['https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
+    variants: [
+      { id: 'std-mt', name: 'Standard MT 4x4', price: '₹30.40 Lakh' },
+      { id: 'high-at', name: 'High AT 4x4', price: '₹37.90 Lakh' }
+    ],
+    colors: [
+      { id: 'grey', name: 'Grey Metallic', hex: '#64748B' },
+      { id: 'white', name: 'Super White', hex: '#FFFFFF' }
+    ]
+  },
+  'hilux': {
+    checkoutId: 'toyota-hilux',
+    name: 'Toyota Hilux',
+    desc: 'The Extreme Off-Road Pickup Utility Vehicle',
+    basePrice: '₹30.40 Lakh',
+    bookingAmount: '₹1,00,000',
+    images: ['https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
+    variants: [
+      { id: 'std-mt', name: 'Standard MT 4x4', price: '₹30.40 Lakh' },
+      { id: 'high-at', name: 'High AT 4x4', price: '₹37.90 Lakh' }
+    ],
+    colors: [
+      { id: 'grey', name: 'Grey Metallic', hex: '#64748B' },
+      { id: 'white', name: 'Super White', hex: '#FFFFFF' }
+    ]
+  },
+  'toyota-camry': {
+    checkoutId: 'toyota-camry',
+    name: 'Toyota Camry',
+    desc: 'Luxurious self-charging hybrid sedan',
+    basePrice: '₹46.17 Lakh',
+    bookingAmount: '₹1,00,000',
+    images: ['https://images.unsplash.com/photo-1503376710915-18861d9a2638?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'In Stock',
+    variants: [
+      { id: 'hybrid-cvt', name: '2.5L Hybrid e-CVT', price: '₹46.17 Lakh' }
+    ],
+    colors: [
+      { id: 'attitude-black', name: 'Attitude Black', hex: '#111111' },
+      { id: 'white', name: 'Platinum White Pearl', hex: '#FAFAFA' }
+    ]
+  },
+  'camry': {
+    checkoutId: 'toyota-camry',
+    name: 'Toyota Camry',
+    desc: 'Luxurious self-charging hybrid sedan',
+    basePrice: '₹46.17 Lakh',
+    bookingAmount: '₹1,00,000',
+    images: ['https://images.unsplash.com/photo-1503376710915-18861d9a2638?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'In Stock',
+    variants: [
+      { id: 'hybrid-cvt', name: '2.5L Hybrid e-CVT', price: '₹46.17 Lakh' }
+    ],
+    colors: [
+      { id: 'attitude-black', name: 'Attitude Black', hex: '#111111' },
+      { id: 'white', name: 'Platinum White Pearl', hex: '#FAFAFA' }
+    ]
+  },
+  'toyota-vellfire': {
+    checkoutId: 'toyota-vellfire',
+    name: 'Toyota Vellfire',
+    desc: 'Ultra-Luxury Executive Hybrid Lounge MPV',
+    basePrice: '₹1.20 Crore',
+    bookingAmount: '₹2,00,050',
+    images: ['https://images.unsplash.com/photo-1517524008436-a3851f153a77?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
+    variants: [
+      { id: 'vip-lounge', name: 'VIP Executive Lounge', price: '₹1.20 Crore' }
+    ],
+    colors: [
+      { id: 'black', name: 'Burning Black', hex: '#000000' },
+      { id: 'white', name: 'White Pearl', hex: '#FFFFFF' }
+    ]
+  },
+  'vellfire': {
+    checkoutId: 'toyota-vellfire',
+    name: 'Toyota Vellfire',
+    desc: 'Ultra-Luxury Executive Hybrid Lounge MPV',
+    basePrice: '₹1.20 Crore',
+    bookingAmount: '₹2,00,050',
+    images: ['https://images.unsplash.com/photo-1517524008436-a3851f153a77?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
+    variants: [
+      { id: 'vip-lounge', name: 'VIP Executive Lounge', price: '₹1.20 Crore' }
+    ],
+    colors: [
+      { id: 'black', name: 'Burning Black', hex: '#000000' },
+      { id: 'white', name: 'White Pearl', hex: '#FFFFFF' }
+    ]
+  },
+  'toyota-landcruiser300': {
+    checkoutId: 'toyota-landcruiser300',
+    name: 'Land Cruiser 300',
+    desc: 'The Ultimate Master of All Terrains',
+    basePrice: '₹2.10 Crore',
+    bookingAmount: '₹20,00,000',
+    images: ['https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
+    variants: [
+      { id: 'zx-diesel', name: 'ZX 3.3L V6 Diesel', price: '₹2.10 Crore' }
+    ],
+    colors: [
+      { id: 'precious-white', name: 'Precious White Pearl', hex: '#FAFAFA' },
+      { id: 'dark-red', name: 'Dark Red Mica', hex: '#7F1D1D' }
+    ]
+  },
+  'landcruiser300': {
+    checkoutId: 'toyota-landcruiser300',
+    name: 'Land Cruiser 300',
+    desc: 'The Ultimate Master of All Terrains',
+    basePrice: '₹2.10 Crore',
+    bookingAmount: '₹20,00,000',
+    images: ['https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
+    variants: [
+      { id: 'zx-diesel', name: 'ZX 3.3L V6 Diesel', price: '₹2.10 Crore' }
+    ],
+    colors: [
+      { id: 'precious-white', name: 'Precious White Pearl', hex: '#FAFAFA' },
+      { id: 'dark-red', name: 'Dark Red Mica', hex: '#7F1D1D' }
     ]
   }
 };
