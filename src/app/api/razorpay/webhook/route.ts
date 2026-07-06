@@ -11,12 +11,21 @@ const getDb = () => {
         try {
             // FORCE the newlines back if they were stripped by Hostinger
             const rawKey = process.env.FIREBASE_PRIVATE_KEY || "";
-            let formattedKey = rawKey.includes("\\n") 
-                ? rawKey.replace(/\\n/g, '\n') 
-                : rawKey;
-            if (formattedKey.startsWith('"') && formattedKey.endsWith('"')) {
-                formattedKey = formattedKey.slice(1, -1);
+            let formattedKey = rawKey.trim();
+            if (formattedKey.startsWith('"') || formattedKey.startsWith("'")) {
+                formattedKey = formattedKey.slice(1);
             }
+            while (
+                formattedKey.endsWith('"') ||
+                formattedKey.endsWith("'") ||
+                formattedKey.endsWith(",") ||
+                formattedKey.endsWith("\r") ||
+                formattedKey.endsWith("\n") ||
+                formattedKey.endsWith(" ")
+            ) {
+                formattedKey = formattedKey.slice(0, -1);
+            }
+            formattedKey = formattedKey.replace(/\\n/g, '\n');
 
             admin.initializeApp({
                 credential: admin.cert({
