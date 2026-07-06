@@ -3,9 +3,15 @@
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
   const { user, loading, signingIn, loginWithGoogle, logout } = useAuth();
+  const pathname = usePathname();
+
+  if (pathname === "/") {
+    return null;
+  }
 
   return (
     <nav className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur-md sticky top-0 z-50 transition-all duration-300">
