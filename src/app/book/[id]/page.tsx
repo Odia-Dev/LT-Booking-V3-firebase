@@ -290,10 +290,10 @@ export default function BookPage() {
           </p>
           <div className="pt-4 space-y-3">
             <Link
-              href="/admin/dashboard"
+              href="/dashboard"
               className="block w-full text-center text-xs font-bold uppercase tracking-wider bg-white text-zinc-950 py-3 rounded-full hover:bg-zinc-200 transition-all"
             >
-              Go to CRM Dashboard
+              Go to My Bookings
             </Link>
             <Link
               href="/"

@@ -5,6 +5,7 @@ import React, { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { 
   TrendingUp, 
   Clock, 
@@ -35,10 +36,19 @@ interface Booking {
   branch: string;
   status: string;
   createdAt: string;
+  razorpay_order_id?: string;
 }
 
 export default function DashboardPage() {
   const { user, loading, loginWithGoogle, isConfigured } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (user && user.email === "admin@laxmitoyota.co.in") {
+      router.push("/admin/dashboard");
+    }
+  }, [user, router]);
+
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [fetching, setFetching] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,13 +117,17 @@ export default function DashboardPage() {
   };
 
   const loadData = async () => {
+    if (!user) return;
     setFetching(true);
     try {
       if (isConfigured) {
         const querySnapshot = await getDocs(collection(db, "bookings"));
         const list: Booking[] = [];
         querySnapshot.forEach((doc) => {
-          list.push({ id: doc.id, ...doc.data() } as Booking);
+          const data = doc.data() as Booking;
+          if (data.customerEmail === user.email) {
+            list.push({ id: doc.id, ...data });
+          }
         });
         // Sort by date descending (newest first)
         list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
@@ -121,8 +135,9 @@ export default function DashboardPage() {
       } else {
         const existingRaw = localStorage.getItem("laxmi_toyota_bookings");
         const list: Booking[] = existingRaw ? JSON.parse(existingRaw) : [];
-        list.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setBookings(list);
+        const filteredList = list.filter((bk) => bk.customerEmail === user.email);
+        filteredList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        setBookings(filteredList);
       }
     } catch (error) {
       console.error("Error loading bookings:", error);
@@ -210,8 +225,8 @@ export default function DashboardPage() {
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-zinc-800/80 pb-6 gap-4">
           <div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">Dealership CRM</h1>
-            <p className="text-zinc-500 text-xs mt-1">Sleek leader allocation tracking. Firestore synchronization verified.</p>
+            <h1 className="text-3xl font-extrabold text-white tracking-tight">Your Reservation Desk</h1>
+            <p className="text-zinc-500 text-xs mt-1">Logged in as: <span className="text-zinc-300 font-semibold">{user?.email}</span></p>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -228,43 +243,6 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
-
-        {/* Task 4: KPI Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {/* Card 1: Total Bookings */}
-          <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-6 flex items-center justify-between backdrop-blur-sm">
-            <div className="space-y-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Total Bookings</span>
-              <p className="text-3xl font-extrabold text-white">{totalBookings}</p>
-            </div>
-            <div className="h-12 w-12 bg-red-500/10 rounded-full flex items-center justify-center text-red-500 border border-red-500/10">
-              <TrendingUp className="h-6 w-6" />
-            </div>
-          </div>
-
-          {/* Card 2: Recent Leads (Last 7 Days) */}
-          <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-6 flex items-center justify-between backdrop-blur-sm">
-            <div className="space-y-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Recent Leads (7 Days)</span>
-              <p className="text-3xl font-extrabold text-white">{recentLeads}</p>
-            </div>
-            <div className="h-12 w-12 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-400 border border-emerald-500/10">
-              <Clock className="h-6 w-6" />
-            </div>
-          </div>
-
-          {/* Card 3: Top Branch */}
-          <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/30 p-6 flex items-center justify-between backdrop-blur-sm">
-            <div className="space-y-1">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Top Branch</span>
-              <p className="text-3xl font-extrabold text-white">{topBranch}</p>
-            </div>
-            <div className="h-12 w-12 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-400 border border-blue-500/10">
-              <MapPin className="h-6 w-6" />
-            </div>
-          </div>
-        </div>
-
         {/* Error/Success Feedback Banners */}
         {(errorMessage || successMessage) && (
           <div className="space-y-4">
@@ -295,136 +273,92 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Task 3: Modern Table Section */}
-        <div className="rounded-xl border border-zinc-800/80 bg-zinc-900/10 backdrop-blur-sm overflow-hidden">
-          
-          {/* Search Box */}
-          <div className="p-6 border-b border-zinc-800/80 flex items-center bg-zinc-900/20">
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by customer, phone, vehicle, or branch..."
-                className="w-full bg-zinc-950 border border-zinc-800 rounded-lg pl-10 pr-4 py-2 text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
-              />
+        {/* Customer Portal Listings */}
+        {filteredBookings.length === 0 ? (
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/10 p-16 text-center space-y-6 backdrop-blur-sm">
+            <div className="h-16 w-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto text-red-500 border border-red-500/20">
+              <Car className="h-8 w-8" />
             </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-white">No Bookings Found</h3>
+              <p className="text-zinc-500 text-xs max-w-sm mx-auto">
+                You haven't reserved any Toyota model yet. Visit our showroom to explore features and priority allocations.
+              </p>
+            </div>
+            <Link
+              href="/"
+              className="inline-block bg-[#EB0A1E] text-white px-8 py-3 rounded-full text-xs font-bold uppercase tracking-widest hover:bg-red-700 transition-colors"
+            >
+              Explore Showroom
+            </Link>
           </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {filteredBookings.map((bk) => (
+              <div key={bk.id} className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6 space-y-6 backdrop-blur-sm flex flex-col justify-between">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                      <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{bk.vehicleType || "VEHICLE"}</span>
+                      <h3 className="text-xl font-extrabold text-white">{bk.vehicleName}</h3>
+                    </div>
+                    <span className={`inline-flex items-center text-[10px] font-bold uppercase px-3 py-1 rounded-full border ${
+                      bk.status.toLowerCase() === "paid"
+                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                        : "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                    }`}>
+                      {bk.status}
+                    </span>
+                  </div>
 
-          {/* Bookings Table */}
-          <div className="overflow-x-auto">
-            {filteredBookings.length === 0 ? (
-              <div className="text-center py-16 text-zinc-500 text-sm">
-                No leads recorded matching your search query.
+                  <div className="grid grid-cols-2 gap-4 text-xs border-y border-zinc-850 py-4">
+                    <div className="space-y-0.5">
+                      <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Booking Date</span>
+                      <p className="text-white font-medium">
+                        {new Date(bk.createdAt).toLocaleDateString("en-IN", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        })} at {new Date(bk.createdAt).toLocaleTimeString("en-IN", {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          hour12: true,
+                        })}
+                      </p>
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Allotted Branch</span>
+                      <p className="text-white font-medium">{bk.branch}</p>
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Reservation Deposit</span>
+                      <p className="text-emerald-400 font-bold text-sm">{bk.bookingAmount}</p>
+                    </div>
+                    <div className="space-y-0.5">
+                      <span className="text-zinc-500 uppercase tracking-wider text-[10px]">Razorpay Order ID</span>
+                      <p className="text-zinc-300 font-mono text-[10px] break-all">{bk.razorpay_order_id || "N/A"}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    onClick={() => alert(`Downloading booking receipt for your ${bk.vehicleName} booking reference ID: ${bk.id}...`)}
+                    className="flex-1 py-2.5 bg-white hover:bg-zinc-200 text-zinc-950 rounded-lg text-xs font-bold uppercase tracking-wider text-center transition-all"
+                  >
+                    Download Receipt
+                  </button>
+                  <Link
+                    href={`/book/${bk.vehicleId}`}
+                    className="flex-1 py-2.5 bg-zinc-850 hover:bg-zinc-800 text-white rounded-lg text-xs font-bold uppercase tracking-wider text-center border border-zinc-800 transition-all"
+                  >
+                    Book Another
+                  </Link>
+                </div>
               </div>
-            ) : (
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="border-b border-zinc-800/85 bg-zinc-900/30 text-xs font-bold uppercase tracking-wider text-zinc-500">
-                    <th className="py-4 px-6">Date</th>
-                    <th className="py-4 px-6">Customer Name</th>
-                    <th className="py-4 px-6">Mobile</th>
-                    <th className="py-4 px-6">Vehicle</th>
-                    <th className="py-4 px-6">Branch</th>
-                    <th className="py-4 px-6 text-center">Status</th>
-                    <th className="py-4 px-6 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="text-sm text-zinc-300 divide-y divide-zinc-850">
-                  {filteredBookings.map((bk) => (
-                    <tr key={bk.id} className="hover:bg-zinc-900/20 transition-colors">
-                      <td className="py-4 px-6 font-mono text-xs text-zinc-400">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5 text-white">
-                            <Calendar className="h-3.5 w-3.5 text-zinc-600" />
-                            {new Date(bk.createdAt).toLocaleDateString("en-IN", {
-                              day: "2-digit",
-                              month: "short",
-                              year: "numeric",
-                            })}
-                          </div>
-                          <div className="text-[10px] text-zinc-500 pl-5">
-                            {new Date(bk.createdAt).toLocaleTimeString("en-IN", {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              hour12: true,
-                            })}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="font-semibold text-white flex items-center gap-1.5">
-                          <UserIcon className="h-3.5 w-3.5 text-zinc-500" />
-                          {bk.customerName}
-                        </div>
-                        <span className="text-[10px] text-zinc-500 block mt-0.5">{bk.customerEmail}</span>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-1.5 text-zinc-300 font-mono text-xs">
-                          <Phone className="h-3.5 w-3.5 text-zinc-600" />
-                          {bk.customerPhone}
-                        </div>
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center gap-2">
-                          <Car className="h-4 w-4 text-red-500" />
-                          <div>
-                            <span className="font-semibold text-white block">{bk.vehicleName}</span>
-                            <span className="text-[10px] text-zinc-500 block uppercase tracking-wider">{bk.vehicleType}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 font-medium text-white">{bk.branch}</td>
-                      <td className="py-4 px-6 text-center">
-                        <div className="flex flex-col items-center gap-1.5">
-                          <span className={`inline-flex items-center text-[10px] font-bold uppercase px-2.5 py-1 rounded-full border ${
-                            bk.status.toLowerCase() === "paid"
-                              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                              : bk.status.toLowerCase() === "pending" || bk.status.toLowerCase() === "pending payment"
-                              ? "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                              : "bg-zinc-800 border-zinc-700 text-zinc-400"
-                          }`}>
-                            {bk.status}
-                          </span>
-                          {(bk.status.toLowerCase() === "pending" || bk.status.toLowerCase() === "pending payment") && (
-                            <button
-                              onClick={() => handleMarkAsPaid(bk.id)}
-                              disabled={actionLoadingId !== null}
-                              className="inline-flex items-center gap-1 text-[10px] font-bold uppercase rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 text-white px-2 py-0.5 transition-colors"
-                            >
-                              {actionLoadingId === bk.id ? (
-                                <Loader2 className="h-2.5 w-2.5 animate-spin text-white" />
-                              ) : (
-                                <CheckCircle className="h-2.5 w-2.5" />
-                              )}
-                              Mark as Paid
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                      <td className="py-4 px-6 text-right">
-                        <button
-                          onClick={() => handleDelete(bk.id)}
-                          disabled={actionLoadingId !== null}
-                          className="inline-flex items-center justify-center p-2 rounded-lg text-zinc-600 hover:text-red-500 hover:bg-red-500/10 disabled:opacity-50 transition-all duration-150"
-                          title="Delete Lead"
-                        >
-                          {actionLoadingId === bk.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
+            ))}
           </div>
-
-        </div>
+        )}
 
       </div>
     </div>
