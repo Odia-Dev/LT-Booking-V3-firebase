@@ -61,6 +61,20 @@ const VEHICLE_DATA: Record<
     type: "Luxury SUV",
     imageUrl: "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=600",
   },
+  camry: {
+    name: "Toyota Camry",
+    price: "₹46.17 Lakh",
+    bookingAmount: 100000,
+    type: "Luxury Sedan",
+    imageUrl: "https://images.unsplash.com/photo-1503376710915-18861d9a2638?auto=format&fit=crop&q=80&w=600",
+  },
+  hilux: {
+    name: "Toyota Hilux",
+    price: "₹30.40 Lakh",
+    bookingAmount: 100000,
+    type: "Lifestyle Utility",
+    imageUrl: "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=600",
+  },
 };
 
 export default function BookPage() {
