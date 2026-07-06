@@ -365,7 +365,7 @@ export default function DashboardPage() {
         {/* Next Steps for Your Toyota Section */}
         <section className="space-y-6 pt-10 border-t border-zinc-800/60">
           <h2 className="text-2xl font-bold text-white tracking-tight">Next Steps for Your Toyota</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             
             {/* Card 1: EMI Calculator */}
             <div className="bg-zinc-900/30 border border-zinc-855 p-6 rounded-2xl space-y-4 hover:border-red-500/30 transition-all flex flex-col justify-between">
@@ -427,6 +427,27 @@ export default function DashboardPage() {
                 className="inline-flex items-center justify-center w-full bg-zinc-900 text-zinc-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#EB0A1E] hover:text-white border border-zinc-800 hover:border-transparent transition-all mt-4"
               >
                 Book Test Drive
+              </Link>
+            </div>
+
+            {/* Card 4: Car Exchange Valuation */}
+            <div className="bg-zinc-900/30 border border-zinc-855 p-6 rounded-2xl space-y-4 hover:border-red-500/30 transition-all flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="h-10 w-10 bg-red-500/10 rounded-xl flex items-center justify-center text-[#EB0A1E]">
+                  <RefreshCw className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Value Your Old Car (U-Trust)</h3>
+                  <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                    Get the best exchange value for your current vehicle to upgrade to your new Toyota.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/car-exchange-valuation"
+                className="inline-flex items-center justify-center w-full bg-zinc-900 text-zinc-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#EB0A1E] hover:text-white border border-zinc-800 hover:border-transparent transition-all mt-4"
+              >
+                Value My Car
               </Link>
             </div>
 
