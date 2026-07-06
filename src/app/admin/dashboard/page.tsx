@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import React, { useEffect, useState } from "react";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, updateDoc } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
 import Link from "next/link";
 import { 
   TrendingUp, 
@@ -16,7 +16,9 @@ import {
   Phone,
   ShieldCheck,
   CheckCircle,
-  Loader2
+  Loader2,
+  Trash2,
+  AlertCircle
 } from "lucide-react";
 
 interface Booking {
@@ -47,6 +49,9 @@ export default function AdminDashboard() {
   const [authError, setAuthError] = useState<string | null>(null);
   const [authLoading, setAuthLoading] = useState(false);
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthLoading(true);
@@ -57,6 +62,36 @@ export default function AdminDashboard() {
       setAuthError(err?.message || "Invalid credentials. Please try again.");
     } finally {
       setAuthLoading(false);
+    }
+  };
+
+  const handleDelete = async (bookingId: string) => {
+    if (!window.confirm("Are you sure you want to permanently delete this booking lead?")) {
+      return;
+    }
+    
+    setUpdatingId(bookingId);
+    setErrorMessage(null);
+    try {
+      if (isConfigured) {
+        const docRef = doc(db, "bookings", bookingId);
+        await deleteDoc(docRef);
+      } else {
+        const existingRaw = localStorage.getItem("laxmi_toyota_bookings");
+        const list: Booking[] = existingRaw ? JSON.parse(existingRaw) : [];
+        const updatedList = list.filter((bk) => bk.id !== bookingId);
+        localStorage.setItem("laxmi_toyota_bookings", JSON.stringify(updatedList));
+      }
+      
+      // Update local state
+      setBookings((prev) => prev.filter((bk) => bk.id !== bookingId));
+      setSuccessMessage("Booking deleted successfully.");
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (error: any) {
+      console.error("Error deleting booking:", error);
+      setErrorMessage(error?.message || "Failed to delete booking. Permission denied or database error.");
+    } finally {
+      setUpdatingId(null);
     }
   };
 
@@ -322,8 +357,35 @@ export default function AdminDashboard() {
             <div className="h-12 w-12 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-400">
               <MapPin className="h-6 w-6" />
             </div>
+          </d        {/* Error/Success Feedback Banners */}
+        {(errorMessage || successMessage) && (
+          <div className="space-y-4">
+            {errorMessage && (
+              <div className="flex items-center gap-3 p-4 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 text-sm">
+                <AlertCircle className="h-5 w-5 shrink-0" />
+                <div className="flex-1 font-medium">{errorMessage}</div>
+                <button 
+                  onClick={() => setErrorMessage(null)} 
+                  className="text-xs hover:underline uppercase font-bold text-red-500"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+            {successMessage && (
+              <div className="flex items-center gap-3 p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-sm">
+                <CheckCircle className="h-5 w-5 shrink-0" />
+                <div className="flex-1 font-medium">{successMessage}</div>
+                <button 
+                  onClick={() => setSuccessMessage(null)} 
+                  className="text-xs hover:underline uppercase font-bold text-emerald-500"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
           </div>
-        </div>
+        )}
 
         {/* Search and Table section */}
         <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/10 backdrop-blur-sm overflow-hidden">
@@ -406,28 +468,41 @@ export default function AdminDashboard() {
                           {bk.status}
                         </span>
                       </td>
-                      <td className="py-4 px-6 text-right">
-                        {successId === bk.id ? (
-                          <div className="flex justify-end items-center gap-1 text-xs text-emerald-400 font-semibold animate-pulse">
-                            <CheckCircle className="h-4 w-4" />
-                            Success
-                          </div>
-                        ) : bk.status === "Pending Payment" ? (
+                      <td className="py-4 px-6 text-right font-mono">
+                        <div className="flex justify-end items-center gap-3">
+                          {successId === bk.id ? (
+                            <div className="flex items-center gap-1 text-xs text-emerald-400 font-semibold animate-pulse">
+                              <CheckCircle className="h-4 w-4" />
+                              Success
+                            </div>
+                          ) : bk.status === "Pending Payment" ? (
+                            <button
+                              onClick={() => updateBookingStatus(bk.id, "Paid")}
+                              disabled={updatingId === bk.id}
+                              className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-805 disabled:opacity-50 text-xs font-semibold text-white px-3 py-1.5 border border-zinc-800 hover:border-zinc-700 transition-all duration-150"
+                            >
+                              {updatingId === bk.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-500" />
+                              ) : (
+                                <CheckCircle className="h-3.5 w-3.5 text-zinc-500 hover:text-emerald-400 transition-colors" />
+                              )}
+                              Mark as Paid
+                            </button>
+                          ) : null}
+
                           <button
-                            onClick={() => updateBookingStatus(bk.id, "Paid")}
+                            onClick={() => handleDelete(bk.id)}
                             disabled={updatingId === bk.id}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 active:bg-zinc-800/80 disabled:opacity-50 text-xs font-semibold text-white px-3 py-1.5 border border-zinc-800 hover:border-zinc-750 transition-all duration-150"
+                            className="inline-flex items-center justify-center p-2 rounded-lg text-zinc-600 hover:text-red-500 hover:bg-red-500/10 disabled:opacity-50 transition-all duration-150"
+                            title="Delete Lead"
                           >
                             {updatingId === bk.id ? (
-                              <Loader2 className="h-3.5 w-3.5 animate-spin text-zinc-500" />
+                              <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />
                             ) : (
-                              <CheckCircle className="h-3.5 w-3.5 text-zinc-500 hover:text-emerald-400 transition-colors" />
+                              <Trash2 className="h-4 w-4" />
                             )}
-                            Mark as Paid
                           </button>
-                        ) : (
-                          <span className="text-xs text-zinc-700 font-mono">-</span>
-                        )}
+                        </div>
                       </td>
                     </tr>
                   ))}
