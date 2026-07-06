@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, use } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
   CheckCircle, ShieldCheck, Info, ArrowLeft,
-  ChevronRight, Star, AlertCircle, Phone
+  ChevronRight, Star, AlertCircle, Sparkles
 } from 'lucide-react';
 
 const vehicleDatabase: Record<string, {
@@ -15,6 +15,7 @@ const vehicleDatabase: Record<string, {
   basePrice: string;
   bookingAmount: string;
   images: string[];
+  stockStatus: "In Stock" | "Waitlisted";
   variants: { id: string; name: string; price: string }[];
   colors: { id: string; name: string; hex: string }[];
 }> = {
@@ -25,6 +26,7 @@ const vehicleDatabase: Record<string, {
     basePrice: '₹11.14 Lakh',
     bookingAmount: '₹25,000',
     images: ['https://images.unsplash.com/photo-1621007947382-bb3c3994e3fd?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'In Stock',
     variants: [
       { id: 'e-mt', name: 'E MT (Petrol)', price: '₹11.31 Lakh' },
       { id: 's-mt', name: 'S MT (Petrol)', price: '₹12.82 Lakh' },
@@ -45,6 +47,7 @@ const vehicleDatabase: Record<string, {
     basePrice: '₹11.14 Lakh',
     bookingAmount: '₹25,000',
     images: ['https://images.unsplash.com/photo-1621007947382-bb3c3994e3fd?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'In Stock',
     variants: [
       { id: 'e-mt', name: 'E MT (Petrol)', price: '₹11.31 Lakh' },
       { id: 's-mt', name: 'S MT (Petrol)', price: '₹12.82 Lakh' },
@@ -65,6 +68,7 @@ const vehicleDatabase: Record<string, {
     basePrice: '₹18.86 Lakh',
     bookingAmount: '₹50,000',
     images: ['https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
     variants: [
       { id: 'gx-7str', name: 'GX 7STR (Petrol)', price: '₹19.53 Lakh' },
       { id: 'vx-hybrid', name: 'VX Hybrid 7STR', price: '₹26.76 Lakh' },
@@ -83,6 +87,7 @@ const vehicleDatabase: Record<string, {
     basePrice: '₹18.86 Lakh',
     bookingAmount: '₹50,000',
     images: ['https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=1200'],
+    stockStatus: 'Waitlisted',
     variants: [
       { id: 'gx-7str', name: 'GX 7STR (Petrol)', price: '₹19.53 Lakh' },
       { id: 'vx-hybrid', name: 'VX Hybrid 7STR', price: '₹26.76 Lakh' },
@@ -96,8 +101,12 @@ const vehicleDatabase: Record<string, {
   }
 };
 
-export default function VehicleDetailPage() {
-  const { id } = useParams() as { id: string };
+interface Params {
+  id: string;
+}
+
+export default function VehicleDetailPage({ params }: { params: Promise<Params> }) {
+  const { id } = use(params);
   const router = useRouter();
 
   const vehicle = vehicleDatabase[id];
@@ -127,22 +136,43 @@ export default function VehicleDetailPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F9FAFB] font-sans text-slate-900 selection:bg-[#EB0A1E] selection:text-white pb-32 lg:pb-12">
+    <div className="min-h-screen bg-[#F9FAFB] font-sans text-slate-900 selection:bg-[#EB0A1E] selection:text-white pb-32">
       
+      {/* 5K BONUS BANNER */}
+      <div className="w-full bg-[#EB0A1E] text-white py-3 px-4 text-center text-xs font-black tracking-widest uppercase flex items-center justify-center gap-2 animate-pulse">
+        <Sparkles className="w-4 h-4 fill-white" />
+        ⚡ ONLINE EXCLUSIVE: Get ₹5,000 instant discount on your final invoice when you book online today.
+      </div>
+
       {/* Top Header / Breadcrumb */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6">
         <Link href="/" className="inline-flex items-center text-xs font-bold uppercase tracking-widest text-slate-500 hover:text-[#EB0A1E] transition-colors">
           <ArrowLeft className="w-4 h-4 mr-2" /> Back to Fleet
         </Link>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
         {/* Left Column - Media */}
         <div className="lg:col-span-7 space-y-6">
           <div className="bg-white rounded-2xl overflow-hidden border border-gray-200/60 shadow-sm relative group">
-            <div className="absolute top-4 left-4 z-10 bg-[#EB0A1E] text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded shadow-sm">
+            <div className="absolute top-4 left-4 z-10 bg-slate-950 text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 rounded shadow-sm">
               Official Allocations Only
             </div>
+            
+            {/* Scarcity Badge on Image */}
+            <div className="absolute top-4 right-4 z-10">
+              {vehicle.stockStatus === "In Stock" ? (
+                <span className="flex items-center gap-1.5 bg-red-50 border border-red-200 text-red-600 text-[10px] font-extrabold uppercase tracking-wider px-3.5 py-2 rounded-xl shadow-md">
+                  <span className="h-2.5 w-2.5 bg-red-600 rounded-full animate-ping" />
+                  🔥 Only 2 Units Left for Immediate Delivery.
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-extrabold uppercase tracking-wider px-3.5 py-2 rounded-xl shadow-md">
+                  ⏳ Current Waiting Period: 12 Weeks. Lock allocation today.
+                </span>
+              )}
+            </div>
+
             <img 
               src={vehicle.images[0]} 
               alt={vehicle.name} 
@@ -177,6 +207,7 @@ export default function VehicleDetailPage() {
               {vehicle.name}
             </h1>
             <p className="text-sm text-slate-500">{vehicle.desc}</p>
+            
             <div className="mt-4 flex items-baseline gap-2">
               <span className="text-3xl font-black text-slate-900">
                 {selectedVariant.price}
@@ -245,7 +276,7 @@ export default function VehicleDetailPage() {
             </div>
           </div>
 
-          {/* Configuration Summary card (Desktop) */}
+          {/* Configuration Summary card (Desktop Side Panel) */}
           <div className="hidden lg:block bg-white border border-gray-200 rounded-2xl p-6 shadow-sm space-y-4">
             <div className="flex justify-between items-center pb-4 border-b border-gray-100">
               <div>
@@ -275,9 +306,9 @@ export default function VehicleDetailPage() {
 
             <button
               onClick={handleBooking}
-              className="w-full bg-[#EB0A1E] text-white py-3.5 rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-red-700 transition-colors shadow-lg shadow-red-600/10 flex justify-center items-center"
+              className="w-full bg-[#EB0A1E] text-white py-3.5 rounded-xl text-sm font-bold uppercase tracking-widest hover:bg-red-700 transition-colors shadow-lg shadow-red-600/10 flex justify-center items-center gap-1.5"
             >
-              Proceed to Secure Booking <ChevronRight className="w-4 h-4 ml-1" />
+              Reserve Now & Claim ₹5,000 Bonus <ChevronRight className="w-4 h-4" />
             </button>
 
             <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-400 font-bold uppercase tracking-wider pt-2">
@@ -286,24 +317,27 @@ export default function VehicleDetailPage() {
           </div>
         </div>
       </div>
-
-      {/* Sticky Mobile CTA (Bottom of screen on mobile) */}
-      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-4 flex flex-col md:flex-row justify-between items-center gap-3 lg:hidden z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.08)]">
-        <div className="w-full flex justify-between items-center md:w-auto">
-          <div>
-            <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Booking Deposit</p>
-            <p className="text-xl font-black text-[#EB0A1E]">{vehicle.bookingAmount}</p>
+ 
+      {/* PERSISTENT STICKY 'RESERVE NOW' BOTTOM BAR (Scroll Follower for both Mobile + Desktop) */}
+      <div className="fixed bottom-0 left-0 w-full bg-slate-950 border-t border-slate-800 p-4 flex justify-between items-center z-40 shadow-[0_-8px_32px_rgba(0,0,0,0.5)]">
+        <div className="max-w-7xl mx-auto w-full flex flex-row justify-between items-center gap-4">
+          <div className="text-left">
+            <span className="text-[9px] font-black uppercase text-red-500 tracking-wider flex items-center gap-1 animate-pulse">
+              ⚡ ₹5,000 online bonus applied
+            </span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-xl font-black text-white">{vehicle.bookingAmount}</span>
+              <span className="text-[10px] text-slate-400 font-bold uppercase hidden sm:inline">100% Refundable Deposit</span>
+            </div>
           </div>
-          <div className="text-right text-[10px] text-slate-400 md:hidden font-bold uppercase">
-            {selectedVariant.name}
-          </div>
+          
+          <button
+            onClick={handleBooking}
+            className="bg-[#EB0A1E] text-white py-3 px-8 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-red-700 transition-colors flex items-center gap-1 shrink-0 shadow-lg shadow-red-500/20"
+          >
+            Reserve Now <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
-        <button
-          onClick={handleBooking}
-          className="w-full md:w-auto bg-[#EB0A1E] text-white py-3 px-8 rounded-lg text-xs font-bold uppercase tracking-widest flex justify-center items-center shrink-0"
-        >
-          Secure Booking <ChevronRight className="w-4 h-4 ml-1" />
-        </button>
       </div>
 
     </div>

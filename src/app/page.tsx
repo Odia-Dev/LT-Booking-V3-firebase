@@ -141,6 +141,11 @@ export default function UltimateStorefront() {
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-[#EB0A1E] selection:text-white pb-20 lg:pb-0 scroll-smooth">
       
+      {/* 5K BONUS BANNER */}
+      <div className="w-full bg-[#EB0A1E] text-white py-3 px-4 text-center text-xs font-black tracking-widest uppercase flex items-center justify-center gap-2 z-[60] relative">
+        <span>⚡ ONLINE EXCLUSIVE: Get ₹5,000 instant discount on your final invoice when you book online today.</span>
+      </div>
+
       {/* --- NAVIGATION --- */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

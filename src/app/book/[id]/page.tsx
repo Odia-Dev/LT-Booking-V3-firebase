@@ -407,6 +407,11 @@ function BookContent() {
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-zinc-950 px-4 py-12">
+      {/* 5K BONUS BANNER */}
+      <div className="max-w-4xl mx-auto mb-6 bg-[#EB0A1E] text-white py-2.5 px-4 text-center text-[10px] font-black tracking-widest uppercase rounded-xl flex items-center justify-center gap-1.5">
+        ⚡ ONLINE EXCLUSIVE: Get ₹5,000 instant discount on your final invoice when you book online today.
+      </div>
+
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         
         {/* Order Summary Card */}
