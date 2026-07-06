@@ -126,7 +126,7 @@ export default function DashboardPage() {
         querySnapshot.forEach((doc) => {
           const data = doc.data() as Booking;
           if (data.customerEmail === user.email) {
-            list.push({ id: doc.id, ...data });
+            list.push({ ...data, id: doc.id });
           }
         });
         // Sort by date descending (newest first)
