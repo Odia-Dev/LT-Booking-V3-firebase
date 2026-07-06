@@ -259,7 +259,7 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <h1 className="text-3xl font-extrabold text-white tracking-tight">Your Reservation Desk</h1>
               {profile?.isPhoneVerified && (
-                <BadgeCheck className="h-6 w-6 text-blue-500 fill-blue-100 shrink-0" title="Verified Customer" />
+                <BadgeCheck className="h-6 w-6 text-blue-500 fill-blue-100 shrink-0" />
               )}
             </div>
             <p className="text-zinc-500 text-xs mt-1">Logged in as: <span className="text-zinc-300 font-semibold">{user?.email}</span></p>
