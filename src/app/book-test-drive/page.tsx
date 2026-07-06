@@ -92,6 +92,8 @@ export default function TestDrivePage() {
       status: "New Lead",
       userUid: user?.uid || "guest",
       customerEmail: user?.email || "guest@guest.com",
+      authUserId: user?.uid || null,
+      authEmail: user?.email || null,
       createdAt: new Date().toISOString(),
     };
 
