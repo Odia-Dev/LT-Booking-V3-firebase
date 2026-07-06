@@ -3,7 +3,7 @@
 import { useAuth } from "@/context/AuthContext";
 import React, { useEffect, useState } from "react";
 import { db, isConfigured } from "@/lib/firebase";
-import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc, addDoc } from "firebase/firestore";
+import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc, addDoc, getDoc } from "firebase/firestore";
 import Link from "next/link";
 import { 
   TrendingUp, 
@@ -25,7 +25,8 @@ import {
   CheckSquare,
   UserCheck,
   X,
-  Plus
+  Plus,
+  Settings as SettingsIcon
 } from "lucide-react";
 
 interface Booking {
@@ -94,7 +95,7 @@ interface ExchangeLead {
   branch?: string;
 }
 
-type TabType = "bookings" | "test_drives" | "finance_leads" | "exchange_leads";
+type TabType = "bookings" | "test_drives" | "finance_leads" | "exchange_leads" | "payment_settings";
 
 const OFFICIAL_BRANCHES = [
   "Berhampur",
@@ -138,6 +139,70 @@ export default function AdminDashboard() {
 
   // Sales Officer Autocomplete States
   const [salesOfficers, setSalesOfficers] = useState<string[]>([]);
+
+  // ICICI payment settings states
+  const [iciciMerchantId, setIciciMerchantId] = useState("");
+  const [iciciEncryptionKey, setIciciEncryptionKey] = useState("");
+  const [iciciThreshold, setIciciThreshold] = useState(100000);
+  const [iciciEnabled, setIciciEnabled] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+
+  useEffect(() => {
+    async function loadSettings() {
+      if (!user) return;
+      if (isConfigured) {
+        try {
+          const docSnap = await getDoc(doc(db, "settings", "payment_gateways"));
+          if (docSnap.exists()) {
+            const data = docSnap.data();
+            setIciciMerchantId(data.merchantId || "");
+            setIciciEncryptionKey(data.encryptionKey || "");
+            setIciciThreshold(data.threshold || 100000);
+            setIciciEnabled(!!data.enabled);
+          }
+        } catch (e) {
+          console.error("Error loading payment integration settings:", e);
+        }
+      } else {
+        const local = localStorage.getItem("laxmi_toyota_payment_gateways");
+        if (local) {
+          const data = JSON.parse(local);
+          setIciciMerchantId(data.merchantId || "");
+          setIciciEncryptionKey(data.encryptionKey || "");
+          setIciciThreshold(data.threshold || 100000);
+          setIciciEnabled(!!data.enabled);
+        }
+      }
+    }
+    loadSettings();
+  }, [user]);
+
+  const handleSaveSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingSettings(true);
+    try {
+      const payload = {
+        merchantId: iciciMerchantId,
+        encryptionKey: iciciEncryptionKey,
+        threshold: iciciThreshold,
+        enabled: iciciEnabled,
+        updatedAt: new Date().toISOString()
+      };
+
+      if (isConfigured) {
+        await setDoc(doc(db, "settings", "payment_gateways"), payload);
+      } else {
+        localStorage.setItem("laxmi_toyota_payment_gateways", JSON.stringify(payload));
+      }
+      setSuccessMessage("ICICI Payment Gateway settings saved successfully.");
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (error: any) {
+      console.error("Error saving payment gateways settings:", error);
+      setErrorMessage(error?.message || "Failed to save payment integrations settings.");
+    } finally {
+      setSavingSettings(false);
+    }
+  };
   
   // Assignment Modal States
   const [showAssignModal, setShowAssignModal] = useState(false);
@@ -830,6 +895,12 @@ export default function AdminDashboard() {
           >
             Exchanges ({totalEx})
           </button>
+          <button
+            onClick={() => { setActiveTab("payment_settings"); setSearchQuery(""); }}
+            className={`pb-3 transition-colors ${activeTab === "payment_settings" ? "border-b-2 border-[#EB0A1E] text-white" : "hover:text-zinc-300"}`}
+          >
+            Payment Integrations
+          </button>
         </div>
 
         {/* Error/Success Feedback Banners */}
@@ -852,11 +923,83 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Search and Table container */}
-        <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/10 backdrop-blur-sm overflow-hidden">
-          
-          {/* Search bar */}
-          <div className="p-6 border-b border-zinc-800/80 flex items-center bg-zinc-900/20">
+        {activeTab === "payment_settings" ? (
+          <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/10 backdrop-blur-sm p-6 sm:p-8 space-y-6">
+            <div className="border-b border-zinc-800/60 pb-4">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                <SettingsIcon className="w-5 h-5 text-[#EB0A1E]" /> Payment Gateway Integrations
+              </h2>
+              <p className="text-xs text-zinc-500 mt-1 font-semibold">Configure live API credentials for ICICI payment pipelines and routing thresholds.</p>
+            </div>
+
+            <form onSubmit={handleSaveSettings} className="space-y-6 max-w-2xl text-left">
+              <div className="flex items-center justify-between p-4 bg-zinc-900/40 border border-zinc-800/60 rounded-xl">
+                <div>
+                  <h4 className="text-sm font-semibold text-white">Enable ICICI Eazypay Gateway</h4>
+                  <p className="text-xs text-zinc-500">Reroute customer checkout amounts through ICICI Bank integration.</p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input 
+                    type="checkbox" 
+                    checked={iciciEnabled} 
+                    onChange={(e) => setIciciEnabled(e.target.checked)} 
+                    className="sr-only peer" 
+                  />
+                  <div className="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-400 after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#EB0A1E] peer-checked:after:bg-white"></div>
+                </label>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Merchant ID</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 293812"
+                    value={iciciMerchantId}
+                    onChange={(e) => setIciciMerchantId(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
+                  />
+                </div>
+                
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">Smart Routing Threshold Amount (₹)</label>
+                  <input
+                    type="number"
+                    placeholder="100000"
+                    value={iciciThreshold}
+                    onChange={(e) => setIciciThreshold(parseInt(e.target.value) || 0)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] uppercase font-bold text-zinc-500 tracking-wider">AES Encryption Key</label>
+                <input
+                  type="password"
+                  placeholder="••••••••••••••••••••••••••••••••"
+                  value={iciciEncryptionKey}
+                  onChange={(e) => setIciciEncryptionKey(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 transition-colors font-mono"
+                />
+                <p className="text-[10px] text-zinc-500">Values are stored securely inside Firestore settings parameters and masked visually.</p>
+              </div>
+
+              <button
+                type="submit"
+                disabled={savingSettings}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#EB0A1E] hover:bg-red-750 px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-xl disabled:opacity-50 transition-all duration-200"
+              >
+                {savingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
+                Save Settings
+              </button>
+            </form>
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-zinc-800/80 bg-zinc-900/10 backdrop-blur-sm overflow-hidden">
+            
+            {/* Search bar */}
+            <div className="p-6 border-b border-zinc-800/80 flex items-center bg-zinc-900/20">
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
               <input
@@ -1092,6 +1235,7 @@ export default function AdminDashboard() {
           </div>
 
         </div>
+        )}
 
       </div>
 

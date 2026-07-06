@@ -357,6 +357,37 @@ function BookContent() {
       const savedBooking = await addBooking(bookingData);
       const bookingId = savedBooking.id;
 
+      // Smart routing: Check if amount > 100000 and try to initiate ICICI Eazypay payment
+      let useIcici = false;
+      let iciciRedirectUrl = "";
+      if (vehicle.bookingAmount > 100000) {
+        try {
+          const iciciResponse = await fetch("/api/payment/icici-initiate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: vehicle.bookingAmount,
+              bookingId,
+              customerName: fullName,
+              customerEmail: user.email,
+              customerPhone: cleanedPhone,
+            }),
+          });
+          const iciciData = await iciciResponse.json();
+          if (iciciResponse.ok && !iciciData.useFallback && iciciData.checkoutUrl) {
+            useIcici = true;
+            iciciRedirectUrl = iciciData.checkoutUrl;
+          }
+        } catch (e) {
+          console.error("ICICI initiation failed, falling back to Razorpay:", e);
+        }
+      }
+
+      if (useIcici && iciciRedirectUrl) {
+        window.location.href = iciciRedirectUrl;
+        return;
+      }
+
       // 2. Call local API endpoint to initialize Razorpay Order
       const response = await fetch("/api/razorpay/create-order", {
         method: "POST",
