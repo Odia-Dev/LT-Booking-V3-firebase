@@ -20,7 +20,9 @@ import {
   Trash2,
   Loader2,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Calculator,
+  Landmark
 } from "lucide-react";
 
 interface Booking {
@@ -359,6 +361,77 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
+
+        {/* Next Steps for Your Toyota Section */}
+        <section className="space-y-6 pt-10 border-t border-zinc-800/60">
+          <h2 className="text-2xl font-bold text-white tracking-tight">Next Steps for Your Toyota</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Card 1: EMI Calculator */}
+            <div className="bg-zinc-900/30 border border-zinc-855 p-6 rounded-2xl space-y-4 hover:border-red-500/30 transition-all flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="h-10 w-10 bg-red-500/10 rounded-xl flex items-center justify-center text-[#EB0A1E]">
+                  <Calculator className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Calculate Your EMI</h3>
+                  <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                    Plan your monthly payments with our interactive calculator.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/toyota-emi-calculator"
+                className="inline-flex items-center justify-center w-full bg-zinc-900 text-zinc-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#EB0A1E] hover:text-white border border-zinc-800 hover:border-transparent transition-all mt-4"
+              >
+                Go to Calculator
+              </Link>
+            </div>
+
+            {/* Card 2: Loan Eligibility */}
+            <div className="bg-zinc-900/30 border border-zinc-855 p-6 rounded-2xl space-y-4 hover:border-red-500/30 transition-all flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="h-10 w-10 bg-red-500/10 rounded-xl flex items-center justify-center text-[#EB0A1E]">
+                  <Landmark className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Check Loan Eligibility</h3>
+                  <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                    Get pre-approved for Toyota Finance with minimal documentation.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/car-loan-eligibility"
+                className="inline-flex items-center justify-center w-full bg-zinc-900 text-zinc-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#EB0A1E] hover:text-white border border-zinc-800 hover:border-transparent transition-all mt-4"
+              >
+                Apply for Loan
+              </Link>
+            </div>
+
+            {/* Card 3: Book a Test Drive */}
+            <div className="bg-zinc-900/30 border border-zinc-855 p-6 rounded-2xl space-y-4 hover:border-red-500/30 transition-all flex flex-col justify-between">
+              <div className="space-y-3">
+                <div className="h-10 w-10 bg-red-500/10 rounded-xl flex items-center justify-center text-[#EB0A1E]">
+                  <Car className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Book a Test Drive</h3>
+                  <p className="text-xs text-zinc-400 mt-1 leading-relaxed">
+                    Experience the drive before your delivery.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href="/book-test-drive"
+                className="inline-flex items-center justify-center w-full bg-zinc-900 text-zinc-300 py-3 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-[#EB0A1E] hover:text-white border border-zinc-800 hover:border-transparent transition-all mt-4"
+              >
+                Book Test Drive
+              </Link>
+            </div>
+
+          </div>
+        </section>
 
       </div>
     </div>
