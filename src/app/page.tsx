@@ -1,26 +1,117 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence, useScroll, useTransform, useSpring, useMotionValue } from 'framer-motion';
+import Lenis from 'lenis';
 import { 
-  Search, ShoppingCart, MapPin, Phone, Mail, 
+  Search, MapPin, Phone, Mail, 
   CheckCircle2, Star, ChevronRight, PlayCircle,
   Menu, X, Car, CreditCard, ShieldCheck, 
-  Clock, ThumbsUp, HelpCircle, ChevronDown, MessageCircle
+  ThumbsUp, HelpCircle, ChevronDown, MessageCircle
 } from 'lucide-react';
 
+// Lenis smooth scroll initialization hook
+function useLenis() {
+  useEffect(() => {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: true,
+      wheelMultiplier: 1,
+      touchMultiplier: 2,
+      infinite: false,
+    });
+
+    function raf(time: number) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+
+    requestAnimationFrame(raf);
+
+    return () => {
+      lenis.destroy();
+    };
+  }, []);
+}
+
+// Animated Counter Component for Trust Stats
+function AnimatedCounter({ value, duration = 2 }: { value: number; duration?: number }) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let start = 0;
+    const end = value;
+    if (start === end) return;
+
+    const totalMiliseconds = duration * 1000;
+    const incrementTime = Math.abs(Math.floor(totalMiliseconds / end));
+
+    const timer = setInterval(() => {
+      start += 1;
+      setCount(start);
+      if (start === end) {
+        clearInterval(timer);
+      }
+    }, Math.max(incrementTime, 10));
+
+    return () => clearInterval(timer);
+  }, [value, duration]);
+
+  return <span>{count.toLocaleString()}</span>;
+}
+
 const VEHICLES = [
-  { id: 'glanza', name: 'Glanza', desc: 'Premium Hatchback', price: '6.81 Lakh', booking: '11,000', img: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=800', badge: 'Sale' },
-  { id: 'hyryder', name: 'Hyryder', desc: 'Self-Charging Hybrid Electric SUV', price: '11.14 Lakh', booking: '21,000', img: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fd?auto=format&fit=crop&q=80&w=800', badge: 'Popular' },
-  { id: 'hycross', name: 'Innova Hycross', desc: 'Advanced MPV with Hybrid Tech', price: '19.77 Lakh', booking: '50,000', img: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=800', badge: 'High Demand' },
-  { id: 'fortuner', name: 'Fortuner', desc: 'Legendary SUV', price: '33.43 Lakh', booking: '1,00,000', img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800', badge: 'Iconic' },
+  { 
+    id: 'glanza', 
+    name: 'Glanza', 
+    spec: 'Smart Hatchback • 22+ km/l • Perfect for City Drives', 
+    price: '6.81 Lakh', 
+    booking: '11,000', 
+    img: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=800', 
+    badge: 'Sale' 
+  },
+  { 
+    id: 'hyryder', 
+    name: 'Hyryder', 
+    spec: 'Self-Charging Hybrid SUV • 27.97 km/l • Premium Family SUV', 
+    price: '11.14 Lakh', 
+    booking: '21,000', 
+    img: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fd?auto=format&fit=crop&q=80&w=800', 
+    badge: 'Popular' 
+  },
+  { 
+    id: 'hycross', 
+    name: 'Innova Hycross', 
+    spec: 'Advanced Hybrid MPV • Spacious 7 Seater • Future Ready', 
+    price: '19.77 Lakh', 
+    booking: '50,000', 
+    img: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=800', 
+    badge: 'High Demand' 
+  },
+  { 
+    id: 'fortuner', 
+    name: 'Fortuner', 
+    spec: 'Legendary SUV • Command Every Road • Premium Ownership', 
+    price: '33.43 Lakh', 
+    booking: '1,00,000', 
+    img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800', 
+    badge: 'Iconic' 
+  },
 ];
 
 const BRANCHES = [
-  { name: 'Brahmapur (HQ)', address: 'NH-16, Haladiapadar', phone: '+91 98765 43212' },
-  { name: 'Jeypore', address: 'NH-26, Jeypore Main Road', phone: '+91 98765 43214' },
-  { name: 'Bargarh', address: 'Bargarh Main Road', phone: '+91 98765 43211' },
-  { name: 'Balangir', address: 'Balangir Highway', phone: '+91 98765 43215' },
+  { name: 'Brahmapur (HQ)', address: 'NH-16, Haladiapadar' },
+  { name: 'Jeypore', address: 'NH-26, Jeypore Main Road' },
+  { name: 'Bargarh', address: 'Bargarh Main Road' },
+  { name: 'Balangir', address: 'Balangir Highway' },
+  { name: 'Rayagada', address: 'Near Bus Stand Road' },
+  { name: 'Bhawanipatna', address: 'Main Town Road' },
+  { name: 'Paralakhemundi', address: 'Gajapati Palace Road' },
+  { name: 'Aska', address: 'NH-59, Aska Main Road' }
 ];
 
 const OFFERS = [
@@ -43,20 +134,23 @@ const TESTIMONIALS = [
 ];
 
 export default function UltimateStorefront() {
+  useLenis();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
 
   return (
-    <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-[#EB0A1E] selection:text-white pb-20 lg:pb-0">
+    <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-[#EB0A1E] selection:text-white pb-20 lg:pb-0 scroll-smooth">
       
       {/* --- NAVIGATION --- */}
-      <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+      <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
+            {/* Logo */}
             <div className="flex-shrink-0 flex items-center cursor-pointer">
               <span className="text-[#EB0A1E] text-2xl font-black tracking-tight">Laxmi Toyota</span>
             </div>
             
+            {/* Navigation links */}
             <div className="hidden lg:flex space-x-8 items-center">
               {['Vehicles', 'How it Works', 'Offers', 'Branches', 'FAQ'].map((item) => (
                 <a key={item} href={`#${item.toLowerCase().replace(/ /g, '-')}`} className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
@@ -68,12 +162,14 @@ export default function UltimateStorefront() {
               </Link>
             </div>
 
+            {/* CTA action */}
             <div className="hidden lg:flex items-center space-x-6">
-              <a href="#vehicles" className="bg-[#EB0A1E] text-white px-6 py-2.5 rounded text-sm font-bold shadow-md hover:bg-red-700 transition-all flex items-center justify-center">
+              <a href="#vehicles" className="bg-[#EB0A1E] text-white px-6 py-2.5 rounded text-sm font-bold shadow-md hover:bg-red-700 transition-all">
                 Book Online
               </a>
             </div>
 
+            {/* Mobile hamburger */}
             <div className="lg:hidden flex items-center">
               <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="text-slate-600">
                 {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -82,7 +178,7 @@ export default function UltimateStorefront() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
+        {/* Mobile Menu dropdown */}
         {mobileMenuOpen && (
           <div className="lg:hidden bg-white border-b border-gray-100 px-4 py-4 space-y-4 shadow-lg absolute w-full">
             {['Vehicles', 'How it Works', 'Offers', 'Branches', 'FAQ'].map((item) => (
@@ -102,80 +198,131 @@ export default function UltimateStorefront() {
         )}
       </nav>
 
-      {/* --- HERO SECTION --- */}
-      <section className="bg-slate-50 pt-20 pb-24 px-4 relative border-b border-gray-100">
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <div className="inline-flex items-center space-x-2 bg-red-50 text-[#EB0A1E] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6">
-            <ShieldCheck className="w-4 h-4" />
+      {/* --- CINEMATIC HERO SECTION --- */}
+      <section className="relative h-[80vh] min-h-[600px] flex items-center justify-center overflow-hidden bg-black px-4">
+        {/* Background Video */}
+        <video 
+          autoPlay 
+          muted 
+          loop 
+          playsInline 
+          className="absolute inset-0 w-full h-full object-cover opacity-75 pointer-events-none"
+        >
+          <source src="https://assets.mixkit.co/videos/preview/mixkit-modern-suv-car-driving-on-a-rainy-road-40292-large.mp4" type="video/mp4" />
+        </video>
+        
+        {/* Gradient Overlay for high readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/40 to-slate-950/60 z-0"></div>
+        
+        <div className="max-w-5xl mx-auto text-center relative z-10 text-white">
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6 border border-white/10"
+          >
+            <ShieldCheck className="w-4 h-4 text-[#EB0A1E]" />
             <span>Official Toyota Dealer for South Odisha</span>
-          </div>
-          <h1 className="text-4xl md:text-6xl font-extrabold text-slate-900 tracking-tight mb-6 leading-tight">
-            Reserve Your Toyota Car Online <br/>in Just 2 Minutes
-          </h1>
-          <p className="text-sm md:text-base text-slate-600 mb-10 max-w-2xl mx-auto">
+          </motion.div>
+          
+          <motion.h1 
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.15 }}
+            className="text-[44px] sm:text-[64px] lg:text-[80px] font-black tracking-tight mb-6 leading-none text-white drop-shadow-sm"
+          >
+            Reserve Your Toyota Car <br className="hidden md:inline"/>Online in Just 2 Minutes
+          </motion.h1>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, delay: 0.3 }}
+            className="text-base sm:text-lg lg:text-[18px] text-slate-200 mb-10 max-w-2xl mx-auto font-light leading-relaxed"
+          >
             Secure your preferred variant and color with an authorized Toyota dealer serving South Odisha.
-          </p>
-          <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+          </motion.p>
+          
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.45 }}
+            className="flex flex-col sm:flex-row justify-center items-center gap-4"
+          >
             <a href="#vehicles" className="w-full sm:w-auto bg-[#EB0A1E] text-white px-8 py-4 rounded text-sm font-bold shadow-lg hover:bg-red-700 transition-colors flex items-center justify-center">
               Explore Vehicles <ChevronRight className="w-4 h-4 ml-1" />
             </a>
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* --- TRUST BAR --- */}
-      <div className="bg-white border-b border-gray-100 py-6">
+      {/* --- TRUST BAR WITH ANIMATED COUNTERS --- */}
+      <div className="bg-white border-b border-gray-100 py-10 relative z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
             <div className="flex flex-col items-center justify-center">
               <ThumbsUp className="w-6 h-6 text-[#EB0A1E] mb-2" />
-              <p className="text-xl font-black text-slate-900">10,000+</p>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Secure Online Payments</p>
+              <p className="text-3xl font-black text-slate-900">
+                <AnimatedCounter value={3000} />+
+              </p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Toyota Deliveries</p>
             </div>
             <div className="flex flex-col items-center justify-center">
               <MapPin className="w-6 h-6 text-[#EB0A1E] mb-2" />
-              <p className="text-xl font-black text-slate-900">8</p>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Locations Across Odisha</p>
+              <p className="text-3xl font-black text-slate-900">
+                <AnimatedCounter value={8} />
+              </p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Locations Across Odisha</p>
             </div>
             <div className="flex flex-col items-center justify-center">
               <Star className="w-6 h-6 text-[#EB0A1E] mb-2" />
-              <p className="text-xl font-black text-slate-900">4.8</p>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Instant Confirmation</p>
+              <p className="text-3xl font-black text-slate-900">4.8★</p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Customer Rating</p>
             </div>
             <div className="flex flex-col items-center justify-center">
               <ShieldCheck className="w-6 h-6 text-[#EB0A1E] mb-2" />
-              <p className="text-xl font-black text-slate-900">20+ Years</p>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold">Official Toyota Dealer</p>
+              <p className="text-3xl font-black text-slate-900">
+                <AnimatedCounter value={4} />+ Years
+              </p>
+              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Of Trust</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* --- FEATURED VEHICLES --- */}
-      <section id="vehicles" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-extrabold text-slate-900 mb-4">Choose Your Toyota</h2>
+      {/* --- FEATURED VEHICLES GRID --- */}
+      <section id="vehicles" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-[48px] font-extrabold text-slate-900 mb-4 tracking-tight">Choose Your Toyota</h2>
           <p className="text-slate-500 text-sm">Select a model to view variants, colors, and secure your booking.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {VEHICLES.map((v) => (
-            <div key={v.id} className="bg-white rounded-xl border border-gray-200 overflow-hidden hover:shadow-xl transition-all group flex flex-col justify-between">
+            <motion.div 
+              key={v.id} 
+              whileHover={{ y: -8, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
+              className="bg-white rounded-xl border border-gray-200 overflow-hidden transition-all group flex flex-col justify-between"
+            >
               <div>
                 <div className="relative h-48 bg-slate-100 overflow-hidden">
                   <div className="absolute top-3 right-3 z-10 bg-[#EB0A1E] text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded">
                     {v.badge}
                   </div>
-                  <img src={v.img} alt={v.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  <img 
+                    src={v.img} 
+                    alt={v.name} 
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                  />
                 </div>
                 <div className="p-5">
-                  <h3 className="text-lg font-bold text-slate-900">{v.name}</h3>
-                  <p className="text-xs text-slate-500 mb-4 h-8">{v.desc}</p>
+                  <h3 className="text-[24px] font-bold text-slate-900 mb-1">{v.name}</h3>
+                  <p className="text-xs text-slate-500 mb-4 h-12 leading-relaxed">{v.spec}</p>
                 </div>
               </div>
               
               <div className="p-5 pt-0">
-                <div className="flex justify-between items-end mb-4 pt-4 border-t border-gray-50">
+                <div className="flex justify-between items-end mb-4 pt-4 border-t border-gray-105">
                   <div>
                     <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Starts At</p>
                     <p className="text-sm font-bold text-slate-900">₹ {v.price}</p>
@@ -187,22 +334,22 @@ export default function UltimateStorefront() {
                 </div>
                 
                 <Link 
-                  href={`/book/${v.id}`}
+                  href={v.id === 'hyryder' ? '/vehicles/toyota-urban-cruiser-hyryder' : v.id === 'hycross' ? '/vehicles/toyota-innova-hycross' : `/book/${v.id}`}
                   className="w-full bg-slate-900 text-white py-2.5 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#EB0A1E] transition-colors flex items-center justify-center"
                 >
                   Select Variant & Book
                 </Link>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
 
       {/* --- HOW ONLINE BOOKING WORKS --- */}
-      <section id="how-it-works" className="py-20 bg-slate-50 border-y border-gray-100">
+      <section id="how-it-works" className="py-24 bg-slate-50 border-y border-gray-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-3xl font-extrabold text-slate-900 mb-4">How Online Booking Works</h2>
+            <h2 className="text-[48px] font-extrabold text-slate-900 mb-4 tracking-tight">How Online Booking Works</h2>
             <p className="text-slate-500 text-sm">A seamless, transparent process designed to give you priority allocation.</p>
           </div>
 
@@ -213,7 +360,7 @@ export default function UltimateStorefront() {
               { icon: <CheckCircle2 className="w-6 h-6 text-[#EB0A1E]"/>, title: 'Instant Confirmation', desc: 'Receive your official booking ID and receipt immediately.' },
               { icon: <Phone className="w-6 h-6 text-[#EB0A1E]"/>, title: 'Advisor Contact', desc: 'Your dedicated RM calls you to arrange finance and delivery.' }
             ].map((step, i) => (
-              <div key={i} className="bg-white p-6 rounded-xl border border-gray-100 text-center relative">
+              <div key={i} className="bg-white p-6 rounded-xl border border-gray-100 text-center relative shadow-sm">
                 <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
                   {step.icon}
                 </div>
@@ -227,11 +374,11 @@ export default function UltimateStorefront() {
       </section>
 
       {/* --- CURRENT OFFERS --- */}
-      <section id="offers" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl font-extrabold text-slate-900 mb-8 text-center">Exclusive Online Offers</h2>
+      <section id="offers" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="text-[48px] font-extrabold text-slate-900 mb-8 text-center tracking-tight">Exclusive Online Offers</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {OFFERS.map((offer, i) => (
-            <div key={i} className="border border-[#EB0A1E]/20 bg-red-50/30 p-6 rounded-xl relative overflow-hidden">
+            <div key={i} className="border border-[#EB0A1E]/20 bg-red-50/30 p-6 rounded-xl relative overflow-hidden flex flex-col justify-between">
               <div className="absolute top-0 right-0 bg-[#EB0A1E] text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-bl-lg">
                 {offer.valid}
               </div>
@@ -243,16 +390,18 @@ export default function UltimateStorefront() {
       </section>
 
       {/* --- TESTIMONIALS --- */}
-      <section className="py-20 bg-slate-900 text-white">
+      <section className="py-24 bg-slate-900 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl font-extrabold mb-12 text-center">What our customers say</h2>
+          <h2 className="text-[48px] font-extrabold mb-12 text-center tracking-tight">What our customers say</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TESTIMONIALS.map((t, i) => (
-              <div key={i} className="bg-slate-800 p-6 rounded-xl border border-slate-700">
-                <div className="flex text-[#F59E0B] mb-4">
-                  {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-4 h-4 fill-current" />)}
+              <div key={i} className="bg-slate-800 p-6 rounded-xl border border-slate-700 flex flex-col justify-between">
+                <div>
+                  <div className="flex text-[#F59E0B] mb-4">
+                    {[...Array(t.rating)].map((_, j) => <Star key={j} className="w-4 h-4 fill-current" />)}
+                  </div>
+                  <p className="text-sm text-slate-300 italic mb-6">"{t.text}"</p>
                 </div>
-                <p className="text-sm text-slate-300 italic mb-6">"{t.text}"</p>
                 <div>
                   <p className="font-bold text-sm">{t.name}</p>
                   <p className="text-xs text-slate-400">{t.location}</p>
@@ -264,26 +413,28 @@ export default function UltimateStorefront() {
       </section>
 
       {/* --- BRANCHES --- */}
-      <section id="branches" className="py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <h2 className="text-3xl font-extrabold text-slate-900 mb-2 text-center">Serving South Odisha</h2>
+      <section id="branches" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h2 className="text-[48px] font-extrabold text-slate-900 mb-2 text-center tracking-tight">Serving South Odisha</h2>
         <p className="text-center text-slate-500 text-sm mb-12">Select your nearest branch during checkout.</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           {BRANCHES.map((b, i) => (
-            <div key={i} className="border border-gray-200 p-5 rounded-xl hover:border-[#EB0A1E] transition-colors cursor-default">
-              <h3 className="font-bold text-slate-900 mb-2">{b.name}</h3>
-              <div className="flex items-start text-xs text-slate-500 mb-2">
-                <MapPin className="w-3 h-3 mr-2 mt-0.5 text-[#EB0A1E]" /> {b.address}
+            <div key={i} className="border border-gray-200 p-5 rounded-xl hover:border-[#EB0A1E] transition-colors cursor-default flex flex-col justify-between h-full">
+              <div>
+                <h3 className="font-bold text-slate-900 mb-2">{b.name}</h3>
+                <div className="flex items-start text-xs text-slate-500 mb-2">
+                  <MapPin className="w-3 h-3 mr-2 mt-0.5 text-[#EB0A1E]" /> {b.address}
+                </div>
               </div>
-              <div className="flex items-center text-xs text-slate-500">
-                <Phone className="w-3 h-3 mr-2 text-[#EB0A1E]" /> {b.phone}
-              </div>
+              <a href="#vehicles" className="w-full bg-slate-50 text-slate-900 border border-slate-200 py-2.5 rounded text-xs font-bold hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-colors flex items-center justify-center mt-4">
+                Book Now
+              </a>
             </div>
           ))}
         </div>
       </section>
 
       {/* --- FAQ & REFUND POLICY --- */}
-      <section id="faq" className="py-20 bg-slate-50 border-t border-gray-100">
+      <section id="faq" className="py-24 bg-slate-50 border-t border-gray-100">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12">
             <div>
@@ -346,6 +497,67 @@ export default function UltimateStorefront() {
           <MessageCircle className="w-5 h-5" />
         </a>
       </div>
+
+      {/* --- FOOTER --- */}
+      <footer className="bg-slate-900 pt-16 pb-8 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
+        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 mb-12">
+          {/* Col 1 */}
+          <div className="col-span-2 md:col-span-1">
+            <h3 className="text-[#EB0A1E] text-xl font-black tracking-tight mb-6">Laxmi Toyota</h3>
+            <p className="text-slate-400 text-sm leading-relaxed mb-6">
+              The authorized Toyota dealer for South Odisha. Committed to delivering premium automotive experiences and unparalleled service.
+            </p>
+          </div>
+          
+          {/* Col 2 */}
+          <div>
+            <h4 className="text-white font-bold mb-6">Vehicles</h4>
+            <ul className="space-y-4 text-sm text-slate-400">
+              <li><a href="#vehicles" className="hover:text-white transition-colors">Vehicles</a></li>
+              <li><a href="#offers" className="hover:text-white transition-colors">Offers</a></li>
+              <li><a href="#vehicles" className="hover:text-white transition-colors">Test Drive</a></li>
+              <li><a href="#vehicles" className="hover:text-white transition-colors">Book Online</a></li>
+            </ul>
+          </div>
+
+          {/* Col 3 */}
+          <div>
+            <h4 className="text-white font-bold mb-6">Company</h4>
+            <ul className="space-y-4 text-sm text-slate-400">
+              <li><a href="#about" className="hover:text-white transition-colors">About</a></li>
+              <li><a href="#faq" className="hover:text-white transition-colors">FAQ</a></li>
+              <li><a href="#faq" className="hover:text-white transition-colors">Refund Policy</a></li>
+              <li><a href="#privacy" className="hover:text-white transition-colors">Privacy Policy</a></li>
+            </ul>
+          </div>
+
+          {/* Col 4 */}
+          <div>
+            <h4 className="text-white font-bold mb-6">Branches</h4>
+            <ul className="space-y-2 text-sm text-slate-400">
+              <li>Brahmapur</li>
+              <li>Jeypore</li>
+              <li>Bargarh</li>
+              <li>Balangir</li>
+              <li>Rayagada</li>
+              <li>Bhawanipatna</li>
+              <li>Paralakhemundi</li>
+              <li>Aska</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto pt-8 border-t border-slate-800 text-center md:text-left flex flex-col md:flex-row justify-between items-center">
+          <p className="text-slate-500 text-xs mb-4 md:mb-0">
+            &copy; {new Date().getFullYear()} Laxmi Toyota. All rights reserved.
+          </p>
+          <div className="flex space-x-6 text-xs text-slate-500">
+            <span className="text-slate-400">Official Toyota Dealer for South Odisha</span>
+            <a href="#" className="hover:text-white transition-colors">Privacy Policy</a>
+            <a href="#" className="hover:text-white transition-colors">Terms of Service</a>
+          </div>
+        </div>
+      </footer>
 
     </div>
   );
