@@ -1,0 +1,419 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useAuth } from "@/context/AuthContext";
+import { db } from "@/lib/firebase";
+import { collection, addDoc } from "firebase/firestore";
+import Link from "next/link";
+import { CheckCircle2, User, Phone, Briefcase, IndianRupee, Landmark, Car, ShieldAlert, ArrowLeft } from "lucide-react";
+
+const VEHICLES = [
+  { id: "glanza", name: "Toyota Glanza" },
+  { id: "taisor", name: "Toyota Taisor" },
+  { id: "rumion", name: "Toyota Rumion" },
+  { id: "hyryder", name: "Urban Cruiser Hyryder" },
+  { id: "hycross", name: "Innova Hycross" },
+  { id: "fortuner", name: "Toyota Fortuner" },
+  { id: "camry", name: "Toyota Camry" },
+  { id: "hilux", name: "Toyota Hilux" },
+  { id: "landcruiser", name: "Land Cruiser 300" }
+];
+
+const BANKS = [
+  "State Bank of India (SBI)",
+  "HDFC Bank",
+  "ICICI Bank",
+  "Axis Bank",
+  "Kotak Mahindra Bank",
+  "Punjab National Bank (PNB)",
+  "Other Preferred Bank"
+];
+
+export default function FinanceLeadPage() {
+  const { user, isConfigured } = useAuth();
+
+  // Form States
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [occupation, setOccupation] = useState("Salaried");
+  const [monthlyIncome, setMonthlyIncome] = useState(50000);
+  const [preferredBank, setPreferredBank] = useState("State Bank of India (SBI)");
+  const [interestedVehicle, setInterestedVehicle] = useState("");
+  const [documentConsent, setDocumentConsent] = useState(false);
+
+  // Status States
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [leadId, setLeadId] = useState("");
+
+  // Prefill user's display name if authenticated
+  useEffect(() => {
+    if (user) {
+      setFullName(user.displayName || "");
+    }
+  }, [user]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    // Validations
+    if (!fullName.trim()) {
+      setError("Please enter your full name.");
+      return;
+    }
+
+    const cleanedPhone = phone.trim();
+    if (!/^\d{10}$/.test(cleanedPhone)) {
+      setError("Please enter a valid 10-digit mobile number.");
+      return;
+    }
+
+    if (!interestedVehicle) {
+      setError("Please select the vehicle model you are interested in.");
+      return;
+    }
+
+    if (!documentConsent) {
+      setError("Please confirm if you have your salary proof or ITR ready.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    const leadData = {
+      fullName: fullName.trim(),
+      phone: cleanedPhone,
+      occupation: occupation,
+      monthlyIncome: monthlyIncome,
+      preferredBank: preferredBank,
+      vehicleId: interestedVehicle,
+      vehicleName: VEHICLES.find(v => v.id === interestedVehicle)?.name || interestedVehicle,
+      documentConsent: documentConsent,
+      status: "New Lead",
+      userUid: user?.uid || "guest",
+      customerEmail: user?.email || "guest@guest.com",
+      submittedAt: new Date().toISOString(),
+    };
+
+    try {
+      if (isConfigured) {
+        // Save to Firestore
+        const docRef = await addDoc(collection(db, "finance_leads"), leadData);
+        setLeadId(docRef.id);
+      } else {
+        // Local storage fallback for developer preview
+        const existingRaw = localStorage.getItem("laxmi_toyota_finance_leads");
+        const existing = existingRaw ? JSON.parse(existingRaw) : [];
+        const mockId = `fin-lead-${Date.now()}`;
+        existing.push({ id: mockId, ...leadData });
+        localStorage.setItem("laxmi_toyota_finance_leads", JSON.stringify(existing));
+        setLeadId(mockId);
+      }
+      setSuccess(true);
+    } catch (err: any) {
+      console.error("Finance Lead submission error:", err);
+      setError("An error occurred during submission. Please check your connection and try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const formatINR = (value: number) => {
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  if (success) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center px-4 py-12">
+        <div className="max-w-md w-full bg-white border border-slate-200/80 p-8 rounded-2xl text-center space-y-6 shadow-xl shadow-slate-200/50 animate-fade-in">
+          <div className="h-16 w-16 bg-[#EB0A1E]/10 rounded-full flex items-center justify-center mx-auto text-[#EB0A1E] border border-[#EB0A1E]/20">
+            <CheckCircle2 className="h-8 w-8" />
+          </div>
+
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black text-slate-900">Application Submitted</h2>
+            <p className="text-xs text-slate-500 font-medium">Application ID: <span className="font-mono text-slate-800 font-bold">{leadId}</span></p>
+            <p className="text-xs text-slate-400">Status: <span className="text-[#EB0A1E] font-semibold bg-red-50 px-2 py-0.5 rounded">New Lead</span></p>
+          </div>
+
+          <div className="text-slate-600 text-sm space-y-4 border-y border-slate-100 py-5 text-left leading-relaxed">
+            <p>
+              Thank you, <span className="font-semibold text-slate-900">{fullName}</span>. Your priority financing eligibility application has been logged.
+            </p>
+            <p className="text-xs text-slate-500">
+              A certified **Laxmi Toyota Finance Executive** will contact you within **24 hours** to verify your documents and route your pre-approval application to your preferred bank (<span className="font-medium text-slate-900">{preferredBank}</span>).
+            </p>
+          </div>
+
+          <div className="pt-2">
+            <Link
+              href="/"
+              className="block w-full text-center text-xs font-bold uppercase tracking-widest bg-slate-900 text-white py-3.5 rounded-xl hover:bg-[#EB0A1E] transition-all duration-200 shadow-md shadow-slate-900/10"
+            >
+              Return to Showroom
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col justify-center px-4 py-16">
+      <div className="max-w-5xl mx-auto w-full grid grid-cols-1 md:grid-cols-12 gap-8 bg-white border border-slate-200/80 rounded-3xl overflow-hidden shadow-2xl shadow-slate-200/80">
+        
+        {/* Left Column: Benefits Section */}
+        <div className="md:col-span-5 bg-slate-950 p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute inset-0 bg-gradient-to-tr from-red-950/40 via-transparent to-transparent opacity-60 pointer-events-none" />
+          
+          <div className="relative z-10 space-y-6">
+            <Link href="/" className="inline-flex items-center text-xs font-bold uppercase tracking-widest text-slate-400 hover:text-white transition-colors gap-1.5">
+              <ArrowLeft className="w-4 h-4" /> Back
+            </Link>
+            
+            <div className="space-y-2">
+              <span className="text-[10px] font-bold tracking-widest uppercase text-[#EB0A1E] bg-[#EB0A1E]/10 border border-[#EB0A1E]/20 px-3 py-1 rounded">
+                Pre-Approval Portal
+              </span>
+              <h1 className="text-3xl font-black tracking-tight pt-2">
+                Finance <br/>Eligibility
+              </h1>
+              <p className="text-slate-400 text-xs leading-relaxed pt-1">
+                Apply for fast-track financing eligibility checks and secure custom credit terms from multiple leading banks.
+              </p>
+            </div>
+          </div>
+
+          {/* Finance Benefits list */}
+          <div className="relative z-10 space-y-6 pt-10 border-t border-slate-800/80">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-[#EB0A1E] flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Low Interest Rates</h4>
+                <p className="text-[11px] text-slate-400 mt-0.5">Tie-ups with SBI, HDFC & ICICI for competitive custom rates.</p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-[#EB0A1E] flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Minimal Documentation</h4>
+                <p className="text-[11px] text-slate-400 mt-0.5">Hassle-free process with fast verification of salary proofs/ITR.</p>
+              </div>
+            </div>
+
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="w-5 h-5 text-[#EB0A1E] flex-shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Quick Digital Approval</h4>
+                <p className="text-[11px] text-slate-400 mt-0.5">Eligibility status processed and updated within 2 hours of check.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Split-form */}
+        <div className="md:col-span-7 p-8 sm:p-10 flex flex-col justify-center">
+          <div className="mb-6">
+            <h2 className="text-2xl font-extrabold text-slate-900">Eligibility Check</h2>
+            <p className="text-slate-500 text-xs mt-1">Please configure your profile metrics for digital verification.</p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="bg-red-50 text-red-600 border border-red-100 p-3.5 rounded-xl text-xs font-semibold">
+                {error}
+              </div>
+            )}
+
+            {/* Personal Details Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Full Name */}
+              <div className="space-y-1.5">
+                <label htmlFor="fullName" className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Full Name
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                    <User className="h-4 w-4" />
+                  </span>
+                  <input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Full name"
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-[#EB0A1E] focus:ring-1 focus:ring-[#EB0A1E] focus:bg-white rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-900 focus:outline-none transition-all"
+                  />
+                </div>
+              </div>
+
+              {/* Mobile */}
+              <div className="space-y-1.5">
+                <label htmlFor="phone" className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Mobile Number
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                    <Phone className="h-4 w-4" />
+                  </span>
+                  <input
+                    id="phone"
+                    type="tel"
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="10-digit number"
+                    maxLength={10}
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-[#EB0A1E] focus:ring-1 focus:ring-[#EB0A1E] focus:bg-white rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-900 focus:outline-none transition-all"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Occupation & Bank Account Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Occupation */}
+              <div className="space-y-1.5">
+                <label htmlFor="occupation" className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Occupation Type
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                    <Briefcase className="h-4 w-4" />
+                  </span>
+                  <select
+                    id="occupation"
+                    value={occupation}
+                    onChange={(e) => setOccupation(e.target.value)}
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-[#EB0A1E] focus:ring-1 focus:ring-[#EB0A1E] focus:bg-white rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-900 focus:outline-none transition-all appearance-none"
+                  >
+                    <option value="Salaried">Salaried Employee</option>
+                    <option value="Self-Employed">Self-Employed</option>
+                    <option value="Business Owner">Business Owner</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Preferred Bank */}
+              <div className="space-y-1.5">
+                <label htmlFor="bank" className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  Preferred Bank
+                </label>
+                <div className="relative">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                    <Landmark className="h-4 w-4" />
+                  </span>
+                  <select
+                    id="bank"
+                    value={preferredBank}
+                    onChange={(e) => setPreferredBank(e.target.value)}
+                    required
+                    className="w-full bg-slate-50 border border-slate-200 focus:border-[#EB0A1E] focus:ring-1 focus:ring-[#EB0A1E] focus:bg-white rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-900 focus:outline-none transition-all appearance-none"
+                  >
+                    {BANKS.map((b, i) => (
+                      <option key={i} value={b}>{b}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Income Slider */}
+            <div className="space-y-2">
+              <div className="flex justify-between items-center text-xs">
+                <label htmlFor="income" className="block font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                  <IndianRupee className="w-3.5 h-3.5 text-slate-400" /> Monthly Income
+                </label>
+                <span className="font-extrabold text-[#EB0A1E] bg-red-50 px-2 py-0.5 rounded">
+                  {formatINR(monthlyIncome)}
+                </span>
+              </div>
+              <input
+                id="income"
+                type="range"
+                min="15000"
+                max="500000"
+                step="5000"
+                value={monthlyIncome}
+                onChange={(e) => setMonthlyIncome(Number(e.target.value))}
+                className="w-full h-1.5 bg-slate-100 rounded-lg appearance-none cursor-pointer accent-[#EB0A1E]"
+              />
+              <div className="flex justify-between text-[9px] text-slate-400 font-bold uppercase">
+                <span>₹15,000</span>
+                <span>₹2.5 Lakh</span>
+                <span>₹5 Lakh+</span>
+              </div>
+            </div>
+
+            {/* Vehicle Interest Dropdown */}
+            <div className="space-y-1.5">
+              <label htmlFor="vehicle" className="block text-xs font-bold text-slate-500 uppercase tracking-wider">
+                Vehicle Interest
+              </label>
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                  <Car className="h-4 w-4" />
+                </span>
+                <select
+                  id="vehicle"
+                  value={interestedVehicle}
+                  onChange={(e) => setInterestedVehicle(e.target.value)}
+                  required
+                  className="w-full bg-slate-50 border border-slate-200 focus:border-[#EB0A1E] focus:ring-1 focus:ring-[#EB0A1E] focus:bg-white rounded-xl pl-9 pr-3 py-2.5 text-sm text-slate-900 focus:outline-none transition-all appearance-none"
+                >
+                  <option value="" disabled>Select Vehicle Model</option>
+                  {VEHICLES.map((v) => (
+                    <option key={v.id} value={v.id}>{v.name}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Consent Checkbox */}
+            <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 mt-2">
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={documentConsent}
+                  onChange={(e) => setDocumentConsent(e.target.checked)}
+                  required
+                  className="mt-1 h-4.5 w-4.5 border border-slate-300 rounded text-[#EB0A1E] focus:ring-[#EB0A1E] cursor-pointer"
+                />
+                <div className="text-xs text-slate-600 leading-relaxed select-none">
+                  <span className="font-semibold text-slate-900 block">Document Consent Required</span>
+                  I have my salary proof / ITR documents ready for verification by the financing team.
+                </div>
+              </label>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="w-full rounded-xl bg-[#EB0A1E] py-3.5 text-sm font-bold uppercase tracking-widest text-white shadow-lg shadow-red-500/10 hover:bg-red-700 disabled:opacity-50 transition-all duration-200"
+            >
+              {isSubmitting ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  Verifying Eligibility...
+                </span>
+              ) : (
+                "Submit Application"
+              )}
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  );
+}
