@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { db, storage, isConfigured } from "@/lib/firebase";
-import { collection, addDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, addDoc, doc, updateDoc, query, where, getDocs } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Link from "next/link";
 import imageCompression from "browser-image-compression";
@@ -57,11 +57,23 @@ export default function CarExchangeValuationPage() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  
+  // 3-Layer Security States
+  const [botField, setBotField] = useState(""); // Honeypot Field
+  const [cooldownMessage, setCooldownMessage] = useState(""); // 24h Cooldown State
 
-  // Prefill user's display name if authenticated
+  // Prefill user's display name if authenticated and check cooldown
   useEffect(() => {
     if (user) {
       setFullName(user.displayName || "");
+    }
+
+    const lastSubmit = localStorage.getItem("last_exchange_submit");
+    if (lastSubmit) {
+      const diff = Date.now() - parseInt(lastSubmit, 10);
+      if (diff < 24 * 60 * 60 * 1000) {
+        setCooldownMessage("You have recently submitted a request. Our executive will call you within 24 hours.");
+      }
     }
   }, [user]);
 
@@ -80,6 +92,24 @@ export default function CarExchangeValuationPage() {
   const handleStep1Submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    // Layer 1: Honeypot Validation
+    if (botField) {
+      console.warn("Spam Bot Detected via Honeypot.");
+      setDocId(`exch-lead-bot-${Date.now()}`);
+      setStep(2);
+      return;
+    }
+
+    // Layer 2: Cooldown Client-side Block
+    const lastSubmit = localStorage.getItem("last_exchange_submit");
+    if (lastSubmit) {
+      const diff = Date.now() - parseInt(lastSubmit, 10);
+      if (diff < 24 * 60 * 60 * 1000) {
+        setError("You have recently submitted a request. Our executive will call you within 24 hours.");
+        return;
+      }
+    }
 
     // Validations
     if (!carMake.trim() || !carModel.trim() || !regYear || !kmsDriven || !fullName.trim() || !phone.trim()) {
@@ -112,6 +142,59 @@ export default function CarExchangeValuationPage() {
     };
 
     try {
+      // Layer 3: Firebase / LocalStorage Duplicate Check (7 Days)
+      let duplicateId = "";
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+      if (isConfigured) {
+        const q = query(
+          collection(db, "exchange_leads"),
+          where("phone", "==", cleanedPhone)
+        );
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          if (data.submittedAt && new Date(data.submittedAt) >= sevenDaysAgo) {
+            duplicateId = doc.id;
+          }
+        });
+      } else {
+        const existingRaw = localStorage.getItem("laxmi_toyota_exchange_leads");
+        const list = existingRaw ? JSON.parse(existingRaw) : [];
+        const cutOffTime = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        const dup = list.find((item: any) => item.phone === cleanedPhone && new Date(item.submittedAt).getTime() >= cutOffTime);
+        if (dup) {
+          duplicateId = dup.id;
+        }
+      }
+
+      if (duplicateId) {
+        console.log("Duplicate Lead detected. Updating existing record.");
+        if (isConfigured) {
+          await updateDoc(doc(db, "exchange_leads", duplicateId), {
+            lastContactedAt: new Date().toISOString(),
+            status: "New Lead (Duplicate)"
+          });
+        } else {
+          const existingRaw = localStorage.getItem("laxmi_toyota_exchange_leads");
+          if (existingRaw) {
+            const list = JSON.parse(existingRaw);
+            const index = list.findIndex((i: any) => i.id === duplicateId);
+            if (index !== -1) {
+              list[index].lastContactedAt = new Date().toISOString();
+              list[index].status = "New Lead (Duplicate)";
+              localStorage.setItem("laxmi_toyota_exchange_leads", JSON.stringify(list));
+            }
+          }
+        }
+        
+        setDocId(duplicateId);
+        localStorage.setItem("last_exchange_submit", Date.now().toString());
+        setStep(2);
+        return;
+      }
+
       let createdDocId = "";
       if (isConfigured) {
         // Save directly to Firestore
@@ -126,6 +209,7 @@ export default function CarExchangeValuationPage() {
         localStorage.setItem("laxmi_toyota_exchange_leads", JSON.stringify(existing));
       }
       setDocId(createdDocId);
+      localStorage.setItem("last_exchange_submit", Date.now().toString());
       setStep(2);
     } catch (err: any) {
       console.error("Step 1 Lead Submission Error:", err);
@@ -323,18 +407,36 @@ export default function CarExchangeValuationPage() {
           </div>
 
           {step === 1 ? (
-            /* STEP 1 FORM */
-            <form onSubmit={handleStep1Submit} className="space-y-5">
-              <div>
-                <h2 className="text-xl font-extrabold text-slate-900">Exchange Lead Form</h2>
-                <p className="text-slate-500 text-xs mt-1">Please provide basic vehicle specs to estimate trade value.</p>
+            cooldownMessage ? (
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center space-y-4 shadow-sm my-6">
+                <ShieldAlert className="w-10 h-10 text-amber-500 mx-auto" />
+                <h3 className="text-base font-bold text-slate-900">Valuation Request Pending</h3>
+                <p className="text-xs text-slate-600 leading-relaxed">{cooldownMessage}</p>
               </div>
-
-              {error && (
-                <div className="bg-red-50 text-red-600 border border-red-100 p-3 rounded-lg text-xs font-semibold">
-                  {error}
+            ) : (
+              /* STEP 1 FORM */
+              <form onSubmit={handleStep1Submit} className="space-y-5">
+                <div>
+                  <h2 className="text-xl font-extrabold text-slate-900">Exchange Lead Form</h2>
+                  <p className="text-slate-500 text-xs mt-1">Please provide basic vehicle specs to estimate trade value.</p>
                 </div>
-              )}
+
+                {error && (
+                  <div className="bg-red-50 text-red-600 border border-red-100 p-3 rounded-lg text-xs font-semibold">
+                    {error}
+                  </div>
+                )}
+
+                {/* Honeypot Field */}
+                <input
+                  type="text"
+                  name="bot_field_company"
+                  value={botField}
+                  onChange={(e) => setBotField(e.target.value)}
+                  tabIndex={-1}
+                  autoComplete="off"
+                  className="opacity-0 absolute -z-10 h-0 w-0"
+                />
 
               {/* Personal Details */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -486,7 +588,7 @@ export default function CarExchangeValuationPage() {
                 )}
               </button>
             </form>
-          ) : (
+          ) ) : (
             /* STEP 2 IMAGES UPLOAD (OPTIONAL) */
             <form onSubmit={handleStep2Submit} className="space-y-5">
               <div>
