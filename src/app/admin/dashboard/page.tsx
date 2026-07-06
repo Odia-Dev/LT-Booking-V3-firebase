@@ -357,7 +357,10 @@ export default function AdminDashboard() {
             <div className="h-12 w-12 bg-blue-500/10 rounded-full flex items-center justify-center text-blue-400">
               <MapPin className="h-6 w-6" />
             </div>
-          </d        {/* Error/Success Feedback Banners */}
+          </div>
+        </div>
+
+        {/* Error/Success Feedback Banners */}
         {(errorMessage || successMessage) && (
           <div className="space-y-4">
             {errorMessage && (
