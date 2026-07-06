@@ -24,34 +24,15 @@ export default function PhoneVerifier({ onSuccess, onClose, userId }: PhoneVerif
   const confirmationResultRef = useRef<ConfirmationResult | null>(null);
 
   useEffect(() => {
-    if (!isConfigured) return;
-
-    // Initialize Invisible reCAPTCHA
-    try {
-      if (!window.recaptchaVerifier) {
-        recaptchaVerifierRef.current = new RecaptchaVerifier(
-          auth,
-          "recaptcha-container",
-          {
-            size: "invisible",
-            callback: () => {
-              // reCAPTCHA solved
-            },
-            "expired-callback": () => {
-              setError("reCAPTCHA expired. Please try sending OTP again.");
-            }
-          }
-        );
-        window.recaptchaVerifier = recaptchaVerifierRef.current;
-      } else {
-        recaptchaVerifierRef.current = window.recaptchaVerifier;
-      }
-    } catch (err) {
-      console.error("reCAPTCHA initialization error:", err);
-    }
-
     return () => {
-      // Clean up verification to prevent duplicate hooks
+      // Clean up verifier on unmount
+      if (recaptchaVerifierRef.current) {
+        try {
+          recaptchaVerifierRef.current.clear();
+        } catch (e) {
+          console.error("Error clearing recaptcha verifier on unmount:", e);
+        }
+      }
     };
   }, []);
 
@@ -78,9 +59,23 @@ export default function PhoneVerifier({ onSuccess, onClose, userId }: PhoneVerif
     }
 
     try {
-      const verifier = recaptchaVerifierRef.current;
+      // Initialize fresh invisible reCAPTCHA on-demand if not already active
+      let verifier = recaptchaVerifierRef.current;
       if (!verifier) {
-        throw new Error("reCAPTCHA verifier not initialized.");
+        verifier = new RecaptchaVerifier(
+          auth,
+          "recaptcha-container",
+          {
+            size: "invisible",
+            callback: () => {
+              // reCAPTCHA solved
+            },
+            "expired-callback": () => {
+              setError("reCAPTCHA expired. Please try sending OTP again.");
+            }
+          }
+        );
+        recaptchaVerifierRef.current = verifier;
       }
 
       const confirmation = await signInWithPhoneNumber(auth, cleanedPhone, verifier);
@@ -88,6 +83,15 @@ export default function PhoneVerifier({ onSuccess, onClose, userId }: PhoneVerif
       setStep(2);
     } catch (err: any) {
       console.error("Send OTP Error:", err);
+      
+      // Clear and reset the verifier so the next click creates a fresh one
+      if (recaptchaVerifierRef.current) {
+        try {
+          recaptchaVerifierRef.current.clear();
+        } catch (e) {}
+        recaptchaVerifierRef.current = null;
+      }
+
       if (err.code === "auth/too-many-requests") {
         setError("Too many requests. Please wait a few minutes before trying again.");
       } else if (err.code === "auth/operation-not-allowed") {
@@ -96,11 +100,6 @@ export default function PhoneVerifier({ onSuccess, onClose, userId }: PhoneVerif
         setError("Firebase Internal Error. Action Required: Make sure your website's live domain (e.g. your Hostinger URL) is added to the 'Authorized Domains' list under Firebase Console > Authentication > Settings.");
       } else {
         setError(err.message || "Failed to send OTP. Please check your network and try again.");
-      }
-      // Reset reCAPTCHA if error happens
-      if (window.grecaptcha && recaptchaVerifierRef.current) {
-        recaptchaVerifierRef.current.clear();
-        window.recaptchaVerifier = null;
       }
     } finally {
       setIsSending(false);
