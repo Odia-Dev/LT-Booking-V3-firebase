@@ -139,7 +139,7 @@ export default function FinanceLeadPage() {
           <div className="space-y-2">
             <h2 className="text-2xl font-black text-slate-900">Application Submitted</h2>
             <p className="text-xs text-slate-500 font-medium">Application ID: <span className="font-mono text-slate-800 font-bold">{leadId}</span></p>
-            <p className="text-xs text-slate-400">Status: <span className="text-[#EB0A1E] font-semibold bg-red-50 px-2 py-0.5 rounded">New Lead</span></p>
+            <p className="text-xs text-slate-400">Status: <span className="text-[#EB0A1E] font-semibold bg-red-50 px-2 py-0.5 rounded">Under Review</span></p>
           </div>
 
           <div className="text-slate-600 text-sm space-y-4 border-y border-slate-100 py-5 text-left leading-relaxed">
