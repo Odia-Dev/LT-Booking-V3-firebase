@@ -149,15 +149,7 @@ export default function UltimateStorefront() {
         <span>⚡ ONLINE EXCLUSIVE: Get ₹5,000 instant discount on your final invoice when you book online today.</span>
       </div>
 
-      {/* FLOATING MOBILE BOOK NOW BUTTON (Left corner on mobile to avoid chatbot overlap) */}
-      <div className="fixed bottom-6 left-6 lg:hidden z-50">
-        <Link
-          href="/#vehicles"
-          className="bg-[#EB0A1E] text-white font-black uppercase tracking-widest text-[10px] px-5 py-3 rounded-full shadow-2xl flex items-center gap-1 active:scale-95 transition-all border border-red-500/20"
-        >
-          Book Now
-        </Link>
-      </div>
+
 
       {/* --- NAVIGATION --- */}
       <nav className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 shadow-sm transition-all duration-300">
@@ -595,12 +587,9 @@ export default function UltimateStorefront() {
       </section>
 
       {/* --- STICKY MOBILE CTA --- */}
-      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-3 flex gap-3 lg:hidden z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
-        <a href="#vehicles" className="flex-grow flex-1 bg-[#EB0A1E] text-white rounded py-3 text-xs font-bold uppercase tracking-widest justify-center items-center flex">
+      <div className="fixed bottom-0 left-0 w-full bg-white border-t border-gray-200 p-3 lg:hidden z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+        <a href="#vehicles" className="w-full bg-[#EB0A1E] text-white rounded-xl py-3.5 text-xs font-black uppercase tracking-widest justify-center items-center flex">
           Book Now
-        </a>
-        <a href="https://wa.me/919876543212" target="_blank" rel="noopener noreferrer" className="w-12 bg-green-500 text-white rounded flex justify-center items-center shrink-0">
-          <MessageCircle className="w-5 h-5" />
         </a>
       </div>
 
