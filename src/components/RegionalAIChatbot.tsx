@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useChat } from 'ai/react';
+import { useChat } from '@ai-sdk/react';
 import { MessageCircle, X, Send, User, Bot, Phone } from 'lucide-react';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore'; 
 import { db, isConfigured } from '@/lib/firebase';
