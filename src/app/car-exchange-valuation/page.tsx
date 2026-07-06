@@ -127,7 +127,7 @@ export default function CarExchangeValuationPage() {
       setStep(2);
     } catch (err: any) {
       console.error("Step 1 Lead Submission Error:", err);
-      setError("Failed to log lead. Please check your network and try again.");
+      setError(`Failed to log lead: ${err.message || err.toString()}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -218,7 +218,7 @@ export default function CarExchangeValuationPage() {
       setStep(3);
     } catch (err: any) {
       console.error("Step 2 Upload Error:", err);
-      setError("Failed to upload/compress vehicle media. Please verify connection and retry.");
+      setError(`Failed to upload media: ${err.message || err.toString()}`);
     } finally {
       setIsUploading(false);
     }
