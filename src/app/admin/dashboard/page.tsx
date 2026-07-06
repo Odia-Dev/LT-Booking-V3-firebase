@@ -2,8 +2,8 @@
 
 import { useAuth } from "@/context/AuthContext";
 import React, { useEffect, useState } from "react";
-import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, updateDoc, deleteDoc } from "firebase/firestore";
+import { db, isConfigured } from "@/lib/firebase";
+import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc, addDoc } from "firebase/firestore";
 import Link from "next/link";
 import { 
   TrendingUp, 
@@ -22,7 +22,10 @@ import {
   Briefcase,
   Landmark,
   Image as ImageIcon,
-  CheckSquare
+  CheckSquare,
+  UserCheck,
+  X,
+  Plus
 } from "lucide-react";
 
 interface Booking {
@@ -38,6 +41,8 @@ interface Booking {
   branch: string;
   status: string;
   createdAt: string;
+  assignedTo?: string;
+  soStatus?: string;
 }
 
 interface TestDrive {
@@ -51,6 +56,8 @@ interface TestDrive {
   createdAt: string;
   customerEmail: string;
   authEmail?: string | null;
+  assignedTo?: string;
+  soStatus?: string;
 }
 
 interface FinanceLead {
@@ -65,6 +72,8 @@ interface FinanceLead {
   submittedAt: string;
   customerEmail: string;
   authEmail?: string | null;
+  assignedTo?: string;
+  soStatus?: string;
 }
 
 interface ExchangeLead {
@@ -80,12 +89,34 @@ interface ExchangeLead {
   customerEmail: string;
   authEmail?: string | null;
   images?: string[];
+  assignedTo?: string;
+  soStatus?: string;
+  branch?: string;
 }
 
 type TabType = "bookings" | "test_drives" | "finance_leads" | "exchange_leads";
 
+const OFFICIAL_BRANCHES = [
+  "Berhampur",
+  "Jeypore",
+  "Bargarh",
+  "Balangir",
+  "Rayagada",
+  "Bhawanipatna",
+  "Paralakhemundi",
+  "Aska"
+];
+
+const SO_STATUS_OPTIONS = [
+  "Pending",
+  "Contacted",
+  "Showroom Visit",
+  "Converted",
+  "Lost"
+];
+
 export default function AdminDashboard() {
-  const { user, loading, loginWithGoogle, loginWithEmail, logout, isConfigured } = useAuth();
+  const { user, loading, loginWithGoogle, loginWithEmail, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<TabType>("bookings");
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [testDrives, setTestDrives] = useState<TestDrive[]>([]);
@@ -105,6 +136,19 @@ export default function AdminDashboard() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  // Sales Officer Autocomplete States
+  const [salesOfficers, setSalesOfficers] = useState<string[]>([]);
+  
+  // Assignment Modal States
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedLeadId, setSelectedLeadId] = useState<string | null>(null);
+  const [selectedLeadCollection, setSelectedLeadCollection] = useState<string | null>(null);
+  const [soInput, setSoInput] = useState("");
+  const [soSuggestions, setSoSuggestions] = useState<string[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState("Berhampur");
+  const [customBranch, setCustomBranch] = useState("");
+  const [isAssigning, setIsAssigning] = useState(false);
+
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthLoading(true);
@@ -118,10 +162,36 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchSalesOfficers = async () => {
+    try {
+      if (isConfigured) {
+        const querySnapshot = await getDocs(collection(db, "sales_officers"));
+        const names: string[] = [];
+        querySnapshot.forEach((doc) => {
+          names.push(doc.data().name);
+        });
+        setSalesOfficers(Array.from(new Set(names)));
+      } else {
+        const mockSO = localStorage.getItem("laxmi_toyota_sales_officers");
+        if (mockSO) {
+          setSalesOfficers(JSON.parse(mockSO));
+        } else {
+          const defaults = ["Sanjay", "Rajesh", "Pooja", "Amit"];
+          localStorage.setItem("laxmi_toyota_sales_officers", JSON.stringify(defaults));
+          setSalesOfficers(defaults);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading sales officers suggestions:", error);
+    }
+  };
+
   const loadData = async () => {
     if (!user) return;
     setFetching(true);
     try {
+      await fetchSalesOfficers();
+
       if (isConfigured) {
         // Fetch Bookings
         const bookingSnapshot = await getDocs(collection(db, "bookings"));
@@ -193,7 +263,7 @@ export default function AdminDashboard() {
     } else {
       setFetching(false);
     }
-  }, [user, isConfigured]);
+  }, [user]);
 
   const handleDelete = async (id: string, collectionName: string) => {
     if (!window.confirm(`Are you sure you want to permanently delete this lead?`)) {
@@ -265,41 +335,155 @@ export default function AdminDashboard() {
     }
   };
 
-  const updateLeadStatus = async (id: string, collectionName: string, newStatus: string) => {
+  // Inline SO Status Update Trigger
+  const updateSoStatus = async (id: string, collectionName: string, newSoStatus: string) => {
     setUpdatingId(id);
     try {
       if (isConfigured) {
         const docRef = doc(db, collectionName, id);
-        await updateDoc(docRef, { status: newStatus });
+        await updateDoc(docRef, { soStatus: newSoStatus });
       } else {
-        const localKey = collectionName === "test_drives"
+        const localKey = collectionName === "bookings" 
+          ? "laxmi_toyota_bookings"
+          : collectionName === "test_drives"
           ? "laxmi_toyota_test_drives"
           : collectionName === "finance_leads"
           ? "laxmi_toyota_finance_leads"
           : "laxmi_toyota_exchange_leads";
-          
+
         const existingRaw = localStorage.getItem(localKey);
         const list = existingRaw ? JSON.parse(existingRaw) : [];
-        const updatedList = list.map((item: any) =>
-          item.id === id ? { ...item, status: newStatus } : item
-        );
-        localStorage.setItem(localKey, JSON.stringify(updatedList));
+        const updated = list.map((i: any) => i.id === id ? { ...i, soStatus: newSoStatus } : i);
+        localStorage.setItem(localKey, JSON.stringify(updated));
       }
 
-      if (collectionName === "test_drives") {
-        setTestDrives(prev => prev.map(i => i.id === id ? { ...i, status: newStatus } : i));
+      if (collectionName === "bookings") {
+        setBookings(prev => prev.map(i => i.id === id ? { ...i, soStatus: newSoStatus } : i));
+      } else if (collectionName === "test_drives") {
+        setTestDrives(prev => prev.map(i => i.id === id ? { ...i, soStatus: newSoStatus } : i));
       } else if (collectionName === "finance_leads") {
-        setFinanceLeads(prev => prev.map(i => i.id === id ? { ...i, status: newStatus } : i));
+        setFinanceLeads(prev => prev.map(i => i.id === id ? { ...i, soStatus: newSoStatus } : i));
       } else if (collectionName === "exchange_leads") {
-        setExchangeLeads(prev => prev.map(i => i.id === id ? { ...i, status: newStatus } : i));
+        setExchangeLeads(prev => prev.map(i => i.id === id ? { ...i, soStatus: newSoStatus } : i));
       }
 
       setSuccessId(id);
       setTimeout(() => setSuccessId(null), 3000);
-    } catch (error) {
-      console.error("Error updating lead status:", error);
+    } catch (e) {
+      console.error("Failed to update SO status:", e);
     } finally {
       setUpdatingId(null);
+    }
+  };
+
+  // Open Assign Modal Handler
+  const openAssignDialog = (leadId: string, collectionName: string, currentSo = "", currentBranch = "Berhampur") => {
+    setSelectedLeadId(leadId);
+    setSelectedLeadCollection(collectionName);
+    setSoInput(currentSo);
+    
+    if (OFFICIAL_BRANCHES.includes(currentBranch)) {
+      setSelectedBranch(currentBranch);
+      setCustomBranch("");
+    } else {
+      setSelectedBranch("Other");
+      setCustomBranch(currentBranch);
+    }
+    
+    setSoSuggestions([]);
+    setShowAssignModal(true);
+  };
+
+  // Autocomplete change suggestor
+  const handleSoInputChange = (value: string) => {
+    setSoInput(value);
+    if (!value.trim()) {
+      setSoSuggestions([]);
+      return;
+    }
+    const filtered = salesOfficers.filter(so => 
+      so.toLowerCase().includes(value.toLowerCase())
+    );
+    setSoSuggestions(filtered);
+  };
+
+  // Save Assignment Dialog Handler
+  const handleSaveAssignment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedLeadId || !selectedLeadCollection) return;
+    
+    const assignedSO = soInput.trim();
+    if (!assignedSO) {
+      alert("Please specify a Sales Officer Name.");
+      return;
+    }
+
+    const finalBranch = selectedBranch === "Other" ? customBranch.trim() : selectedBranch;
+    if (!finalBranch) {
+      alert("Please specify a location branch.");
+      return;
+    }
+
+    setIsAssigning(true);
+    try {
+      // 1. Save new Sales Officer suggestion if not already present
+      if (!salesOfficers.includes(assignedSO)) {
+        if (isConfigured) {
+          await addDoc(collection(db, "sales_officers"), { name: assignedSO });
+        } else {
+          const list = [...salesOfficers, assignedSO];
+          localStorage.setItem("laxmi_toyota_sales_officers", JSON.stringify(list));
+        }
+        setSalesOfficers(prev => Array.from(new Set([...prev, assignedSO])));
+      }
+
+      // 2. Update Lead Document
+      const updates = {
+        assignedTo: assignedSO,
+        branch: finalBranch,
+        status: "Assigned",
+        soStatus: "Pending"
+      };
+
+      if (isConfigured) {
+        const docRef = doc(db, selectedLeadCollection, selectedLeadId);
+        await updateDoc(docRef, updates);
+      } else {
+        const localKey = selectedLeadCollection === "bookings" 
+          ? "laxmi_toyota_bookings"
+          : selectedLeadCollection === "test_drives"
+          ? "laxmi_toyota_test_drives"
+          : selectedLeadCollection === "finance_leads"
+          ? "laxmi_toyota_finance_leads"
+          : "laxmi_toyota_exchange_leads";
+
+        const existingRaw = localStorage.getItem(localKey);
+        const list = existingRaw ? JSON.parse(existingRaw) : [];
+        const updated = list.map((i: any) => 
+          i.id === selectedLeadId ? { ...i, ...updates } : i
+        );
+        localStorage.setItem(localKey, JSON.stringify(updated));
+      }
+
+      // 3. Update States
+      if (selectedLeadCollection === "bookings") {
+        setBookings(prev => prev.map(i => i.id === selectedLeadId ? { ...i, ...updates } : i));
+      } else if (selectedLeadCollection === "test_drives") {
+        setTestDrives(prev => prev.map(i => i.id === selectedLeadId ? { ...i, ...updates } : i));
+      } else if (selectedLeadCollection === "finance_leads") {
+        setFinanceLeads(prev => prev.map(i => i.id === selectedLeadId ? { ...i, ...updates } : i));
+      } else if (selectedLeadCollection === "exchange_leads") {
+        setExchangeLeads(prev => prev.map(i => i.id === selectedLeadId ? { ...i, ...updates } : i));
+      }
+
+      setSuccessMessage("Lead assigned successfully!");
+      setTimeout(() => setSuccessMessage(null), 4000);
+      setShowAssignModal(false);
+    } catch (err: any) {
+      console.error("Assignment Error:", err);
+      alert("Failed to assign lead: " + (err.message || err.toString()));
+    } finally {
+      setIsAssigning(false);
     }
   };
 
@@ -434,6 +618,57 @@ export default function AdminDashboard() {
     );
   };
 
+  // Dispatch Assignment Column Render Helper
+  const renderAssignmentColumn = (leadId: string, collectionName: string, assignedTo?: string, branch?: string) => {
+    if (assignedTo) {
+      return (
+        <div className="space-y-1">
+          <div className="flex items-center gap-1.5 text-xs text-white font-semibold">
+            <UserCheck className="w-3.5 h-3.5 text-emerald-400" />
+            {assignedTo}
+          </div>
+          <button
+            onClick={() => openAssignDialog(leadId, collectionName, assignedTo, branch)}
+            className="text-[10px] text-zinc-500 hover:text-red-500 transition-colors uppercase font-bold tracking-wider"
+          >
+            Change
+          </button>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-1">
+        <span className="inline-block text-[9px] font-bold uppercase tracking-wider bg-red-950/40 border border-red-900/60 text-red-400 px-2 py-0.5 rounded">
+          Unassigned
+        </span>
+        <button
+          onClick={() => openAssignDialog(leadId, collectionName, "", branch)}
+          className="block text-[10px] text-blue-400 hover:text-blue-300 font-bold hover:underline transition-all"
+        >
+          Assign Lead
+        </button>
+      </div>
+    );
+  };
+
+  // Dispatch SO Status Dropdown Render Helper
+  const renderSoStatusColumn = (leadId: string, collectionName: string, soStatus = "Pending") => {
+    return (
+      <div className="relative">
+        <select
+          value={soStatus}
+          onChange={(e) => updateSoStatus(leadId, collectionName, e.target.value)}
+          disabled={updatingId === leadId}
+          className="bg-zinc-900/60 border border-zinc-800 rounded px-2.5 py-1 text-xs text-zinc-300 focus:outline-none focus:border-red-500 transition-all font-medium appearance-none cursor-pointer"
+        >
+          {SO_STATUS_OPTIONS.map((opt) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+      </div>
+    );
+  };
+
   // KPI Calculations
   const totalBookings = bookings.length;
   const totalTd = testDrives.length;
@@ -491,8 +726,8 @@ export default function AdminDashboard() {
       return exchangeLeads.filter(
         (i) =>
           i.fullName.toLowerCase().includes(q) ||
-          i.carMake.toLowerCase().includes(q) ||
-          i.carModel.toLowerCase().includes(q) ||
+          (i.carMake && i.carMake.toLowerCase().includes(q)) ||
+          (i.carModel && i.carModel.toLowerCase().includes(q)) ||
           i.phone.includes(q)
       );
     }
@@ -653,7 +888,8 @@ export default function AdminDashboard() {
                         <th className="py-4 px-6">Vehicle</th>
                         <th className="py-4 px-6">Branch</th>
                         <th className="py-4 px-6">Deposit</th>
-                        <th className="py-4 px-6 text-center">Status</th>
+                        <th className="py-4 px-6">Assigned SO</th>
+                        <th className="py-4 px-6 text-center">SO Status</th>
                         <th className="py-4 px-6 text-right">Actions</th>
                       </tr>
                     </thead>
@@ -675,11 +911,8 @@ export default function AdminDashboard() {
                           <td className="py-4 px-6 font-semibold text-white">{bk.vehicleName}</td>
                           <td className="py-4 px-6 font-medium text-white">{bk.branch}</td>
                           <td className="py-4 px-6 font-semibold text-emerald-400">{bk.bookingAmount}</td>
-                          <td className="py-4 px-6 text-center">
-                            <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full border ${
-                              bk.status.toLowerCase() === "paid" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" : "bg-amber-500/10 border-amber-500/20 text-amber-400"
-                            }`}>{bk.status}</span>
-                          </td>
+                          <td className="py-4 px-6">{renderAssignmentColumn(bk.id, "bookings", bk.assignedTo, bk.branch)}</td>
+                          <td className="py-4 px-6 text-center">{renderSoStatusColumn(bk.id, "bookings", bk.soStatus)}</td>
                           <td className="py-4 px-6 text-right">
                             <div className="flex justify-end gap-3">
                               {successId === bk.id ? (
@@ -706,7 +939,8 @@ export default function AdminDashboard() {
                         <th className="py-4 px-6">Vehicle</th>
                         <th className="py-4 px-6">Branch</th>
                         <th className="py-4 px-6">Preferred Date</th>
-                        <th className="py-4 px-6 text-center">Status</th>
+                        <th className="py-4 px-6">Assigned SO</th>
+                        <th className="py-4 px-6 text-center">SO Status</th>
                         <th className="py-4 px-6 text-right">Actions</th>
                       </tr>
                     </thead>
@@ -728,9 +962,8 @@ export default function AdminDashboard() {
                           <td className="py-4 px-6 text-white font-medium">{td.vehicleName}</td>
                           <td className="py-4 px-6 text-white">{td.branch}</td>
                           <td className="py-4 px-6 font-medium text-amber-400">{new Date(td.preferredDate).toLocaleDateString("en-IN", { dateStyle: "medium" })}</td>
-                          <td className="py-4 px-6 text-center">
-                            <span className="bg-red-500/10 border border-red-500/20 text-[#EB0A1E] text-xs font-semibold px-2 py-0.5 rounded">{td.status}</span>
-                          </td>
+                          <td className="py-4 px-6">{renderAssignmentColumn(td.id, "test_drives", td.assignedTo, td.branch)}</td>
+                          <td className="py-4 px-6 text-center">{renderSoStatusColumn(td.id, "test_drives", td.soStatus)}</td>
                           <td className="py-4 px-6 text-right">
                             <div className="flex justify-end gap-3">
                               {td.status === "New Lead" && (
@@ -756,7 +989,8 @@ export default function AdminDashboard() {
                         <th className="py-4 px-6">Income</th>
                         <th className="py-4 px-6">Pref. Bank</th>
                         <th className="py-4 px-6">Vehicle</th>
-                        <th className="py-4 px-6 text-center">Status</th>
+                        <th className="py-4 px-6">Assigned SO</th>
+                        <th className="py-4 px-6 text-center">SO Status</th>
                         <th className="py-4 px-6 text-right">Actions</th>
                       </tr>
                     </thead>
@@ -779,9 +1013,8 @@ export default function AdminDashboard() {
                           <td className="py-4 px-6 font-semibold text-emerald-400">{formatINR(fin.monthlyIncome)}</td>
                           <td className="py-4 px-6 text-zinc-300">{fin.preferredBank}</td>
                           <td className="py-4 px-6 text-white">{fin.vehicleName}</td>
-                          <td className="py-4 px-6 text-center">
-                            <span className="bg-[#EB0A1E]/10 border border-[#EB0A1E]/20 text-[#EB0A1E] text-xs font-semibold px-2 py-0.5 rounded">{fin.status}</span>
-                          </td>
+                          <td className="py-4 px-6">{renderAssignmentColumn(fin.id, "finance_leads", fin.assignedTo, fin.branch)}</td>
+                          <td className="py-4 px-6 text-center">{renderSoStatusColumn(fin.id, "finance_leads", fin.soStatus)}</td>
                           <td className="py-4 px-6 text-right">
                             <div className="flex justify-end gap-3">
                               {fin.status === "New Lead" && (
@@ -806,7 +1039,8 @@ export default function AdminDashboard() {
                         <th className="py-4 px-6">Car Specs</th>
                         <th className="py-4 px-6">Year / KMs</th>
                         <th className="py-4 px-6">Images</th>
-                        <th className="py-4 px-6 text-center">Status</th>
+                        <th className="py-4 px-6">Assigned SO</th>
+                        <th className="py-4 px-6 text-center">SO Status</th>
                         <th className="py-4 px-6 text-right">Actions</th>
                       </tr>
                     </thead>
@@ -837,9 +1071,8 @@ export default function AdminDashboard() {
                               <span className="text-xs text-zinc-500">No Media</span>
                             )}
                           </td>
-                          <td className="py-4 px-6 text-center">
-                            <span className="bg-[#EB0A1E]/10 border border-[#EB0A1E]/20 text-[#EB0A1E] text-xs font-semibold px-2 py-0.5 rounded">{ex.status}</span>
-                          </td>
+                          <td className="py-4 px-6">{renderAssignmentColumn(ex.id, "exchange_leads", ex.assignedTo, ex.branch)}</td>
+                          <td className="py-4 px-6 text-center">{renderSoStatusColumn(ex.id, "exchange_leads", ex.soStatus)}</td>
                           <td className="py-4 px-6 text-right">
                             <div className="flex justify-end gap-3">
                               {ex.status === "New Lead" && (
@@ -861,11 +1094,117 @@ export default function AdminDashboard() {
         </div>
 
       </div>
+
+      {/* 5. SMART ASSIGNMENT AUTCOMPLETE MODAL */}
+      {showAssignModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="relative w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 sm:p-8 space-y-6">
+            
+            <button
+              onClick={() => setShowAssignModal(false)}
+              className="absolute top-4 right-4 text-zinc-400 hover:text-white transition-colors p-1.5 bg-zinc-950/50 hover:bg-zinc-950 rounded-full"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="text-center space-y-2">
+              <div className="h-12 w-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto text-[#EB0A1E]">
+                <UserCheck className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-white tracking-tight">Assign Sales Officer</h3>
+              <p className="text-xs text-zinc-500">
+                Dispatch this client lead to an active Sales Officer and choose their designated location branch.
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveAssignment} className="space-y-4">
+              
+              {/* Autocomplete Combobox */}
+              <div className="space-y-1.5 relative">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500">Sales Officer Name</label>
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Type name (e.g. Sanjay)"
+                    value={soInput}
+                    onChange={(e) => handleSoInputChange(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 transition-colors font-semibold"
+                  />
+                  <Plus className="absolute right-3 top-2.5 w-4 h-4 text-zinc-600 pointer-events-none" />
+                </div>
+
+                {soSuggestions.length > 0 && (
+                  <ul className="absolute z-10 w-full bg-zinc-950 border border-zinc-800 rounded-lg mt-1 max-h-32 overflow-y-auto divide-y divide-zinc-900 text-xs shadow-xl">
+                    {soSuggestions.map((name) => (
+                      <li
+                        key={name}
+                        onClick={() => {
+                          setSoInput(name);
+                          setSoSuggestions([]);
+                        }}
+                        className="px-4 py-2 hover:bg-zinc-900 cursor-pointer text-white transition-colors flex justify-between items-center"
+                      >
+                        <span>{name}</span>
+                        <span className="text-[9px] text-zinc-600 font-bold uppercase tracking-wider">Suggested</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+
+              {/* Branch Locations Dropdown */}
+              <div className="space-y-1.5">
+                <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500">Allotment Branch</label>
+                <select
+                  value={selectedBranch}
+                  onChange={(e) => setSelectedBranch(e.target.value)}
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 transition-colors cursor-pointer"
+                >
+                  {OFFICIAL_BRANCHES.map((br) => (
+                    <option key={br} value={br}>{br} Branch</option>
+                  ))}
+                  <option value="Other">Other (Specify Location)</option>
+                </select>
+              </div>
+
+              {/* Custom Branch Override Input */}
+              {selectedBranch === "Other" && (
+                <div className="space-y-1.5 animate-slide-down">
+                  <label className="block text-[10px] font-bold uppercase tracking-wider text-zinc-500">Custom City/Location</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Enter custom branch city (e.g. Phulbani)"
+                    value={customBranch}
+                    onChange={(e) => setCustomBranch(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 transition-colors font-semibold"
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={isAssigning}
+                className="w-full flex items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-red-600 to-red-500 py-3 text-xs font-bold uppercase tracking-widest text-white shadow-xl hover:from-red-500 hover:to-red-400 disabled:opacity-50 transition-all duration-200"
+              >
+                {isAssigning ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  "Confirm Allotment"
+                )}
+              </button>
+            </form>
+
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
 
-// Simple Helper Component
+// Simple Helpers
 function RefreshCwIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="w-5 h-5">
@@ -873,3 +1212,14 @@ function RefreshCwIcon() {
     </svg>
   );
 }
+
+const updateLeadStatus = async (id: string, collectionName: string, newStatus: string) => {
+  try {
+    if (isConfigured) {
+      const docRef = doc(db, collectionName, id);
+      await updateDoc(docRef, { status: newStatus });
+    }
+  } catch (error) {
+    console.error("Status Update Failed:", error);
+  }
+};
