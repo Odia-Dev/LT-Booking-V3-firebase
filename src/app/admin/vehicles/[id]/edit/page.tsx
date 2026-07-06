@@ -23,14 +23,30 @@ export default function EditVehiclePage({ params }: PageProps) {
       if (!isConfigured) {
         setVehicle({
           id,
-          basicInfo: { brand: "Toyota", name: "Mock Name", slug: "mock-slug", type: "SUV", description: "Mock details", status: "Draft" },
-          pricing: { basePrice: "₹10.00 Lakh", bookingAmount: 11000, roadTax: 0, insurance: 0 },
+          basicInfo: { 
+            brand: "Toyota", 
+            name: "Mock Name", 
+            slug: "mock-slug", 
+            category: "SUV", 
+            shortDesc: "Mock short details", 
+            longDesc: "Mock long details",
+            tagline: "Mock tagline",
+            launchYear: 2026,
+            status: "Draft", 
+            isFeatured: false 
+          },
+          pricing: { 
+            startingPrice: "₹10.00 Lakh", 
+            bookingAmount: 11000, 
+            isRefundable: true,
+            refundNotes: "Refundable"
+          },
           seo: { title: "Mock", description: "Mock", keywords: "Mock" },
-          media: { images: [] },
-          inventory: { stockCount: 5, stockStatus: "In Stock", waitingPeriodWeeks: 0 },
+          media: { heroImage: "", thumbnail: "", gallery: [], brochureUrl: "" },
+          inventory: { stockStatus: "Available", totalUnits: 5, waitingPeriod: "0 Weeks", branches: [] },
           variants: [],
           colors: [],
-          features: [],
+          features: { safety: [], interior: [], exterior: [], technology: [] },
           offers: []
         });
         setLoading(false);
