@@ -1,8 +1,8 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import { useParams, useRouter } from "next/navigation";
-import React, { useState, useEffect } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useEffect, Suspense } from "react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import Link from "next/link";
@@ -38,7 +38,7 @@ const VEHICLE_DATA: Record<
     price: "₹11.14 Lakh",
     bookingAmount: 21000,
     type: "SUV",
-    imageUrl: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=600",
+    imageUrl: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=800",
   },
   fortuner: {
     name: "Toyota Fortuner",
@@ -52,7 +52,7 @@ const VEHICLE_DATA: Record<
     price: "₹19.77 Lakh",
     bookingAmount: 50000,
     type: "MPV",
-    imageUrl: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=600",
+    imageUrl: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=1200",
   },
   landcruiser: {
     name: "Land Cruiser 300",
@@ -77,9 +77,30 @@ const VEHICLE_DATA: Record<
   },
 };
 
-export default function BookPage() {
+const VARIANT_LOOKUP: Record<string, string> = {
+  'e-mt': 'E MT (Petrol)',
+  's-mt': 'S MT (Petrol)',
+  'g-hybrid': 'G Hybrid (e-CVT)',
+  'v-hybrid': 'V Hybrid (e-CVT)',
+  'gx-7str': 'GX 7STR (Petrol)',
+  'vx-hybrid': 'VX Hybrid 7STR',
+  'zx-o-hybrid': 'ZX(O) Hybrid 7STR',
+};
+
+const COLOR_LOOKUP: Record<string, string> = {
+  'cafe-white': 'Cafe White',
+  'speedy-blue': 'Speedy Blue',
+  'sportin-red': 'Sportin Red',
+  'midnight-black': 'Midnight Black',
+  'platinum-white': 'Platinum White Pearl',
+  'attitude-black': 'Attitude Black Mica',
+  'ageha-glass': 'Blackish Ageha Glass Flake',
+};
+
+function BookContent() {
   const { id } = useParams() as { id: string };
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, loading, loginWithGoogle, isConfigured } = useAuth();
 
   const [fullName, setFullName] = useState("");
@@ -88,8 +109,14 @@ export default function BookPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [bookingRef, setBookingRef] = useState("");
 
   const vehicle = VEHICLE_DATA[id];
+  const variantParam = searchParams ? searchParams.get("variant") : null;
+  const colorParam = searchParams ? searchParams.get("color") : null;
+
+  const selectedVariantName = variantParam ? (VARIANT_LOOKUP[variantParam] || variantParam) : null;
+  const selectedColorName = colorParam ? (COLOR_LOOKUP[colorParam] || colorParam) : null;
 
   useEffect(() => {
     if (user) {
@@ -185,7 +212,11 @@ export default function BookPage() {
 
     setIsProcessing(true);
 
+    const generatedRef = `LT-${Math.floor(100000 + Math.random() * 900000)}`;
+    setBookingRef(generatedRef);
+
     const bookingData = {
+      bookingRef: generatedRef,
       userUid: user.uid,
       customerEmail: user.email,
       customerName: fullName,
@@ -196,6 +227,8 @@ export default function BookPage() {
       vehicleType: vehicle.type,
       bookingAmount: `₹${vehicle.bookingAmount.toLocaleString("en-IN")}`,
       price: vehicle.price,
+      selectedVariant: selectedVariantName || "Default",
+      selectedColor: selectedColorName || "Default",
       status: "Pending Payment",
       createdAt: new Date().toISOString(),
     };
@@ -230,6 +263,12 @@ export default function BookPage() {
               localStorage.setItem("laxmi_toyota_bookings", JSON.stringify(existing));
             }
           }
+        } else {
+          // If Firestore is connected, update the document status to Paid
+          const { doc, updateDoc } = await import("firebase/firestore");
+          await updateDoc(doc(db, "bookings", bookingId), {
+            status: "Paid",
+          });
         }
         setSuccess(true);
         return;
@@ -249,8 +288,31 @@ export default function BookPage() {
         name: "Laxmi Toyota",
         description: `Booking deposit for ${vehicle.name}`,
         order_id: orderData.id,
-        handler: async function (response: any) {
-          console.log("Razorpay Payment Success Callback:", response);
+        handler: async function (paymentResponse: any) {
+          console.log("Razorpay Payment Success Callback:", paymentResponse);
+          try {
+            if (isConfigured) {
+              const { doc, updateDoc } = await import("firebase/firestore");
+              await updateDoc(doc(db, "bookings", bookingId), {
+                status: "Paid",
+                razorpayPaymentId: paymentResponse.razorpay_payment_id,
+                razorpaySignature: paymentResponse.razorpay_signature,
+              });
+            } else {
+              const existingRaw = localStorage.getItem("laxmi_toyota_bookings");
+              if (existingRaw) {
+                const existing = JSON.parse(existingRaw);
+                const index = existing.findIndex((b: any) => b.id === bookingId);
+                if (index !== -1) {
+                  existing[index].status = "Paid";
+                  existing[index].razorpayPaymentId = paymentResponse.razorpay_payment_id;
+                  localStorage.setItem("laxmi_toyota_bookings", JSON.stringify(existing));
+                }
+              }
+            }
+          } catch (updateErr) {
+            console.error("Error updating status to Paid:", updateErr);
+          }
           setSuccess(true);
         },
         prefill: {
@@ -296,13 +358,35 @@ export default function BookPage() {
             <CheckCircle className="h-8 w-8" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-2xl font-extrabold text-white">Booking Saved</h2>
-            <p className="text-xs text-zinc-500">Status: <span className="text-amber-400 font-semibold">Pending Payment</span></p>
+            <h2 className="text-2xl font-extrabold text-white">Reservation Confirmed</h2>
+            <p className="text-xs text-zinc-500">Booking Reference: <span className="font-mono text-white font-bold">{bookingRef}</span></p>
+            <p className="text-xs text-zinc-500">Status: <span className="text-emerald-400 font-semibold">Paid</span></p>
           </div>
-          <p className="text-sm text-zinc-400 leading-relaxed">
-            Your reservation request for the <span className="font-semibold text-white">{vehicle.name}</span> has been logged successfully at the <span className="font-semibold text-white">{branch} Branch</span>.
-          </p>
-          <div className="pt-4 space-y-3">
+          <div className="text-zinc-300 text-sm space-y-4 border-y border-zinc-800/60 py-4 text-left">
+            <p>
+              Thank you, <span className="font-semibold text-white">{fullName}</span>. Your priority reservation has been securely logged.
+            </p>
+            <p className="text-xs text-zinc-400 leading-relaxed">
+              An executive from the <span className="font-semibold text-white">{branch} Dealership</span> will contact you shortly on your registered mobile number to confirm delivery scheduling.
+            </p>
+            {(selectedVariantName || selectedColorName) && (
+              <div className="bg-zinc-950/40 border border-zinc-800/40 rounded-xl p-3 text-xs space-y-1.5 text-zinc-400 mt-2">
+                {selectedVariantName && (
+                  <div className="flex justify-between">
+                    <span>Variant</span>
+                    <span className="text-white font-semibold">{selectedVariantName}</span>
+                  </div>
+                )}
+                {selectedColorName && (
+                  <div className="flex justify-between">
+                    <span>Color</span>
+                    <span className="text-white font-semibold">{selectedColorName}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+          <div className="pt-2 space-y-3">
             <Link
               href="/dashboard"
               className="block w-full text-center text-xs font-bold uppercase tracking-wider bg-white text-zinc-950 py-3 rounded-full hover:bg-zinc-200 transition-all"
@@ -325,7 +409,7 @@ export default function BookPage() {
     <div className="min-h-[calc(100vh-4rem)] bg-zinc-950 px-4 py-12">
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
         
-        {/* Task 2: Order Summary Card */}
+        {/* Order Summary Card */}
         <section className="space-y-6">
           <div className="border-b border-zinc-800/80 pb-4">
             <Link href="/" className="text-zinc-500 hover:text-white text-xs flex items-center gap-1 mb-2 transition-colors">
@@ -352,7 +436,19 @@ export default function BookPage() {
               </div>
 
               <div className="space-y-3 text-sm border-t border-zinc-800/60 pt-4">
-                <div className="flex justify-between">
+                {selectedVariantName && (
+                  <div className="flex justify-between text-xs">
+                    <span className="text-zinc-500">Selected Variant</span>
+                    <span className="font-bold text-white">{selectedVariantName}</span>
+                  </div>
+                )}
+                {selectedColorName && (
+                  <div className="flex justify-between text-xs border-t border-zinc-800/10 pt-2">
+                    <span className="text-zinc-500">Selected Color</span>
+                    <span className="font-bold text-white">{selectedColorName}</span>
+                  </div>
+                )}
+                <div className="flex justify-between border-t border-zinc-800/20 pt-3">
                   <span className="text-zinc-500">Ex-Showroom Price</span>
                   <span className="font-semibold text-white">{vehicle.price}</span>
                 </div>
@@ -365,7 +461,7 @@ export default function BookPage() {
           </div>
         </section>
 
-        {/* Task 3 & 5: Fintech-style checkout form */}
+        {/* Fintech-style checkout form */}
         <section className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-6 backdrop-blur-sm self-start space-y-6">
           <div>
             <h2 className="text-xl font-bold text-white">Complete Booking</h2>
@@ -442,5 +538,17 @@ export default function BookPage() {
 
       </div>
     </div>
+  );
+}
+
+export default function BookPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-[70vh] flex items-center justify-center bg-zinc-950">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-800 border-t-red-500" />
+      </div>
+    }>
+      <BookContent />
+    </Suspense>
   );
 }

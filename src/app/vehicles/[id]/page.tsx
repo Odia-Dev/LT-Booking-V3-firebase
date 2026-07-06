@@ -123,7 +123,7 @@ export default function VehicleDetailPage() {
   }
 
   const handleBooking = () => {
-    router.push(`/checkout/${vehicle.checkoutId}?variant=${selectedVariant.id}&color=${selectedColor.id}`);
+    router.push(`/book/${vehicle.checkoutId}?variant=${selectedVariant.id}&color=${selectedColor.id}`);
   };
 
   return (
