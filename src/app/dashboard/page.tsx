@@ -335,13 +335,22 @@ export default function DashboardPage() {
                   {filteredBookings.map((bk) => (
                     <tr key={bk.id} className="hover:bg-zinc-900/20 transition-colors">
                       <td className="py-4 px-6 font-mono text-xs text-zinc-400">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="h-3.5 w-3.5 text-zinc-600" />
-                          {new Date(bk.createdAt).toLocaleDateString("en-IN", {
-                            day: "2-digit",
-                            month: "short",
-                            year: "numeric",
-                          })}
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-1.5 text-white">
+                            <Calendar className="h-3.5 w-3.5 text-zinc-600" />
+                            {new Date(bk.createdAt).toLocaleDateString("en-IN", {
+                              day: "2-digit",
+                              month: "short",
+                              year: "numeric",
+                            })}
+                          </div>
+                          <div className="text-[10px] text-zinc-500 pl-5">
+                            {new Date(bk.createdAt).toLocaleTimeString("en-IN", {
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              hour12: true,
+                            })}
+                          </div>
                         </div>
                       </td>
                       <td className="py-4 px-6">
