@@ -92,6 +92,8 @@ export default function PhoneVerifier({ onSuccess, onClose, userId }: PhoneVerif
         setError("Too many requests. Please wait a few minutes before trying again.");
       } else if (err.code === "auth/operation-not-allowed") {
         setError("Firebase Phone Authentication is not enabled. Action Required: Go to your Firebase Console > Authentication > Sign-in method, click 'Add new provider', select 'Phone', enable it, and save. Also check that your SMS region settings permit sending to +91.");
+      } else if (err.code === "auth/internal-error" || err.message?.includes("internal-error")) {
+        setError("Firebase Internal Error. Action Required: Make sure your website's live domain (e.g. your Hostinger URL) is added to the 'Authorized Domains' list under Firebase Console > Authentication > Settings.");
       } else {
         setError(err.message || "Failed to send OTP. Please check your network and try again.");
       }
