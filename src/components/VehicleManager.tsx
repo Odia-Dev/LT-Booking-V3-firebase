@@ -288,8 +288,8 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
 
   const renderBasicInfo = () => (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Core Details</h3>
+      <div className="bg-slate-900 p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-100 mb-4">Core Details</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Vehicle Name</label>
@@ -300,7 +300,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                 updateBasicInfo("name", e.target.value);
                 updateBasicInfo("slug", e.target.value.toLowerCase().replace(/\s+/g, "-"));
               }}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100" 
               placeholder="e.g., Urban Cruiser Hyryder" 
             />
           </div>
@@ -310,7 +310,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
               type="text" 
               value={basicInfo.slug} 
               onChange={(e) => updateBasicInfo("slug", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100" 
               placeholder="toyota-urban-cruiser-hyryder" 
             />
           </div>
@@ -319,7 +319,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
             <select 
               value={basicInfo.category} 
               onChange={(e) => updateBasicInfo("category", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100"
             >
               {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
@@ -330,7 +330,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
               type="text" 
               value={basicInfo.tagline} 
               onChange={(e) => updateBasicInfo("tagline", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100" 
               placeholder="Self-Charging Hybrid Electric SUV" 
             />
           </div>
@@ -341,13 +341,13 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
             rows={2} 
             value={basicInfo.shortDesc} 
             onChange={(e) => updateBasicInfo("shortDesc", e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] resize-none text-slate-900"
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] resize-none text-slate-100"
           />
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Search Engine Optimization</h3>
+      <div className="bg-slate-900 p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-100 mb-4">Search Engine Optimization</h3>
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase mb-2">SEO Title Tag</label>
@@ -355,7 +355,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
               type="text" 
               value={seo.title} 
               onChange={(e) => updateSEO("title", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100" 
               placeholder="Toyota Hyryder Price, Features & Specs in Odisha" 
             />
           </div>
@@ -365,7 +365,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
               rows={2} 
               value={seo.description} 
               onChange={(e) => updateSEO("description", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] resize-none text-slate-900"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] resize-none text-slate-100"
             />
           </div>
         </div>
@@ -375,8 +375,8 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
 
   const renderPricing = () => (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Base Pricing Rules</h3>
+      <div className="bg-slate-900 p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-100 mb-4">Base Pricing Rules</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Starting Ex-Showroom (Base Variant)</label>
@@ -386,7 +386,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                 type="text" 
                 value={pricing.startingPrice} 
                 onChange={(e) => updatePricing("startingPrice", e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100" 
                 placeholder="e.g. ₹11.14 Lakh" 
               />
             </div>
@@ -399,7 +399,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                 type="number" 
                 value={pricing.bookingAmount} 
                 onChange={(e) => updatePricing("bookingAmount", parseInt(e.target.value) || 0)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100" 
                 placeholder="21000" 
               />
             </div>
@@ -407,9 +407,9 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-[#EB0A1E]">
+      <div className="bg-slate-900 p-6 rounded-xl border border-slate-200 shadow-sm border-l-4 border-l-[#EB0A1E]">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-slate-900">Active Offers & Discounts</h3>
+          <h3 className="text-lg font-bold text-slate-100">Active Offers & Discounts</h3>
           <button 
             onClick={addOffer}
             className="text-xs font-bold text-[#EB0A1E] flex items-center bg-red-50 px-3 py-1.5 rounded-md hover:bg-red-100"
@@ -428,14 +428,14 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                   placeholder="Offer Title (e.g. ₹5,000 Online Bonus)"
                   value={offer.title}
                   onChange={(e) => updateOfferField(idx, "title", e.target.value)}
-                  className="flex-grow bg-slate-55 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900 text-xs"
+                  className="flex-grow bg-slate-55 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-100 text-xs"
                 />
                 <input
                   type="number"
                   placeholder="Value"
                   value={offer.discount}
                   onChange={(e) => updateOfferField(idx, "discount", parseInt(e.target.value) || 0)}
-                  className="w-32 bg-slate-55 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900 text-xs"
+                  className="w-32 bg-slate-55 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-100 text-xs"
                 />
                 <button onClick={() => removeOffer(idx)} className="text-red-500">
                   <Trash2 className="w-4 h-4" />
@@ -450,10 +450,10 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
 
   const renderVariants = () => (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div className="bg-slate-900 p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h3 className="text-lg font-bold text-slate-900">Variant Management</h3>
+            <h3 className="text-lg font-bold text-slate-100">Variant Management</h3>
             <p className="text-xs text-slate-500">Add all available trims (e.g., E MT, G Hybrid, V AT)</p>
           </div>
           <button onClick={addVariant} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-slate-800 flex items-center">
@@ -476,7 +476,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                      type="text" 
                      value={v.name} 
                      onChange={(e) => updateVariantField(idx, "name", e.target.value)}
-                     className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-900" 
+                     className="w-full bg-slate-900 border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-100" 
                      placeholder="e.g. S E-CNG" 
                    />
                 </div>
@@ -486,7 +486,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                      type="text" 
                      value={v.engine} 
                      onChange={(e) => updateVariantField(idx, "engine", e.target.value)}
-                     className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-900" 
+                     className="w-full bg-slate-900 border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-100" 
                      placeholder="1462 cc" 
                    />
                 </div>
@@ -496,7 +496,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                      type="text" 
                      value={v.fuel} 
                      onChange={(e) => updateVariantField(idx, "fuel", e.target.value)}
-                     className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-900" 
+                     className="w-full bg-slate-900 border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-100" 
                      placeholder="Petrol" 
                    />
                 </div>
@@ -506,7 +506,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                      type="text" 
                      value={v.transmission} 
                      onChange={(e) => updateVariantField(idx, "transmission", e.target.value)}
-                     className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-900" 
+                     className="w-full bg-slate-900 border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-100" 
                      placeholder="Manual" 
                    />
                 </div>
@@ -516,7 +516,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                      type="text" 
                      value={v.exShowroom} 
                      onChange={(e) => updateVariantField(idx, "exShowroom", e.target.value)}
-                     className="w-full bg-white border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-900" 
+                     className="w-full bg-slate-900 border border-slate-200 rounded px-3 py-1.5 text-xs outline-none text-slate-100" 
                      placeholder="₹11.14 Lakh" 
                    />
                 </div>
@@ -529,9 +529,9 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
         )}
       </div>
 
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
+      <div className="bg-slate-900 p-6 rounded-xl border border-slate-200 shadow-sm">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-slate-900">Color Palette</h3>
+          <h3 className="text-lg font-bold text-slate-100">Color Palette</h3>
           <button 
             onClick={addColor}
             className="text-xs font-bold text-[#EB0A1E] flex items-center bg-red-50 px-3 py-1.5 rounded-md hover:bg-red-100"
@@ -550,7 +550,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                   placeholder="Color Name (e.g. Attitude Black)"
                   value={c.name}
                   onChange={(e) => updateColorField(i, "name", e.target.value)}
-                  className="flex-grow bg-slate-55 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 outline-none"
+                  className="flex-grow bg-slate-55 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-100 outline-none"
                 />
                 <input
                   type="color"
@@ -571,15 +571,15 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
 
   const renderInventory = () => (
     <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Availability Controls</h3>
+      <div className="bg-slate-900 p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-100 mb-4">Availability Controls</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Global Stock Status</label>
             <select 
               value={inventory.stockStatus} 
               onChange={(e) => updateInventory("stockStatus", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100"
             >
               <option value="Available">Available (In Stock)</option>
               <option value="Waitlist">Waitlist (Allocations only)</option>
@@ -591,15 +591,15 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
               type="text" 
               value={inventory.waitingPeriod} 
               onChange={(e) => updateInventory("waitingPeriod", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100" 
               placeholder="e.g. 12 Weeks" 
             />
           </div>
         </div>
       </div>
 
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Showroom Availability</h3>
+      <div className="bg-slate-900 p-6 rounded-xl border border-slate-200 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-100 mb-4">Showroom Availability</h3>
         <p className="text-xs text-slate-500 mb-4">Select which showrooms are authorized to sell and display this vehicle.</p>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {BRANCHES.map(branch => {
@@ -622,12 +622,12 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans pb-20">
+    <div className="min-h-screen bg-slate-50 text-slate-100 font-sans pb-20">
       {/* Sticky Header Actions */}
-      <div className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+      <div className="bg-slate-900 border-b border-slate-200 sticky top-0 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-black text-slate-900 tracking-tight flex items-center">
+            <h1 className="text-2xl font-black text-slate-100 tracking-tight flex items-center">
               <Car className="w-6 h-6 mr-2 text-[#EB0A1E]" /> 
               {basicInfo.name ? basicInfo.name : "New Vehicle Master"}
             </h1>
@@ -661,7 +661,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
         
         {/* Sidebar Navigation */}
         <div className="w-full md:w-64 flex-shrink-0">
-          <div className="bg-white rounded-xl border border-slate-200 p-2 shadow-sm sticky top-28">
+          <div className="bg-slate-900 rounded-xl border border-slate-200 p-2 shadow-sm sticky top-28">
             {TABS.map(tab => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -672,7 +672,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                   className={`w-full flex items-center px-4 py-3 text-sm font-bold rounded-lg mb-1 transition-all ${
                     isActive 
                       ? "bg-red-50 text-[#EB0A1E]" 
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-100"
                   }`}
                 >
                   <Icon className={`w-5 h-5 mr-3 ${isActive ? "text-[#EB0A1E]" : "text-slate-400"}`} />
@@ -693,8 +693,8 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
 
           {/* Media Tab */}
           {activeTab === "media" && (
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
-              <h3 className="text-lg font-bold text-slate-900 mb-4">Media Library</h3>
+            <div className="bg-slate-900 p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+              <h3 className="text-lg font-bold text-slate-100 mb-4">Media Library</h3>
               
               <div className="flex items-center justify-center border-2 border-dashed border-slate-200 hover:border-red-500 rounded-xl p-8 transition-colors relative cursor-pointer bg-slate-55">
                 <input
@@ -737,14 +737,14 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
 
           {/* Specs / Features Tab */}
           {activeTab === "specs" && (
-            <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
-              <h3 className="text-lg font-bold text-slate-900 mb-4 font-black">Specs & Feature Checklist</h3>
+            <div className="bg-slate-900 p-6 rounded-xl border border-slate-200 shadow-sm space-y-6">
+              <h3 className="text-lg font-bold text-slate-100 mb-4 font-black">Specs & Feature Checklist</h3>
               
               <div className="flex gap-4">
                 <select
                   value={featureCategory}
                   onChange={(e) => setFeatureCategory(e.target.value as any)}
-                  className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900 text-xs font-bold"
+                  className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-100 text-xs font-bold"
                 >
                   <option value="safety">Safety</option>
                   <option value="interior">Interior</option>
@@ -756,7 +756,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                   placeholder="Add a product feature (e.g. Panoramic sunroof)"
                   value={newFeature}
                   onChange={(e) => setNewFeature(e.target.value)}
-                  className="flex-grow bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900 text-xs"
+                  className="flex-grow bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-100 text-xs"
                 />
                 <button
                   onClick={addFeature}

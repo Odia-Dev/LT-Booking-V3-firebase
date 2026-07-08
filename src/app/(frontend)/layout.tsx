@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
-import "./globals.css";
+import "../globals.css";
 import { AuthContextProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import RegionalAIChatbot from "@/components/RegionalAIChatbot";
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   keywords: "Toyota Odisha, Laxmi Toyota, Book Toyota Online, Toyota Brahmapur, Toyota Fortuner booking, Toyota Hycross hybrid",
 };
 
-export default function RootLayout({
+export default function FrontendLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -30,9 +30,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${poppins.variable} ${inter.variable} h-full antialiased dark`}
+      className={`${poppins.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#0B0F19] text-zinc-100 selection:bg-[#EB0A1E]/30 selection:text-red-200 font-sans">
+      <body className="min-h-full flex flex-col bg-white text-slate-900 selection:bg-[#EB0A1E]/30 selection:text-red-200 font-sans">
         <AuthContextProvider>
           <Navbar />
           <main className="flex-grow">
@@ -44,4 +44,3 @@ export default function RootLayout({
     </html>
   );
 }
-
