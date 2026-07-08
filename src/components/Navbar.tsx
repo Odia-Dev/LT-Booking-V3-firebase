@@ -8,7 +8,7 @@ import React, { useState } from "react";
 import { Menu, X, ChevronRight } from "lucide-react";
 
 export default function Navbar() {
-  const { user, loading, signingIn, loginWithGoogle, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
