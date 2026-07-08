@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
 import "../admin-globals.css";
 import { AuthContextProvider } from "@/context/AuthContext";
+import Navbar from "@/components/Navbar";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -31,6 +32,7 @@ export default function AdminLayout({
     >
       <body className="min-h-screen bg-slate-950 text-white selection:bg-[#EB0A1E]/30 selection:text-red-200 font-sans">
         <AuthContextProvider>
+          <Navbar />
           <div className="min-h-screen bg-slate-950 text-white">
             {children}
           </div>
