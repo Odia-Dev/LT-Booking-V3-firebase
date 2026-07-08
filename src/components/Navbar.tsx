@@ -92,13 +92,12 @@ export default function Navbar() {
                 </button>
               </div>
             ) : (
-              <button
-                onClick={loginWithGoogle}
-                disabled={signingIn}
-                className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all"
+              <Link
+                href="/login"
+                className="bg-zinc-900 hover:bg-zinc-800 text-white border border-zinc-800 px-5 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all text-center"
               >
-                {signingIn ? "Logging in..." : "Login"}
-              </button>
+                Login
+              </Link>
             )}
           </div>
 
@@ -168,15 +167,13 @@ export default function Navbar() {
                 </button>
               </>
             ) : (
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  loginWithGoogle();
-                }}
+              <Link
+                href="/login"
+                onClick={() => setMobileMenuOpen(false)}
                 className="w-full text-center bg-zinc-900 border border-zinc-800 text-white py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider"
               >
                 Login
-              </button>
+              </Link>
             )}
           </div>
         </div>
