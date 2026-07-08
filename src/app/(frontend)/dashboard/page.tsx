@@ -26,6 +26,7 @@ import {
   BadgeCheck
 } from "lucide-react";
 import PhoneVerifier from "@/components/PhoneVerifier";
+import AuthForm from "@/components/AuthForm";
 
 interface Booking {
   id: string;
@@ -197,20 +198,8 @@ export default function DashboardPage() {
   // Protection Gate
   if (!user) {
     return (
-      <div className="min-h-[85vh] flex items-center justify-center bg-zinc-950 px-4">
-        <div className="max-w-md w-full border border-zinc-800/80 bg-zinc-900/40 p-8 rounded-2xl text-center space-y-6 backdrop-blur-md">
-          <div className="h-12 w-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto text-red-500">
-            <ShieldCheck className="h-6 w-6" />
-          </div>
-          <h2 className="text-xl font-bold text-white">Dealership Authentication Required</h2>
-          <p className="text-zinc-400 text-sm">Please sign in with your Google account to access CRM lead allocations.</p>
-          <button
-            onClick={loginWithGoogle}
-            className="w-full rounded-full bg-gradient-to-r from-red-600 to-red-500 py-3 text-sm font-semibold text-white shadow-xl hover:from-red-500 hover:to-red-400 transition-all duration-200"
-          >
-            Sign In to Access CRM
-          </button>
-        </div>
+      <div className="min-h-[85vh] flex items-center justify-center bg-slate-950 px-4">
+        <AuthForm />
       </div>
     );
   }

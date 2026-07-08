@@ -28,6 +28,7 @@ import {
   Plus,
   Settings as SettingsIcon
 } from "lucide-react";
+import AuthForm from "@/components/AuthForm";
 
 interface Booking {
   id: string;
@@ -587,72 +588,7 @@ export default function AdminDashboard() {
   if (!user) {
     return (
       <div className="min-h-[85vh] flex items-center justify-center bg-slate-950 px-4">
-        <div className="max-w-md w-full border border-slate-800/80 bg-slate-900/40 p-8 rounded-2xl space-y-6 backdrop-blur-md">
-          <div className="text-center space-y-2">
-            <div className="h-12 w-12 bg-red-500/10 rounded-full flex items-center justify-center mx-auto text-red-500">
-              <ShieldCheck className="h-6 w-6" />
-            </div>
-            <h2 className="text-xl font-bold text-white tracking-tight">Admin Authentication Required</h2>
-            <p className="text-slate-500 text-xs">Please sign in with your authorized admin email credentials to view bookings.</p>
-          </div>
-          
-          <form onSubmit={handleEmailSubmit} className="space-y-4 text-left">
-            {authError && (
-              <div className="p-3 text-xs bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-center font-medium">
-                {authError}
-              </div>
-            )}
-            
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Email Address</label>
-              <input
-                type="email"
-                required
-                placeholder="admin@laxmitoyota.co.in"
-                value={emailInput}
-                onChange={(e) => setEmailInput(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-850 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
-              />
-            </div>
-            
-            <div className="space-y-1.5">
-              <label className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Password</label>
-              <input
-                type="password"
-                required
-                placeholder="••••••••"
-                value={passwordInput}
-                onChange={(e) => setPasswordInput(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-855 rounded-lg px-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
-              />
-            </div>
-            
-            <button
-              type="submit"
-              disabled={authLoading}
-              className="w-full flex items-center justify-center gap-2 rounded-lg bg-gradient-to-r from-red-600 to-red-500 py-3 text-sm font-semibold text-white shadow-xl hover:from-red-500 hover:to-red-400 disabled:opacity-50 transition-all duration-200"
-            >
-              {authLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin text-white" />
-              ) : (
-                "Sign In to Admin Dashboard"
-              )}
-            </button>
-          </form>
-
-          <div className="relative flex py-2 items-center">
-            <div className="flex-grow border-t border-slate-800"></div>
-            <span className="flex-shrink mx-4 text-[10px] text-slate-600 uppercase tracking-widest">or</span>
-            <div className="flex-grow border-t border-slate-800"></div>
-          </div>
-
-          <button
-            onClick={loginWithGoogle}
-            className="w-full rounded-lg bg-slate-900 border border-slate-800 py-3 text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-850 transition-all duration-200"
-          >
-            Sign In with Google Account
-          </button>
-        </div>
+        <AuthForm />
       </div>
     );
   }
