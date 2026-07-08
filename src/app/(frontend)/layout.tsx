@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Poppins, Inter } from "next/font/google";
 import "../globals.css";
 import { AuthContextProvider } from "@/context/AuthContext";
-import Navbar from "@/components/Navbar";
 import RegionalAIChatbot from "@/components/RegionalAIChatbot";
 
 const poppins = Poppins({
@@ -34,7 +33,6 @@ export default function FrontendLayout({
     >
       <body className="min-h-full flex flex-col bg-white text-slate-900 selection:bg-[#EB0A1E]/30 selection:text-red-200 font-sans">
         <AuthContextProvider>
-          <Navbar />
           <main className="flex-grow">
             {children}
           </main>
