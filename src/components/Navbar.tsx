@@ -5,13 +5,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X, ChevronDown, ChevronUp } from "lucide-react";
 import { NAV_CATEGORIES } from "@/lib/categories";
+import { VEHICLES } from "@/lib/data";
 
 export default function Navbar() {
   const { user, loading, logout } = useAuth();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileVehiclesExpanded, setMobileVehiclesExpanded] = useState(false);
 
   // Skip rendering on the landing page, as it has its own custom navbar layout
   if (pathname === "/") {
@@ -39,29 +41,50 @@ export default function Navbar() {
             </Link>
             
             {/* Dropdown Menu */}
-            <div className="relative group py-2">
+            <div className="relative group py-6">
               <button className="flex items-center text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors focus:outline-none">
-                Vehicles <ChevronDown className="h-3.5 w-3.5 ml-1" />
+                Vehicles <ChevronDown className="h-3.5 w-3.5 ml-1 transition-transform group-hover:rotate-180" />
               </button>
               
-              {/* Dropdown Content */}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[480px] bg-zinc-900 border border-zinc-800 shadow-2xl rounded-2xl p-6 hidden group-hover:grid grid-cols-2 gap-6 z-50 text-left">
+              {/* Premium Hover Dropdown Panel */}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[680px] bg-zinc-900 border border-zinc-800 shadow-2xl rounded-2xl p-6 hidden group-hover:grid grid-cols-2 gap-6 z-50 text-left">
                 {NAV_CATEGORIES.map((cat) => (
-                  <div key={cat.name} className="space-y-2">
-                    <h4 className="text-[#EB0A1E] text-[10px] uppercase tracking-widest font-black">{cat.name}</h4>
-                    <ul className="space-y-1.5">
-                      {cat.models.map((model) => (
-                        <li key={model}>
-                          <Link href={`/vehicles/${model}`} className="text-xs text-zinc-400 hover:text-white transition-colors font-semibold block capitalize">
-                            {model.replace("toyota-", "").replace(/-/g, " ")}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
+                  <div key={cat.name} className="space-y-3">
+                    <h4 className="text-[#EB0A1E] text-[10px] uppercase tracking-widest font-black border-b border-zinc-800 pb-1.5">{cat.name}</h4>
+                    <div className="grid grid-cols-1 gap-2.5">
+                      {cat.models.map((modelKey) => {
+                        const vehicleData = VEHICLES[modelKey];
+                        if (!vehicleData) return null;
+                        return (
+                          <div key={modelKey} className="flex items-center gap-3 group/item">
+                            {/* Small Car Image - Links to CRM/CMS Management Panel */}
+                            <Link 
+                              href="/admin/dashboard" 
+                              title="Edit in CMS"
+                              className="relative h-10 w-16 bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800 hover:border-[#EB0A1E] transition-all shrink-0 cursor-pointer block"
+                            >
+                              <img
+                                src={vehicleData.image}
+                                alt={vehicleData.name}
+                                className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-300"
+                              />
+                            </Link>
+                            {/* Model name - Links to Public Details Page */}
+                            <Link 
+                              href={`/vehicles/${modelKey}`} 
+                              className="text-xs text-zinc-400 hover:text-white transition-colors font-semibold block capitalize"
+                            >
+                              {vehicleData.name}
+                            </Link>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
+
             <Link href="/book-test-drive" className="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">
               Test Drive
             </Link>
@@ -139,13 +162,62 @@ export default function Navbar() {
 
       {/* Mobile Drawer menu (Slide-down overlay) */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-zinc-950 border-b border-zinc-850 px-4 py-6 space-y-4 shadow-2xl absolute w-full left-0 z-50 text-left animate-slide-down">
+        <div className="lg:hidden bg-zinc-950 border-b border-zinc-850 px-4 py-6 space-y-4 shadow-2xl absolute w-full left-0 z-50 text-left max-h-[85vh] overflow-y-auto">
           <Link href="/" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-zinc-300 hover:text-white transition-colors">
             Home
           </Link>
-          <Link href="/#vehicles" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-zinc-300 hover:text-white transition-colors">
-            Vehicles
-          </Link>
+          
+          {/* Mobile Vehicles Accordion dropdown */}
+          <div className="space-y-2">
+            <button 
+              onClick={() => setMobileVehiclesExpanded(!mobileVehiclesExpanded)}
+              className="w-full flex justify-between items-center text-sm font-bold uppercase tracking-wider text-zinc-300 hover:text-white transition-colors focus:outline-none"
+            >
+              <span>Vehicles</span>
+              {mobileVehiclesExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </button>
+            
+            {mobileVehiclesExpanded && (
+              <div className="pl-4 space-y-4 pt-2 border-l border-zinc-800/80 animate-in fade-in duration-200">
+                {NAV_CATEGORIES.map((cat) => (
+                  <div key={cat.name} className="space-y-2">
+                    <h4 className="text-[#EB0A1E] text-[10px] uppercase tracking-widest font-black">{cat.name}</h4>
+                    <div className="grid grid-cols-1 gap-2">
+                      {cat.models.map((modelKey) => {
+                        const vehicleData = VEHICLES[modelKey];
+                        if (!vehicleData) return null;
+                        return (
+                          <div key={modelKey} className="flex items-center gap-3">
+                            {/* Small image links to CRM CMS */}
+                            <Link 
+                              href="/admin/dashboard" 
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="relative h-8 w-12 bg-zinc-950 rounded border border-zinc-800 shrink-0 block"
+                            >
+                              <img
+                                src={vehicleData.image}
+                                alt={vehicleData.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </Link>
+                            {/* Name links to public details */}
+                            <Link 
+                              href={`/vehicles/${modelKey}`} 
+                              onClick={() => setMobileMenuOpen(false)}
+                              className="text-xs text-zinc-400 hover:text-white font-medium"
+                            >
+                              {vehicleData.name}
+                            </Link>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <Link href="/book-test-drive" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-zinc-300 hover:text-white transition-colors">
             Test Drive
           </Link>

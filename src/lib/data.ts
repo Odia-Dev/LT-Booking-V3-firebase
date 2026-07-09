@@ -6,6 +6,7 @@ export interface Vehicle {
   variants: string[];
   colors: string[];
   category: string;
+  image: string;
 }
 
 export interface Branch {
@@ -30,10 +31,11 @@ export const VEHICLES: Record<string, Vehicle> = {
     ],
     variants: ["E", "S", "G", "V"],
     colors: ["Sportin Red", "Gaming Grey", "Enticing Silver", "Insta Blue", "Cafe White"],
-    category: "Hatchback"
+    category: "Hatchback",
+    image: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=200"
   },
   "toyota-urban-cruiser-taisor": {
-    name: "Toyota Urban Cruiser Taisor",
+    name: "Toyota Taisor",
     price: "₹7.74 Lakh onwards",
     tagline: "Make Your Move",
     features: [
@@ -45,7 +47,8 @@ export const VEHICLES: Record<string, Vehicle> = {
     ],
     variants: ["E", "S", "S+", "G", "V"],
     colors: ["Lucent Orange", "Sportin Red", "Cafe White", "Enticing Silver", "Gaming Grey"],
-    category: "SUV"
+    category: "SUV",
+    image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=200"
   },
   "toyota-rumion": {
     name: "Toyota Rumion",
@@ -60,7 +63,8 @@ export const VEHICLES: Record<string, Vehicle> = {
     ],
     variants: ["S", "G", "V"],
     colors: ["Rustic Brown", "Iconic Grey", "Spunky Blue", "Cafe White", "Enticing Silver"],
-    category: "MPV"
+    category: "MPV",
+    image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=200"
   },
   "toyota-urban-cruiser-hyryder": {
     name: "Toyota Urban Cruiser Hyryder",
@@ -75,7 +79,8 @@ export const VEHICLES: Record<string, Vehicle> = {
     ],
     variants: ["E", "S", "G", "V"],
     colors: ["Cafe White", "Enticing Silver", "Gaming Grey", "Sportin Red", "Cave Black"],
-    category: "SUV"
+    category: "SUV",
+    image: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=200"
   },
   "toyota-urban-cruiser-ebella": {
     name: "Toyota Urban Cruiser Ebella",
@@ -90,7 +95,8 @@ export const VEHICLES: Record<string, Vehicle> = {
     ],
     variants: ["Standard EV", "Pro EV", "Max EV"],
     colors: ["Nebula Blue", "Cafe White", "Cave Black", "Enticing Silver"],
-    category: "Electric"
+    category: "Electric",
+    image: "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&q=80&w=200"
   },
   "toyota-innova-crysta": {
     name: "Toyota Innova Crysta",
@@ -105,7 +111,8 @@ export const VEHICLES: Record<string, Vehicle> = {
     ],
     variants: ["G", "GX", "VX", "ZX"],
     colors: ["Super White", "Silver Metallic", "Grey Metallic", "Attitude Black Mica", "Bronze Metallic"],
-    category: "MPV"
+    category: "MPV",
+    image: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=200"
   },
   "toyota-innova-hycross": {
     name: "Toyota Innova Hycross",
@@ -120,7 +127,8 @@ export const VEHICLES: Record<string, Vehicle> = {
     ],
     variants: ["G", "GX", "VX", "ZX", "ZX (O)"],
     colors: ["Super White", "Platinum White Pearl", "Silver Metallic", "Attitude Black Mica", "Blackish Ageha Glass Flake"],
-    category: "MPV"
+    category: "MPV",
+    image: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=200"
   },
   "toyota-fortuner": {
     name: "Toyota Fortuner",
@@ -129,13 +137,14 @@ export const VEHICLES: Record<string, Vehicle> = {
     features: [
       "Powerful 2.8L Diesel/2.7L Petrol Engine",
       "4WD System with High/Low Range Selector",
-      "Ventilated Front Seats",
+      "React Front Seats System",
       "11-speaker Premium JBL Audio System",
       "Active Traction Control (A-TRC)"
     ],
     variants: ["Standard 2WD", "Standard 4WD"],
     colors: ["Super White", "Platinum White Pearl", "Grey Metallic", "Attitude Black", "Phantom Brown"],
-    category: "SUV"
+    category: "SUV",
+    image: "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=200"
   },
   "toyota-fortuner-legender": {
     name: "Toyota Fortuner Legender",
@@ -150,7 +159,8 @@ export const VEHICLES: Record<string, Vehicle> = {
     ],
     variants: ["Legender 4x2", "Legender 4x4"],
     colors: ["Platinum White Pearl with Black Roof"],
-    category: "SUV"
+    category: "SUV",
+    image: "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=200"
   },
   "toyota-hilux": {
     name: "Toyota Hilux",
@@ -165,7 +175,8 @@ export const VEHICLES: Record<string, Vehicle> = {
     ],
     variants: ["Std", "High", "High AT"],
     colors: ["Super White", "Platinum White Pearl", "Grey Metallic", "Silver Metallic", "Emotional Red"],
-    category: "SUV"
+    category: "SUV",
+    image: "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=200"
   },
   "toyota-camry": {
     name: "Toyota Camry",
@@ -180,7 +191,8 @@ export const VEHICLES: Record<string, Vehicle> = {
     ],
     variants: ["Camry Hybrid"],
     colors: ["Platinum White Pearl", "Silver Metallic", "Attitude Black", "Burning Black", "Red Mica Metallic"],
-    category: "Sedan"
+    category: "Sedan",
+    image: "https://images.unsplash.com/photo-1503376710915-18861d9a2638?auto=format&fit=crop&q=80&w=200"
   },
   "toyota-vellfire": {
     name: "Toyota Vellfire",
@@ -195,7 +207,8 @@ export const VEHICLES: Record<string, Vehicle> = {
     ],
     variants: ["Hi-Grade", "VIP Grade"],
     colors: ["Black", "Burning Black", "White Pearl Crystal Shine"],
-    category: "Luxury"
+    category: "Luxury",
+    image: "https://images.unsplash.com/photo-1517524008436-a3851f153a77?auto=format&fit=crop&q=80&w=200"
   },
   "toyota-landcruiser300": {
     name: "Toyota Land Cruiser 300",
@@ -210,7 +223,8 @@ export const VEHICLES: Record<string, Vehicle> = {
     ],
     variants: ["ZX"],
     colors: ["Super White", "Precious White Pearl", "Dark Red Mica Metallic", "Attitude Black", "Dark Blue Mica"],
-    category: "Luxury"
+    category: "Luxury",
+    image: "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=200"
   }
 };
 
