@@ -5,7 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ChevronDown } from "lucide-react";
+import { NAV_CATEGORIES } from "@/lib/categories";
 
 export default function Navbar() {
   const { user, loading, logout } = useAuth();
@@ -36,9 +37,31 @@ export default function Navbar() {
             <Link href="/" className="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">
               Home
             </Link>
-            <Link href="/#vehicles" className="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">
-              Vehicles
-            </Link>
+            
+            {/* Dropdown Menu */}
+            <div className="relative group py-2">
+              <button className="flex items-center text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors focus:outline-none">
+                Vehicles <ChevronDown className="h-3.5 w-3.5 ml-1" />
+              </button>
+              
+              {/* Dropdown Content */}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[480px] bg-zinc-900 border border-zinc-800 shadow-2xl rounded-2xl p-6 hidden group-hover:grid grid-cols-2 gap-6 z-50 text-left">
+                {NAV_CATEGORIES.map((cat) => (
+                  <div key={cat.name} className="space-y-2">
+                    <h4 className="text-[#EB0A1E] text-[10px] uppercase tracking-widest font-black">{cat.name}</h4>
+                    <ul className="space-y-1.5">
+                      {cat.models.map((model) => (
+                        <li key={model}>
+                          <Link href={`/vehicles/${model}`} className="text-xs text-zinc-400 hover:text-white transition-colors font-semibold block capitalize">
+                            {model.replace("toyota-", "").replace(/-/g, " ")}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </div>
             <Link href="/book-test-drive" className="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">
               Test Drive
             </Link>
