@@ -174,7 +174,7 @@ export default function UltimateStorefront() {
               <Link href="/toyota-emi-calculator" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
                 EMI Check
               </Link>
-              <Link href="/#offers" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
+              <Link href="/offers" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
                 Offer
               </Link>
               <Link href="/contact" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
@@ -254,7 +254,7 @@ export default function UltimateStorefront() {
             <Link href="/toyota-emi-calculator" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
               EMI Check
             </Link>
-            <Link href="/#offers" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
+            <Link href="/offers" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
               Offer
             </Link>
             <Link href="/contact" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
