@@ -4,6 +4,7 @@ import "../globals.css";
 import { AuthContextProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import RegionalAIChatbot from "@/components/RegionalAIChatbot";
+import AnalyticsWrapper from "@/components/AnalyticsWrapper";
 
 const poppins = Poppins({
   variable: "--font-poppins",
@@ -34,6 +35,7 @@ export default function FrontendLayout({
     >
       <body className="min-h-full flex flex-col bg-white text-slate-900 selection:bg-[#EB0A1E]/30 selection:text-red-200 font-sans">
         <AuthContextProvider>
+          <AnalyticsWrapper />
           <Navbar />
           <main className="flex-grow">
             {children}
