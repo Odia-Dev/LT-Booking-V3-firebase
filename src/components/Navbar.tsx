@@ -104,7 +104,7 @@ export default function Navbar() {
             <Link href="/#offers" className="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">
               Offer
             </Link>
-            <Link href="/#contact-us" className="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">
+            <Link href="/contact" className="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">
               Contact
             </Link>
             <Link href="/blog" className="text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors">
@@ -247,7 +247,7 @@ export default function Navbar() {
           <Link href="/#offers" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-zinc-300 hover:text-white transition-colors">
             Offer
           </Link>
-          <Link href="/#contact-us" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-zinc-300 hover:text-white transition-colors">
+          <Link href="/contact" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-zinc-300 hover:text-white transition-colors">
             Contact
           </Link>
           <Link href="/blog" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-zinc-300 hover:text-white transition-colors">

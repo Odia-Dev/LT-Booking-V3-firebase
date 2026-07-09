@@ -177,7 +177,7 @@ export default function UltimateStorefront() {
               <Link href="/#offers" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
                 Offer
               </Link>
-              <Link href="/#contact-us" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
+              <Link href="/contact" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
                 Contact
               </Link>
               <Link href="/blog" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
@@ -257,7 +257,7 @@ export default function UltimateStorefront() {
             <Link href="/#offers" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
               Offer
             </Link>
-            <Link href="/#contact-us" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
+            <Link href="/contact" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
               Contact
             </Link>
             <Link href="/blog" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
