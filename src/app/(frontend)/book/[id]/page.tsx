@@ -7,6 +7,7 @@ import { db } from "@/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import Link from "next/link";
 import { ShieldCheck, ArrowLeft, CheckCircle } from "lucide-react";
+import { BRANCHES } from "@/lib/data";
 
 const VEHICLE_DATA: Record<
   string,
@@ -224,11 +225,18 @@ function BookContent() {
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [branch, setBranch] = useState("Berhampur");
+  const [branch, setBranch] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [bookingRef, setBookingRef] = useState("");
+  const [isOther, setIsOther] = useState(false);
+  const [cityPincode, setCityPincode] = useState({ city: "", pincode: "" });
+
+  const handleBranchChange = (value: string) => {
+    setBranch(value);
+    setIsOther(value === "other");
+  };
 
   const vehicle = VEHICLE_DATA[id];
   const variantParam = searchParams ? searchParams.get("variant") : null;
@@ -329,6 +337,11 @@ function BookContent() {
       return;
     }
 
+    if (!branch) {
+      setError("Please select a dealership branch.");
+      return;
+    }
+
     setIsProcessing(true);
 
     const generatedRef = `LT-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -340,7 +353,9 @@ function BookContent() {
       customerEmail: user.email,
       customerName: fullName,
       customerPhone: cleanedPhone,
-      branch: branch,
+      branch: branch === "other" ? "Other / Home Delivery" : branch,
+      deliveryCity: branch === "other" ? cityPincode.city : "",
+      deliveryPincode: branch === "other" ? cityPincode.pincode : "",
       vehicleId: id,
       vehicleName: vehicle.name,
       vehicleType: vehicle.type,
@@ -668,14 +683,38 @@ function BookContent() {
               <select
                 id="branch"
                 value={branch}
-                onChange={(e) => setBranch(e.target.value)}
+                onChange={(e) => handleBranchChange(e.target.value)}
+                required
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-all"
               >
-                <option value="Berhampur">Berhampur Branch</option>
-                <option value="Jeypore">Jeypore Branch</option>
-                <option value="Bargarh">Bargarh Branch</option>
+                <option value="">-- Choose Branch --</option>
+                {Object.entries(BRANCHES).map(([key, b]) => (
+                  <option key={key} value={b.name}>{b.name} Branch</option>
+                ))}
+                <option value="other">Other / Home Delivery</option>
               </select>
             </div>
+
+            {isOther && (
+              <div className="grid grid-cols-2 gap-4 mt-4 animate-in fade-in">
+                <div className="space-y-1">
+                  <input
+                    placeholder="Your City"
+                    required
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                    onChange={(e) => setCityPincode({ ...cityPincode, city: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <input
+                    placeholder="Pincode"
+                    required
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 transition-all"
+                    onChange={(e) => setCityPincode({ ...cityPincode, pincode: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
 
             <button
               type="submit"

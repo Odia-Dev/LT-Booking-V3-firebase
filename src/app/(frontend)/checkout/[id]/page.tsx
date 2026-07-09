@@ -6,6 +6,7 @@ import React, { useState, useEffect } from "react";
 import { db } from "@/lib/firebase";
 import { collection, addDoc } from "firebase/firestore";
 import Link from "next/link";
+import { BRANCHES } from "@/lib/data";
 
 const VEHICLE_DATA: Record<string, { name: string; price: string; bookingAmount: string; type: string; gradient: string }> = {
   glanza: {
@@ -45,9 +46,16 @@ export default function CheckoutPage() {
 
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
-  const [branch, setBranch] = useState("Berhampur");
+  const [branch, setBranch] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [isOther, setIsOther] = useState(false);
+  const [cityPincode, setCityPincode] = useState({ city: "", pincode: "" });
+
+  const handleBranchChange = (value: string) => {
+    setBranch(value);
+    setIsOther(value === "other");
+  };
 
   const vehicle = VEHICLE_DATA[id];
 
@@ -109,6 +117,11 @@ export default function CheckoutPage() {
       return;
     }
 
+    if (!branch) {
+      setError("Please select a dealership branch.");
+      return;
+    }
+
     setSubmitting(true);
 
     const bookingData = {
@@ -120,7 +133,9 @@ export default function CheckoutPage() {
       customerName: fullName,
       customerPhone: cleanedPhone,
       customerEmail: user.email,
-      branch: branch,
+      branch: branch === "other" ? "Other / Home Delivery" : branch,
+      deliveryCity: branch === "other" ? cityPincode.city : "",
+      deliveryPincode: branch === "other" ? cityPincode.pincode : "",
       status: "Pending",
       createdAt: new Date().toISOString(),
     };
@@ -241,14 +256,38 @@ export default function CheckoutPage() {
               <select
                 id="branch"
                 value={branch}
-                onChange={(e) => setBranch(e.target.value)}
+                onChange={(e) => handleBranchChange(e.target.value)}
+                required
                 className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 transition-colors"
               >
-                <option value="Berhampur">Berhampur Branch</option>
-                <option value="Jeypore">Jeypore Branch</option>
-                <option value="Bargarh">Bargarh Branch</option>
+                <option value="">-- Choose Branch --</option>
+                {Object.entries(BRANCHES).map(([key, b]) => (
+                  <option key={key} value={b.name}>{b.name} Branch</option>
+                ))}
+                <option value="other">Other / Home Delivery</option>
               </select>
             </div>
+
+            {isOther && (
+              <div className="grid grid-cols-2 gap-4 mt-4 animate-in fade-in">
+                <div className="space-y-1">
+                  <input
+                    placeholder="Your City"
+                    required
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 transition-colors"
+                    onChange={(e) => setCityPincode({ ...cityPincode, city: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <input
+                    placeholder="Pincode"
+                    required
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg px-4 py-2.5 text-sm text-white focus:outline-none focus:border-red-500 transition-colors"
+                    onChange={(e) => setCityPincode({ ...cityPincode, pincode: e.target.value })}
+                  />
+                </div>
+              </div>
+            )}
 
             <button
               type="submit"
