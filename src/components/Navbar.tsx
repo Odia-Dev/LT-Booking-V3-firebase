@@ -42,9 +42,12 @@ export default function Navbar() {
             
             {/* Dropdown Menu */}
             <div className="relative group py-6">
-              <button className="flex items-center text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors focus:outline-none">
+              <Link 
+                href="/vehicles"
+                className="flex items-center text-xs font-bold uppercase tracking-widest text-zinc-400 hover:text-white transition-colors focus:outline-none"
+              >
                 Vehicles <ChevronDown className="h-3.5 w-3.5 ml-1 transition-transform group-hover:rotate-180" />
-              </button>
+              </Link>
               
               {/* Premium Hover Dropdown Panel */}
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[680px] bg-zinc-900 border border-zinc-800 shadow-2xl rounded-2xl p-6 hidden group-hover:grid grid-cols-2 gap-6 z-50 text-left">
@@ -82,6 +85,13 @@ export default function Navbar() {
                     </div>
                   </div>
                 ))}
+                {/* View All link */}
+                <div className="col-span-2 border-t border-zinc-800 pt-4 mt-2 flex justify-between items-center">
+                  <span className="text-[10px] text-zinc-500 font-bold uppercase">Explore Complete Catalog</span>
+                  <Link href="/vehicles" className="inline-flex items-center text-xs font-black uppercase tracking-widest text-[#EB0A1E] hover:text-red-400 transition-colors gap-1">
+                    View All Vehicles &rarr;
+                  </Link>
+                </div>
               </div>
             </div>
 
@@ -214,6 +224,16 @@ export default function Navbar() {
                     </div>
                   </div>
                 ))}
+                {/* Mobile View All Link */}
+                <div className="pt-2.5 border-t border-zinc-900/80 mt-4">
+                  <Link 
+                    href="/vehicles" 
+                    onClick={() => setMobileMenuOpen(false)} 
+                    className="inline-flex items-center text-xs font-black uppercase tracking-widest text-[#EB0A1E] hover:text-red-400 transition-colors gap-1"
+                  >
+                    View All Vehicles &rarr;
+                  </Link>
+                </div>
               </div>
             )}
           </div>
