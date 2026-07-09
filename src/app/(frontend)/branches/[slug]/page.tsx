@@ -1,35 +1,34 @@
-"use client";
-
-import React, { use } from "react";
+import React from "react";
+import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { MapPin, Phone, Mail, Clock, ArrowLeft, Car, Calendar, ShieldCheck } from "lucide-react";
-
-interface Branch {
-  slug: string;
-  name: string;
-  district: string;
-  phone: string;
-  address: string;
-}
-
-const BRANCHES: Record<string, Branch> = {
-  brahmapur: { slug: "brahmapur", name: "Brahmapur", district: "Ganjam", phone: "+91 94370 00001", address: "National Highway 16, Haldiapadar, Brahmapur, Odisha 760003" },
-  jeypore: { slug: "jeypore", name: "Jeypore", district: "Koraput", phone: "+91 94370 00002", address: "NH-26, Jeypore Bypass Road, Jeypore, Odisha 764001" },
-  bargarh: { slug: "bargarh", name: "Bargarh", district: "Bargarh", phone: "+91 94370 00003", address: "NH-53, Canal Avenue, Bargarh, Odisha 768028" },
-  balangir: { slug: "balangir", name: "Balangir", district: "Balangir", phone: "+91 94370 00004", address: "Patnagarh Road, Balangir, Odisha 767001" },
-  rayagada: { slug: "rayagada", name: "Rayagada", district: "Rayagada", phone: "+91 94370 00005", address: "Gunupur Road, Rayagada, Odisha 765001" },
-  bhawanipatna: { slug: "bhawanipatna", name: "Bhawanipatna", district: "Kalahandi", phone: "+91 94370 00006", address: "NH-26, Bhawanipatna, Odisha 766001" },
-  paralakhemundi: { slug: "paralakhemundi", name: "Paralakhemundi", district: "Gajapati", phone: "+91 94370 00007", address: "Palasa Road, Paralakhemundi, Odisha 761200" },
-  aska: { slug: "aska", name: "Aska", district: "Ganjam", phone: "+91 94370 00008", address: "Bhanjanagar Road, Aska, Odisha 761111" }
-};
+import { BRANCHES } from "@/lib/data";
+import { MapPin, Phone, Mail, Clock, ArrowLeft, Calendar, ShieldCheck, ExternalLink } from "lucide-react";
 
 interface BranchPageProps {
   params: Promise<{ slug: string }>;
 }
 
-export default function BranchDetailPage({ params }: BranchPageProps) {
-  const { slug } = use(params);
+export async function generateMetadata({ params }: BranchPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const branch = BRANCHES[slug.toLowerCase()];
+
+  if (!branch) {
+    return {
+      title: "Branch Not Found | Laxmi Toyota",
+      description: "The requested Laxmi Toyota branch showroom could not be found.",
+    };
+  }
+
+  return {
+    title: `Laxmi Toyota ${branch.name} Showroom | Authorized Toyota Dealer in Odisha`,
+    description: `Contact Laxmi Toyota showroom in ${branch.name}, Odisha. Phone: ${branch.phone}, Address: ${branch.address}. Schedule localized test drives and car maintenance appointments.`,
+    keywords: `Toyota Showroom ${branch.name}, Laxmi Toyota ${branch.name}, Toyota dealer ${branch.name}, Toyota service center ${branch.name}`,
+  };
+}
+
+export default async function BranchDetailPage({ params }: BranchPageProps) {
+  const { slug } = await params;
   const branch = BRANCHES[slug.toLowerCase()];
 
   if (!branch) {
@@ -55,7 +54,7 @@ export default function BranchDetailPage({ params }: BranchPageProps) {
               Laxmi Toyota {branch.name} Showroom
             </h1>
             <p className="text-slate-500 text-sm leading-relaxed max-w-2xl">
-              Welcome to the authorized Laxmi Toyota dealership in {branch.name}, {branch.district} district. We offer premium sales, spares, and service support for the entire Toyota passenger vehicle lineup.
+              Welcome to the authorized Laxmi Toyota dealership in {branch.name}. We offer premium sales, spares, and service support for the entire Toyota passenger vehicle lineup.
             </p>
           </div>
 
@@ -73,7 +72,9 @@ export default function BranchDetailPage({ params }: BranchPageProps) {
                 <Phone className="h-5 w-5 text-[#EB0A1E] shrink-0" />
                 <div>
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Contact Number</span>
-                  <p className="text-slate-800 font-medium mt-0.5">{branch.phone}</p>
+                  <a href={`tel:${branch.phone.replace(/\s+/g, "")}`} className="text-slate-800 font-medium mt-0.5 hover:text-[#EB0A1E] hover:underline transition-colors block">
+                    {branch.phone}
+                  </a>
                 </div>
               </div>
 
@@ -81,7 +82,7 @@ export default function BranchDetailPage({ params }: BranchPageProps) {
                 <Mail className="h-5 w-5 text-slate-400 shrink-0" />
                 <div>
                   <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Email Address</span>
-                  <p className="text-slate-800 font-medium mt-0.5">{branch.slug}@laxmitoyota.co.in</p>
+                  <p className="text-slate-800 font-medium mt-0.5">{slug.toLowerCase()}@laxmitoyota.co.in</p>
                 </div>
               </div>
             </div>
@@ -90,44 +91,35 @@ export default function BranchDetailPage({ params }: BranchPageProps) {
               <h3 className="font-bold text-slate-900 flex items-center gap-1.5 text-xs uppercase tracking-wider">
                 <Clock className="w-4 h-4 text-slate-500" /> Working Hours
               </h3>
-              <div className="space-y-2 text-xs text-slate-600">
-                <div className="flex justify-between">
-                  <span>Showroom Sales:</span>
-                  <span className="font-semibold text-slate-800">09:00 AM - 08:00 PM</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Service Workshops:</span>
-                  <span className="font-semibold text-slate-800">08:30 AM - 06:30 PM</span>
-                </div>
-                <div className="flex justify-between border-t border-slate-200/60 pt-2 text-[#EB0A1E] font-semibold">
-                  <span>Open Days:</span>
-                  <span>Monday - Sunday</span>
-                </div>
+              <p className="text-xs text-slate-600 leading-relaxed font-semibold">
+                {branch.hours}
+              </p>
+              <div className="pt-2">
+                <a 
+                  href={branch.mapLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-[#EB0A1E] hover:underline"
+                >
+                  Open in Google Maps <ExternalLink className="w-3.5 h-3.5" />
+                </a>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Map placeholder */}
-          <div className="border border-slate-200 bg-slate-50 rounded-2xl h-60 flex flex-col items-center justify-center text-slate-400 text-xs font-medium space-y-2">
-            <MapPin className="w-8 h-8 text-slate-300" />
-            <span>Interactive Google Map Location coming soon</span>
+        {/* CTA Banner */}
+        <div className="bg-slate-900 text-white rounded-3xl p-8 flex flex-col md:flex-row justify-between items-center gap-6 border border-slate-800">
+          <div className="space-y-2 text-center md:text-left">
+            <h3 className="text-xl font-extrabold">Ready to schedule a visit?</h3>
+            <p className="text-slate-400 text-xs max-w-md">Book a priority showroom consultation or a door-step test drive with our sales advisors.</p>
           </div>
-
-          {/* Localized CTA actions */}
-          <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row gap-4">
-            <Link
-              href="/book-test-drive"
-              className="flex-1 text-center py-4 bg-[#EB0A1E] text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-red-700 transition-all flex items-center justify-center gap-1.5"
-            >
-              <Calendar className="w-4 h-4" /> Book a Test Drive in {branch.name}
-            </Link>
-            <Link
-              href="/car-loan-eligibility"
-              className="flex-1 text-center py-4 bg-slate-900 text-white rounded-xl text-xs font-bold uppercase tracking-widest hover:bg-slate-800 transition-all flex items-center justify-center gap-1.5"
-            >
-              <ShieldCheck className="w-4 h-4" /> Apply for Finance Offer
-            </Link>
-          </div>
+          <Link
+            href={`/book-test-drive?branch=${branch.name}`}
+            className="inline-flex items-center justify-center bg-[#EB0A1E] hover:bg-red-750 text-white px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider shadow-lg shadow-red-500/10 transition-all gap-1.5 shrink-0"
+          >
+            <Calendar className="w-4 h-4" /> Schedule Appointment
+          </Link>
         </div>
 
       </div>
