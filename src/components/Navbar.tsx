@@ -49,22 +49,22 @@ export default function Navbar() {
                 Vehicles <ChevronDown className="h-3.5 w-3.5 ml-1 transition-transform group-hover:rotate-180" />
               </Link>
               
-              {/* Premium Hover Dropdown Panel */}
-              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[680px] bg-zinc-900 border border-zinc-800 shadow-2xl rounded-2xl p-6 hidden group-hover:grid grid-cols-2 gap-6 z-50 text-left">
+              {/* Premium Hover Dropdown Panel (Wider, Shorter Rectangle Layout) */}
+              <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[960px] bg-zinc-900 border border-zinc-800 shadow-2xl rounded-2xl p-8 hidden group-hover:grid grid-cols-4 gap-x-8 gap-y-6 z-50 text-left">
                 {NAV_CATEGORIES.map((cat) => (
-                  <div key={cat.name} className="space-y-3">
-                    <h4 className="text-[#EB0A1E] text-[10px] uppercase tracking-widest font-black border-b border-zinc-800 pb-1.5">{cat.name}</h4>
-                    <div className="grid grid-cols-1 gap-2.5">
+                  <div key={cat.name} className="space-y-2.5">
+                    <h4 className="text-[#EB0A1E] text-[10px] uppercase tracking-widest font-black border-b border-zinc-800/80 pb-1">{cat.name}</h4>
+                    <div className="grid grid-cols-1 gap-2">
                       {cat.models.map((modelKey) => {
                         const vehicleData = VEHICLES[modelKey];
                         if (!vehicleData) return null;
                         return (
-                          <div key={modelKey} className="flex items-center gap-3 group/item">
+                          <div key={modelKey} className="flex items-center gap-2.5 group/item">
                             {/* Small Car Image - Links to CRM/CMS Management Panel */}
                             <Link 
                               href="/admin/dashboard" 
                               title="Edit in CMS"
-                              className="relative h-10 w-16 bg-zinc-950 rounded-lg overflow-hidden border border-zinc-800 hover:border-[#EB0A1E] transition-all shrink-0 cursor-pointer block"
+                              className="relative h-7 w-11 bg-zinc-950 rounded border border-zinc-800 hover:border-[#EB0A1E] transition-all shrink-0 cursor-pointer block"
                             >
                               <img
                                 src={vehicleData.image}
@@ -75,9 +75,9 @@ export default function Navbar() {
                             {/* Model name - Links to Public Details Page */}
                             <Link 
                               href={`/vehicles/${modelKey}`} 
-                              className="text-xs text-zinc-400 hover:text-white transition-colors font-semibold block capitalize"
+                              className="text-[11px] text-zinc-400 hover:text-white transition-colors font-bold block capitalize truncate"
                             >
-                              {vehicleData.name}
+                              {vehicleData.name.replace("Toyota ", "")}
                             </Link>
                           </div>
                         );
@@ -86,8 +86,8 @@ export default function Navbar() {
                   </div>
                 ))}
                 {/* View All link */}
-                <div className="col-span-2 border-t border-zinc-800 pt-4 mt-2 flex justify-between items-center">
-                  <span className="text-[10px] text-zinc-500 font-bold uppercase">Explore Complete Catalog</span>
+                <div className="col-span-4 border-t border-zinc-800 pt-4 mt-2 flex justify-between items-center">
+                  <span className="text-[10px] text-zinc-500 font-bold uppercase tracking-wider">Explore Complete Catalog</span>
                   <Link href="/vehicles" className="inline-flex items-center text-xs font-black uppercase tracking-widest text-[#EB0A1E] hover:text-red-400 transition-colors gap-1">
                     View All Vehicles &rarr;
                   </Link>
