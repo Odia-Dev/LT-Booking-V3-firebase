@@ -11,8 +11,11 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      // Redirect to admin dashboard if logged in
-      router.push("/admin/dashboard");
+      if (user.email === "admin@laxmitoyota.co.in") {
+        router.push("/admin/dashboard");
+      } else {
+        router.push("/dashboard");
+      }
     }
   }, [user, loading, router]);
 
