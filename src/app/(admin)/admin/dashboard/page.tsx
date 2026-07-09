@@ -218,6 +218,66 @@ export default function AdminDashboard() {
   const [customBranch, setCustomBranch] = useState("");
   const [isAssigning, setIsAssigning] = useState(false);
 
+  // Optimized filter logic combining searchQuery and statusFilter using useMemo
+  const filteredItems = useMemo(() => {
+    const q = searchQuery.toLowerCase();
+    
+    const matchesStatus = (itemStatus: string) => {
+      if (statusFilter === "All") return true;
+      const statusLower = (itemStatus || "").toLowerCase();
+      
+      if (statusFilter === "Pending") {
+        return statusLower.includes("pending") || statusLower === "new lead" || statusLower === "assigned";
+      }
+      if (statusFilter === "Paid") {
+        return statusLower === "paid" || statusLower === "completed" || statusLower === "processed" || statusLower === "evaluated" || statusLower === "converted";
+      }
+      if (statusFilter === "Cancelled") {
+        return statusLower === "cancelled" || statusLower === "lost" || statusLower.includes("cancel");
+      }
+      return true;
+    };
+
+    if (activeTab === "bookings") {
+      return bookings.filter(
+        (i) =>
+          matchesStatus(i.status) &&
+          (i.customerName.toLowerCase().includes(q) ||
+           i.vehicleName.toLowerCase().includes(q) ||
+           i.branch.toLowerCase().includes(q) ||
+           i.customerPhone.includes(q))
+      );
+    } else if (activeTab === "test_drives") {
+      return testDrives.filter(
+        (i) =>
+          matchesStatus(i.status) &&
+          (i.fullName.toLowerCase().includes(q) ||
+           i.vehicleName.toLowerCase().includes(q) ||
+           i.branch.toLowerCase().includes(q) ||
+           i.phone.includes(q))
+      );
+    } else if (activeTab === "finance_leads") {
+      return financeLeads.filter(
+        (i) =>
+          matchesStatus(i.status) &&
+          (i.fullName.toLowerCase().includes(q) ||
+           i.vehicleName.toLowerCase().includes(q) ||
+           i.preferredBank.toLowerCase().includes(q) ||
+           i.phone.includes(q))
+      );
+    } else if (activeTab === "exchange_leads") {
+      return exchangeLeads.filter(
+        (i) =>
+          matchesStatus(i.status) &&
+          (i.fullName.toLowerCase().includes(q) ||
+           (i.carMake && i.carMake.toLowerCase().includes(q)) ||
+           (i.carModel && i.carModel.toLowerCase().includes(q)) ||
+           i.phone.includes(q))
+      );
+    }
+    return [];
+  }, [activeTab, searchQuery, statusFilter, bookings, testDrives, financeLeads, exchangeLeads]);
+
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setAuthLoading(true);
@@ -738,65 +798,7 @@ export default function AdminDashboard() {
     }).format(value);
   };
 
-  // Optimized filter logic combining searchQuery and statusFilter using useMemo
-  const filteredItems = useMemo(() => {
-    const q = searchQuery.toLowerCase();
-    
-    const matchesStatus = (itemStatus: string) => {
-      if (statusFilter === "All") return true;
-      const statusLower = (itemStatus || "").toLowerCase();
-      
-      if (statusFilter === "Pending") {
-        return statusLower.includes("pending") || statusLower === "new lead" || statusLower === "assigned";
-      }
-      if (statusFilter === "Paid") {
-        return statusLower === "paid" || statusLower === "completed" || statusLower === "processed" || statusLower === "evaluated" || statusLower === "converted";
-      }
-      if (statusFilter === "Cancelled") {
-        return statusLower === "cancelled" || statusLower === "lost" || statusLower.includes("cancel");
-      }
-      return true;
-    };
 
-    if (activeTab === "bookings") {
-      return bookings.filter(
-        (i) =>
-          matchesStatus(i.status) &&
-          (i.customerName.toLowerCase().includes(q) ||
-           i.vehicleName.toLowerCase().includes(q) ||
-           i.branch.toLowerCase().includes(q) ||
-           i.customerPhone.includes(q))
-      );
-    } else if (activeTab === "test_drives") {
-      return testDrives.filter(
-        (i) =>
-          matchesStatus(i.status) &&
-          (i.fullName.toLowerCase().includes(q) ||
-           i.vehicleName.toLowerCase().includes(q) ||
-           i.branch.toLowerCase().includes(q) ||
-           i.phone.includes(q))
-      );
-    } else if (activeTab === "finance_leads") {
-      return financeLeads.filter(
-        (i) =>
-          matchesStatus(i.status) &&
-          (i.fullName.toLowerCase().includes(q) ||
-           i.vehicleName.toLowerCase().includes(q) ||
-           i.preferredBank.toLowerCase().includes(q) ||
-           i.phone.includes(q))
-      );
-    } else if (activeTab === "exchange_leads") {
-      return exchangeLeads.filter(
-        (i) =>
-          matchesStatus(i.status) &&
-          (i.fullName.toLowerCase().includes(q) ||
-           (i.carMake && i.carMake.toLowerCase().includes(q)) ||
-           (i.carModel && i.carModel.toLowerCase().includes(q)) ||
-           i.phone.includes(q))
-      );
-    }
-    return [];
-  }, [activeTab, searchQuery, statusFilter, bookings, testDrives, financeLeads, exchangeLeads]);
 
   // Export filtered table data to a clean CSV file
   const exportToCSV = () => {
