@@ -593,68 +593,6 @@ export default function UltimateStorefront() {
         </a>
       </div>
 
-      {/* --- FOOTER --- */}
-      <footer className="bg-slate-900 pt-16 pb-8 px-4 sm:px-6 lg:px-8 border-t border-slate-800">
-        <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-12 mb-12">
-          {/* Col 1 */}
-          <div className="col-span-2 md:col-span-1">
-            <h3 className="text-[#EB0A1E] text-xl font-black tracking-tight mb-6">Laxmi Toyota</h3>
-            <p className="text-slate-400 text-sm leading-relaxed mb-6">
-              The authorized Toyota dealer for South Odisha. Committed to delivering premium automotive experiences and unparalleled service.
-            </p>
-          </div>
-          
-          {/* Col 2: Showroom & Sales */}
-          <div>
-            <h4 className="text-white text-xs font-bold uppercase tracking-wider mb-6">Showroom & Sales</h4>
-            <ul className="space-y-3.5 text-xs text-slate-450">
-              <li><Link href="/vehicles" className="hover:text-white transition-colors">Browse Fleet</Link></li>
-              <li><Link href="/offers" className="hover:text-white transition-colors">Exclusive Offers</Link></li>
-              <li><Link href="/book-online" className="hover:text-white transition-colors">Book Online Portal</Link></li>
-              <li><Link href="/book-test-drive" className="hover:text-white transition-colors">Schedule Test Drive</Link></li>
-              <li><Link href="/toyota-emi-calculator" className="hover:text-white transition-colors">EMI Calculator</Link></li>
-            </ul>
-          </div>
-
-          {/* Col 3: Service & After-Sales */}
-          <div>
-            <h4 className="text-white text-xs font-bold uppercase tracking-wider mb-6">Service & Care</h4>
-            <ul className="space-y-3.5 text-xs text-slate-450">
-              <li><Link href="/service" className="hover:text-white transition-colors">Service Overview</Link></li>
-              <li><Link href="/service/book-service" className="hover:text-white transition-colors">Book Service Slot</Link></li>
-              <li><Link href="/parts-accessories" className="hover:text-white transition-colors">Parts & Accessories</Link></li>
-              <li><Link href="/insurance-finance" className="hover:text-white transition-colors">Insurance & Finance</Link></li>
-            </ul>
-          </div>
-
-          {/* Col 4: Trust, Brand & Legal */}
-          <div>
-            <h4 className="text-white text-xs font-bold uppercase tracking-wider mb-6">Trust & Legal</h4>
-            <ul className="space-y-3.5 text-xs text-slate-450">
-              <li><Link href="/about" className="hover:text-white transition-colors">About Us</Link></li>
-              <li><Link href="/why-choose-us" className="hover:text-white transition-colors">Why Choose Us</Link></li>
-              <li><Link href="/reviews" className="hover:text-white transition-colors">Customer Reviews</Link></li>
-              <li><Link href="/gallery" className="hover:text-white transition-colors">Showroom Gallery</Link></li>
-              <li><Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/terms-and-conditions" className="hover:text-white transition-colors">Terms of Service</Link></li>
-              <li><Link href="/refund-policy" className="hover:text-white transition-colors">Refund Policy</Link></li>
-              <li><Link href="/disclaimer" className="hover:text-white transition-colors">Legal Disclaimer</Link></li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="max-w-7xl mx-auto pt-8 border-t border-slate-800 text-center md:text-left flex flex-col md:flex-row justify-between items-center text-xs">
-          <div className="text-slate-500 space-y-1">
-            <p>&copy; {new Date().getFullYear()} Laxmi Toyota. All rights reserved.</p>
-            <p>Official Toyota Dealer for South Odisha</p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-6 mt-4 md:mt-0 text-slate-400 font-bold uppercase tracking-wider">
-            <Link href="/blog" className="hover:text-white transition-colors">Newsroom Blog</Link>
-            <Link href="/faqs" className="hover:text-white transition-colors">FAQs Help</Link>
-            <Link href="/contact" className="hover:text-white transition-colors">Contact Desk</Link>
-          </div>
-        </div>
-      </footer>
 
     </div>
   );

@@ -3,6 +3,7 @@ import { Poppins, Inter } from "next/font/google";
 import "../globals.css";
 import { AuthContextProvider } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import RegionalAIChatbot from "@/components/RegionalAIChatbot";
 import AnalyticsWrapper from "@/components/AnalyticsWrapper";
 
@@ -40,6 +41,7 @@ export default function FrontendLayout({
           <main className="flex-grow">
             {children}
           </main>
+          <Footer />
           <RegionalAIChatbot />
         </AuthContextProvider>
       </body>
