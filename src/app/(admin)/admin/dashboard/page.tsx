@@ -31,6 +31,7 @@ import {
   MessageCircle
 } from "lucide-react";
 import AuthForm from "@/components/AuthForm";
+import LogoutButton from "@/components/LogoutButton";
 
 interface Booking {
   id: string;
@@ -904,6 +905,7 @@ export default function AdminDashboard() {
             >
               <RefreshCwIcon />
             </button>
+            <LogoutButton />
             {!isConfigured && (
               <span className="bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] px-3 py-1.5 rounded-full font-semibold uppercase">
                 Mock Database View
