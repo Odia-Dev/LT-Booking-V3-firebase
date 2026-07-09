@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "@/context/AuthContext";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { db, isConfigured } from "@/lib/firebase";
 import { collection, getDocs, doc, updateDoc, deleteDoc, setDoc, addDoc, getDoc } from "firebase/firestore";
 import Link from "next/link";
@@ -26,7 +26,9 @@ import {
   UserCheck,
   X,
   Plus,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Download,
+  MessageCircle
 } from "lucide-react";
 import AuthForm from "@/components/AuthForm";
 
@@ -127,6 +129,7 @@ export default function AdminDashboard() {
   
   const [fetching, setFetching] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"All" | "Pending" | "Paid" | "Cancelled">("All");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [successId, setSuccessId] = useState<string | null>(null);
   
@@ -555,8 +558,47 @@ export default function AdminDashboard() {
 
   if (loading || (user && fetching)) {
     return (
-      <div className="min-h-[85vh] flex items-center justify-center bg-slate-950">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-slate-800 border-t-red-500" />
+      <div className="min-h-screen bg-slate-955 px-4 sm:px-6 lg:px-8 py-12 animate-pulse space-y-10">
+        <div className="max-w-7xl mx-auto space-y-10">
+          {/* Header Skeleton */}
+          <div className="flex justify-between items-center border-b border-slate-900 pb-6">
+            <div className="space-y-3">
+              <div className="h-8 w-48 bg-slate-900 rounded-lg"></div>
+              <div className="h-4 w-72 bg-slate-900 rounded-md"></div>
+            </div>
+            <div className="h-10 w-10 bg-slate-900 rounded-lg"></div>
+          </div>
+
+          {/* Cards Grid Skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-6">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="h-28 bg-slate-900/50 border border-slate-900 rounded-2xl p-6 space-y-3">
+                <div className="h-3 w-20 bg-slate-900 rounded-md"></div>
+                <div className="h-8 w-16 bg-slate-900 rounded-lg"></div>
+              </div>
+            ))}
+          </div>
+
+          {/* Table Container Skeleton */}
+          <div className="border border-slate-900 rounded-2xl overflow-hidden space-y-4">
+            <div className="p-6 bg-slate-900/10 border-b border-slate-900 flex justify-between items-center gap-4">
+              <div className="h-10 w-64 bg-slate-900/90 rounded-lg"></div>
+              <div className="h-10 w-48 bg-slate-900/90 rounded-lg"></div>
+              <div className="h-10 w-32 bg-slate-900/90 rounded-lg"></div>
+            </div>
+            <div className="p-6 space-y-6">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="flex justify-between items-center gap-6">
+                  <div className="h-4 w-28 bg-slate-900 rounded-md"></div>
+                  <div className="h-4 w-40 bg-slate-900 rounded-md"></div>
+                  <div className="h-4 w-24 bg-slate-900 rounded-md"></div>
+                  <div className="h-4 w-20 bg-slate-900 rounded-md"></div>
+                  <div className="h-4 w-24 bg-slate-900 rounded-md"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -696,45 +738,151 @@ export default function AdminDashboard() {
     }).format(value);
   };
 
-  // Filter logic based on active tab
-  const getFilteredList = () => {
+  // Optimized filter logic combining searchQuery and statusFilter using useMemo
+  const filteredItems = useMemo(() => {
     const q = searchQuery.toLowerCase();
+    
+    const matchesStatus = (itemStatus: string) => {
+      if (statusFilter === "All") return true;
+      const statusLower = (itemStatus || "").toLowerCase();
+      
+      if (statusFilter === "Pending") {
+        return statusLower.includes("pending") || statusLower === "new lead" || statusLower === "assigned";
+      }
+      if (statusFilter === "Paid") {
+        return statusLower === "paid" || statusLower === "completed" || statusLower === "processed" || statusLower === "evaluated" || statusLower === "converted";
+      }
+      if (statusFilter === "Cancelled") {
+        return statusLower === "cancelled" || statusLower === "lost" || statusLower.includes("cancel");
+      }
+      return true;
+    };
+
     if (activeTab === "bookings") {
       return bookings.filter(
         (i) =>
-          i.customerName.toLowerCase().includes(q) ||
-          i.vehicleName.toLowerCase().includes(q) ||
-          i.branch.toLowerCase().includes(q) ||
-          i.customerPhone.includes(q)
+          matchesStatus(i.status) &&
+          (i.customerName.toLowerCase().includes(q) ||
+           i.vehicleName.toLowerCase().includes(q) ||
+           i.branch.toLowerCase().includes(q) ||
+           i.customerPhone.includes(q))
       );
     } else if (activeTab === "test_drives") {
       return testDrives.filter(
         (i) =>
-          i.fullName.toLowerCase().includes(q) ||
-          i.vehicleName.toLowerCase().includes(q) ||
-          i.branch.toLowerCase().includes(q) ||
-          i.phone.includes(q)
+          matchesStatus(i.status) &&
+          (i.fullName.toLowerCase().includes(q) ||
+           i.vehicleName.toLowerCase().includes(q) ||
+           i.branch.toLowerCase().includes(q) ||
+           i.phone.includes(q))
       );
     } else if (activeTab === "finance_leads") {
       return financeLeads.filter(
         (i) =>
-          i.fullName.toLowerCase().includes(q) ||
-          i.vehicleName.toLowerCase().includes(q) ||
-          i.preferredBank.toLowerCase().includes(q) ||
-          i.phone.includes(q)
+          matchesStatus(i.status) &&
+          (i.fullName.toLowerCase().includes(q) ||
+           i.vehicleName.toLowerCase().includes(q) ||
+           i.preferredBank.toLowerCase().includes(q) ||
+           i.phone.includes(q))
       );
-    } else {
+    } else if (activeTab === "exchange_leads") {
       return exchangeLeads.filter(
         (i) =>
-          i.fullName.toLowerCase().includes(q) ||
-          (i.carMake && i.carMake.toLowerCase().includes(q)) ||
-          (i.carModel && i.carModel.toLowerCase().includes(q)) ||
-          i.phone.includes(q)
+          matchesStatus(i.status) &&
+          (i.fullName.toLowerCase().includes(q) ||
+           (i.carMake && i.carMake.toLowerCase().includes(q)) ||
+           (i.carModel && i.carModel.toLowerCase().includes(q)) ||
+           i.phone.includes(q))
       );
     }
-  };
+    return [];
+  }, [activeTab, searchQuery, statusFilter, bookings, testDrives, financeLeads, exchangeLeads]);
 
-  const filteredItems = getFilteredList();
+  // Export filtered table data to a clean CSV file
+  const exportToCSV = () => {
+    if (!filteredItems || filteredItems.length === 0) {
+      alert("No data available to export.");
+      return;
+    }
+    
+    let headers: string[] = [];
+    let rows: any[] = [];
+    
+    if (activeTab === "bookings") {
+      headers = ["Date", "Customer Name", "Phone", "Vehicle", "Branch", "Deposit Amount", "SO Assigned", "SO Status", "Status"];
+      rows = filteredItems.map((item: any) => [
+        new Date(item.createdAt).toLocaleString("en-IN"),
+        item.customerName,
+        item.customerPhone,
+        item.vehicleName,
+        item.branch,
+        item.bookingAmount,
+        item.assignedTo || "Unassigned",
+        item.soStatus || "Pending",
+        item.status
+      ]);
+    } else if (activeTab === "test_drives") {
+      headers = ["Submitted Date", "Customer Name", "Phone", "Vehicle", "Branch", "Preferred Date", "SO Assigned", "SO Status", "Status"];
+      rows = filteredItems.map((item: any) => [
+        new Date(item.createdAt).toLocaleString("en-IN"),
+        item.fullName,
+        item.phone,
+        item.vehicleName,
+        item.branch,
+        new Date(item.preferredDate).toLocaleDateString("en-IN"),
+        item.assignedTo || "Unassigned",
+        item.soStatus || "Pending",
+        item.status
+      ]);
+    } else if (activeTab === "finance_leads") {
+      headers = ["Submitted Date", "Customer Name", "Phone", "Vehicle", "Occupation", "Income", "Preferred Bank", "SO Assigned", "SO Status", "Status"];
+      rows = filteredItems.map((item: any) => [
+        new Date(item.submittedAt).toLocaleString("en-IN"),
+        item.fullName,
+        item.phone,
+        item.vehicleName,
+        item.occupation,
+        item.monthlyIncome,
+        item.preferredBank,
+        item.assignedTo || "Unassigned",
+        item.soStatus || "Pending",
+        item.status
+      ]);
+    } else if (activeTab === "exchange_leads") {
+      headers = ["Submitted Date", "Customer Name", "Phone", "Car Specs", "Year / KMs", "SO Assigned", "SO Status", "Status"];
+      rows = filteredItems.map((item: any) => [
+        new Date(item.submittedAt).toLocaleString("en-IN"),
+        item.fullName,
+        item.phone,
+        `${item.carMake} ${item.carModel}`,
+        `${item.registrationYear} / ${item.kmsDriven} KMs`,
+        item.assignedTo || "Unassigned",
+        item.soStatus || "Pending",
+        item.status
+      ]);
+    }
+    
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => 
+        row.map((val: any) => {
+          const valStr = String(val === undefined || val === null ? "" : val);
+          const escaped = valStr.replace(/"/g, '""');
+          return `"${escaped}"`;
+        }).join(",")
+      )
+    ].join("\n");
+    
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `Laxmi_Toyota_${activeTab}_Export_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = "hidden";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 px-4 sm:px-6 lg:px-8 py-12">
@@ -934,19 +1082,46 @@ export default function AdminDashboard() {
         ) : (
           <div className="rounded-2xl border border-slate-800/80 bg-slate-900/10 backdrop-blur-sm overflow-hidden">
             
-            {/* Search bar */}
-            <div className="p-6 border-b border-slate-800/80 flex items-center bg-slate-900/20">
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={`Search ${activeTab.replace(/_/g, " ")}...`}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
-              />
+            {/* Search, Filter Tabs & CSV Export Bar */}
+            <div className="p-6 border-b border-slate-800/80 flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900/20">
+              {/* Search bar */}
+              <div className="relative w-full max-w-sm">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={`Search by name or phone...`}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-red-500 transition-colors"
+                />
+              </div>
+
+              {/* Status Filter Tabs */}
+              <div className="flex bg-slate-950 p-1 border border-slate-800/60 rounded-xl space-x-1 self-start md:self-auto">
+                {(["All", "Pending", "Paid", "Cancelled"] as const).map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setStatusFilter(status)}
+                    className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all uppercase tracking-wider ${
+                      statusFilter === status
+                        ? "bg-[#EB0A1E] text-white shadow-md shadow-red-500/10"
+                        : "text-slate-400 hover:text-white"
+                    }`}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
+
+              {/* CSV Export Button */}
+              <button
+                onClick={exportToCSV}
+                className="inline-flex items-center justify-center gap-2 bg-slate-900 border border-slate-800 hover:bg-slate-850 hover:border-slate-700 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest text-zinc-300 hover:text-white transition-all shadow-md self-start md:self-auto"
+              >
+                <Download className="w-4 h-4 text-slate-400" />
+                Export CSV
+              </button>
             </div>
-          </div>
 
           {/* Searchable Data Table */}
           <div className="overflow-x-auto">
@@ -993,7 +1168,23 @@ export default function AdminDashboard() {
                           <td className="py-4 px-6">{renderAssignmentColumn(bk.id, "bookings", bk.assignedTo, bk.branch)}</td>
                           <td className="py-4 px-6 text-center">{renderSoStatusColumn(bk.id, "bookings", bk.soStatus)}</td>
                           <td className="py-4 px-6 text-right">
-                            <div className="flex justify-end gap-3">
+                            <div className="flex justify-end items-center gap-2">
+                              <a
+                                href={`tel:${bk.customerPhone}`}
+                                className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-blue-450 hover:bg-slate-850 transition-all"
+                                title="Call Customer"
+                              >
+                                <Phone className="h-3.5 w-3.5" />
+                              </a>
+                              <a
+                                href={`https://wa.me/${bk.customerPhone.replace(/[^0-9]/g, "")}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-emerald-450 hover:bg-slate-850 transition-all"
+                                title="WhatsApp Customer"
+                              >
+                                <MessageCircle className="h-3.5 w-3.5" />
+                              </a>
                               {successId === bk.id ? (
                                 <span className="text-xs text-emerald-400 font-bold">Paid</span>
                               ) : bk.status === "Pending Payment" ? (
@@ -1044,7 +1235,23 @@ export default function AdminDashboard() {
                           <td className="py-4 px-6">{renderAssignmentColumn(td.id, "test_drives", td.assignedTo, td.branch)}</td>
                           <td className="py-4 px-6 text-center">{renderSoStatusColumn(td.id, "test_drives", td.soStatus)}</td>
                           <td className="py-4 px-6 text-right">
-                            <div className="flex justify-end gap-3">
+                            <div className="flex justify-end items-center gap-2">
+                              <a
+                                href={`tel:${td.phone}`}
+                                className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-blue-450 hover:bg-slate-850 transition-all"
+                                title="Call Customer"
+                              >
+                                <Phone className="h-3.5 w-3.5" />
+                              </a>
+                              <a
+                                href={`https://wa.me/${td.phone.replace(/[^0-9]/g, "")}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-emerald-450 hover:bg-slate-850 transition-all"
+                                title="WhatsApp Customer"
+                              >
+                                <MessageCircle className="h-3.5 w-3.5" />
+                              </a>
                               {td.status === "New Lead" && (
                                 <button onClick={() => updateLeadStatus(td.id, "test_drives", "Completed")} className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs px-2.5 py-1 rounded">Mark Complete</button>
                               )}
@@ -1095,7 +1302,23 @@ export default function AdminDashboard() {
                           <td className="py-4 px-6">{renderAssignmentColumn(fin.id, "finance_leads", fin.assignedTo, fin.branch)}</td>
                           <td className="py-4 px-6 text-center">{renderSoStatusColumn(fin.id, "finance_leads", fin.soStatus)}</td>
                           <td className="py-4 px-6 text-right">
-                            <div className="flex justify-end gap-3">
+                            <div className="flex justify-end items-center gap-2">
+                              <a
+                                href={`tel:${fin.phone}`}
+                                className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-blue-450 hover:bg-slate-850 transition-all"
+                                title="Call Customer"
+                              >
+                                <Phone className="h-3.5 w-3.5" />
+                              </a>
+                              <a
+                                href={`https://wa.me/${fin.phone.replace(/[^0-9]/g, "")}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-emerald-450 hover:bg-slate-850 transition-all"
+                                title="WhatsApp Customer"
+                              >
+                                <MessageCircle className="h-3.5 w-3.5" />
+                              </a>
                               {fin.status === "New Lead" && (
                                 <button onClick={() => updateLeadStatus(fin.id, "finance_leads", "Processed")} className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs px-2.5 py-1 rounded">Mark Processed</button>
                               )}
@@ -1153,7 +1376,23 @@ export default function AdminDashboard() {
                           <td className="py-4 px-6">{renderAssignmentColumn(ex.id, "exchange_leads", ex.assignedTo, ex.branch)}</td>
                           <td className="py-4 px-6 text-center">{renderSoStatusColumn(ex.id, "exchange_leads", ex.soStatus)}</td>
                           <td className="py-4 px-6 text-right">
-                            <div className="flex justify-end gap-3">
+                            <div className="flex justify-end items-center gap-2">
+                              <a
+                                href={`tel:${ex.phone}`}
+                                className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-blue-450 hover:bg-slate-850 transition-all"
+                                title="Call Customer"
+                              >
+                                <Phone className="h-3.5 w-3.5" />
+                              </a>
+                              <a
+                                href={`https://wa.me/${ex.phone.replace(/[^0-9]/g, "")}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-emerald-450 hover:bg-slate-850 transition-all"
+                                title="WhatsApp Customer"
+                              >
+                                <MessageCircle className="h-3.5 w-3.5" />
+                              </a>
                               {ex.status === "New Lead" && (
                                 <button onClick={() => updateLeadStatus(ex.id, "exchange_leads", "Evaluated")} className="bg-slate-900 hover:bg-slate-800 border border-slate-800 text-xs px-2.5 py-1 rounded">Mark Evaluated</button>
                               )}
