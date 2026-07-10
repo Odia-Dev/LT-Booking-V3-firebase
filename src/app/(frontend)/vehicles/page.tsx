@@ -1,41 +1,49 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import Link from "next/link";
-import { Car, ChevronRight, SlidersHorizontal, Info, Sparkles } from "lucide-react";
+import { SlidersHorizontal, Sparkles } from "lucide-react";
+import { NAV_CATEGORIES } from "@/lib/categories";
 
 const VEHICLES = [
   { slug: "toyota-glanza", name: "Toyota Glanza", type: "Hatchback", category: "hatchback", price: "₹6.81 Lakh", booking: "₹11,000", image: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=600" },
   { slug: "toyota-urban-cruiser-taisor", name: "Toyota Taisor", type: "Compact SUV", category: "suv", price: "₹7.74 Lakh", booking: "₹11,000", image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-rumion", name: "Toyota Rumion", type: "MPV", category: "hybrid", price: "₹10.44 Lakh", booking: "₹21,000", image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-urban-cruiser-hyryder", name: "Urban Cruiser Hyryder", type: "SUV", category: "hybrid", price: "₹11.14 Lakh", booking: "₹25,000", image: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=800" },
+  { slug: "toyota-rumion", name: "Toyota Rumion", type: "MPV", category: "mpv", price: "₹10.44 Lakh", booking: "₹21,000", image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=600" },
+  { slug: "toyota-urban-cruiser-hyryder", name: "Urban Cruiser Hyryder", type: "SUV", category: "suv", price: "₹11.14 Lakh", booking: "₹25,000", image: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=800" },
   { slug: "toyota-urban-cruiser-ebella", name: "Urban Cruiser Ebella", type: "Electric SUV", category: "electric", price: "₹12.00 Lakh", booking: "₹25,000", image: "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-innova-crysta", name: "Toyota Innova Crysta", type: "MPV", category: "luxury", price: "₹19.99 Lakh", booking: "₹50,000", image: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-innova-hycross", name: "Innova Hycross", type: "MPV", category: "hybrid", price: "₹18.86 Lakh", booking: "₹50,000", image: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=1200" },
+  { slug: "toyota-innova-crysta", name: "Toyota Innova Crysta", type: "MPV", category: "mpv", price: "₹19.99 Lakh", booking: "₹50,000", image: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=600" },
+  { slug: "toyota-innova-hycross", name: "Innova Hycross", type: "MPV", category: "mpv", price: "₹18.86 Lakh", booking: "₹50,000", image: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=1200" },
   { slug: "toyota-fortuner", name: "Toyota Fortuner", type: "SUV", category: "suv", price: "₹33.43 Lakh", booking: "₹1,00,000", image: "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=600" },
   { slug: "toyota-fortuner-legender", name: "Toyota Fortuner Legender", type: "SUV", category: "suv", price: "₹43.66 Lakh", booking: "₹1,00,000", image: "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-hilux", name: "Toyota Hilux", type: "Utility Pickup", category: "suv", price: "₹30.40 Lakh", booking: "₹1,00,000", image: "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=600" },
+  { slug: "toyota-hilux", name: "Toyota Hilux", type: "Utility Pickup", category: "offroad", price: "₹30.40 Lakh", booking: "₹1,00,000", image: "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=600" },
   { slug: "toyota-camry", name: "Toyota Camry", type: "Luxury Sedan", category: "sedan", price: "₹46.17 Lakh", booking: "₹1,00,000", image: "https://images.unsplash.com/photo-1503376710915-18861d9a2638?auto=format&fit=crop&q=80&w=600" },
   { slug: "toyota-vellfire", name: "Toyota Vellfire", type: "Luxury MPV", category: "luxury", price: "₹1.20 Crore", booking: "₹2,00,050", image: "https://images.unsplash.com/photo-1517524008436-a3851f153a77?auto=format&fit=crop&q=80&w=600" },
   { slug: "toyota-landcruiser300", name: "Land Cruiser 300", type: "Luxury SUV", category: "luxury", price: "₹2.10 Crore", booking: "₹20,00,000", image: "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=600" }
 ];
 
 const CATEGORIES = [
-  { id: "all", name: "All Models" },
-  { id: "suv", name: "SUVs" },
-  { id: "sedan", name: "Sedans" },
-  { id: "hatchback", name: "Hatchbacks" },
-  { id: "hybrid", name: "Hybrids" },
-  { id: "electric", name: "Electric (EV)" },
-  { id: "luxury", name: "Luxury Lounge" }
+  "All Models",
+  "Hatchback",
+  "MPV",
+  "SUV",
+  "Sedan",
+  "Hybrid",
+  "Electric",
+  "Offroad",
+  "Luxury"
 ];
 
 export default function VehiclesIndexPage() {
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState("All Models");
 
-  const filteredVehicles = filter === "all" 
-    ? VEHICLES 
-    : VEHICLES.filter(v => v.category === filter || (filter === "hybrid" && v.type.toLowerCase().includes("hybrid")));
+  const filteredVehicles = useMemo(() => {
+    if (filter === "All Models") return VEHICLES;
+    const targetCategory = NAV_CATEGORIES.find(
+      (cat) => cat.name.toLowerCase() === filter.toLowerCase()
+    );
+    if (!targetCategory) return [];
+    return VEHICLES.filter((vehicle) => targetCategory.models.includes(vehicle.slug));
+  }, [filter]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 py-16 px-4 sm:px-6 lg:px-8">
@@ -60,21 +68,23 @@ export default function VehiclesIndexPage() {
         </div>
 
         {/* Filter categories tabs */}
-        <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-5">
-          <SlidersHorizontal className="w-4 h-4 text-slate-400 mr-2" />
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setFilter(cat.id)}
-              className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border ${
-                filter === cat.id
-                  ? "bg-slate-950 text-white border-slate-950 shadow-sm"
-                  : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
-              }`}
-            >
-              {cat.name}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 border-b border-slate-200 pb-5 overflow-x-auto whitespace-nowrap scrollbar-none no-scrollbar">
+          <SlidersHorizontal className="w-4 h-4 text-slate-400 mr-2 shrink-0" />
+          <div className="flex gap-2">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => setFilter(cat)}
+                className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-wider transition-all border shrink-0 ${
+                  filter === cat
+                    ? "bg-[#EB0A1E] text-white border-[#EB0A1E] shadow-sm"
+                    : "bg-white text-slate-600 border-slate-200 hover:border-slate-300"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Dynamic Category SEO crosslinks */}
