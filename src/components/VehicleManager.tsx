@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { 
   Car, Settings, Image as ImageIcon, IndianRupee, MapPin, 
-  Tag, FileText, CheckCircle, Save, Eye, LayoutTemplate,
+  FileText, CheckCircle, Save, LayoutTemplate,
   Plus, Trash2, UploadCloud, ChevronRight, AlertCircle, Loader2
 } from "lucide-react";
 import imageCompression from "browser-image-compression";
@@ -91,22 +91,22 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
   const [newFeature, setNewFeature] = useState("");
   const [featureCategory, setFeatureCategory] = useState<keyof VehicleFeatures>("safety");
 
-  const updateBasicInfo = (field: string, value: any) => {
+  const updateBasicInfo = (field: string, value: string | number | boolean) => {
     setBasicInfo(prev => ({ ...prev, [field]: value }));
     setUnsavedChanges(true);
   };
 
-  const updatePricing = (field: string, value: any) => {
+  const updatePricing = (field: string, value: string | number | boolean) => {
     setPricing(prev => ({ ...prev, [field]: value }));
     setUnsavedChanges(true);
   };
 
-  const updateSEO = (field: string, value: any) => {
+  const updateSEO = (field: string, value: string | number | boolean) => {
     setSeo(prev => ({ ...prev, [field]: value }));
     setUnsavedChanges(true);
   };
 
-  const updateInventory = (field: string, value: any) => {
+  const updateInventory = (field: string, value: string | number | boolean | string[]) => {
     setInventory(prev => ({ ...prev, [field]: value }));
     setUnsavedChanges(true);
   };
@@ -165,10 +165,10 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
     setUnsavedChanges(true);
   };
 
-  const updateOfferField = (index: number, field: keyof VehicleOffer, value: any) => {
+  const updateOfferField = (index: number, field: keyof VehicleOffer, value: string | number) => {
     setOffers(prev => {
       const next = [...prev];
-      next[index] = { ...next[index], [field]: value };
+      next[index] = { ...next[index], [field]: value } as VehicleOffer;
       return next;
     });
     setUnsavedChanges(true);
@@ -222,9 +222,9 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
         gallery: [...prev.gallery, downloadUrl]
       }));
       setUnsavedChanges(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Image upload failed:", err);
-      alert("Upload failed: " + err.message);
+      alert("Upload failed: " + (err instanceof Error ? err.message : String(err)));
     } finally {
       setIsUploading(false);
     }
@@ -278,9 +278,9 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
       } else {
         alert("Failed to save: " + data.error);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error(err);
-      alert("Error saving vehicle schema: " + err.message);
+      alert("Error saving vehicle schema: " + (err instanceof Error ? err.message : String(err)));
     } finally {
       setIsSaving(false);
     }
@@ -300,7 +300,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                 updateBasicInfo("name", e.target.value);
                 updateBasicInfo("slug", e.target.value.toLowerCase().replace(/\s+/g, "-"));
               }}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100" 
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
               placeholder="e.g., Urban Cruiser Hyryder" 
             />
           </div>
@@ -310,7 +310,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
               type="text" 
               value={basicInfo.slug} 
               onChange={(e) => updateBasicInfo("slug", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100" 
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
               placeholder="toyota-urban-cruiser-hyryder" 
             />
           </div>
@@ -319,7 +319,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
             <select 
               value={basicInfo.category} 
               onChange={(e) => updateBasicInfo("category", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900"
             >
               {CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
             </select>
@@ -330,7 +330,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
               type="text" 
               value={basicInfo.tagline} 
               onChange={(e) => updateBasicInfo("tagline", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100" 
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
               placeholder="Self-Charging Hybrid Electric SUV" 
             />
           </div>
@@ -341,7 +341,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
             rows={2} 
             value={basicInfo.shortDesc} 
             onChange={(e) => updateBasicInfo("shortDesc", e.target.value)}
-            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] resize-none text-slate-100"
+            className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] resize-none text-slate-900"
           />
         </div>
       </div>
@@ -355,7 +355,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
               type="text" 
               value={seo.title} 
               onChange={(e) => updateSEO("title", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100" 
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
               placeholder="Toyota Hyryder Price, Features & Specs in Odisha" 
             />
           </div>
@@ -365,7 +365,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
               rows={2} 
               value={seo.description} 
               onChange={(e) => updateSEO("description", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] resize-none text-slate-100"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] resize-none text-slate-900"
             />
           </div>
         </div>
@@ -386,7 +386,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                 type="text" 
                 value={pricing.startingPrice} 
                 onChange={(e) => updatePricing("startingPrice", e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100" 
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
                 placeholder="e.g. ₹11.14 Lakh" 
               />
             </div>
@@ -399,7 +399,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                 type="number" 
                 value={pricing.bookingAmount} 
                 onChange={(e) => updatePricing("bookingAmount", parseInt(e.target.value) || 0)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100" 
+                className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-10 pr-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
                 placeholder="21000" 
               />
             </div>
@@ -428,14 +428,14 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                   placeholder="Offer Title (e.g. ₹5,000 Online Bonus)"
                   value={offer.title}
                   onChange={(e) => updateOfferField(idx, "title", e.target.value)}
-                  className="flex-grow bg-slate-55 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-100 text-xs"
+                  className="flex-grow bg-slate-55 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900 text-xs"
                 />
                 <input
                   type="number"
                   placeholder="Value"
                   value={offer.discount}
                   onChange={(e) => updateOfferField(idx, "discount", parseInt(e.target.value) || 0)}
-                  className="w-32 bg-slate-55 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-100 text-xs"
+                  className="w-32 bg-slate-55 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900 text-xs"
                 />
                 <button onClick={() => removeOffer(idx)} className="text-red-500">
                   <Trash2 className="w-4 h-4" />
@@ -550,7 +550,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                   placeholder="Color Name (e.g. Attitude Black)"
                   value={c.name}
                   onChange={(e) => updateColorField(i, "name", e.target.value)}
-                  className="flex-grow bg-slate-55 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-100 outline-none"
+                  className="flex-grow bg-slate-55 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 outline-none"
                 />
                 <input
                   type="color"
@@ -579,7 +579,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
             <select 
               value={inventory.stockStatus} 
               onChange={(e) => updateInventory("stockStatus", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100"
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900"
             >
               <option value="Available">Available (In Stock)</option>
               <option value="Waitlist">Waitlist (Allocations only)</option>
@@ -591,7 +591,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
               type="text" 
               value={inventory.waitingPeriod} 
               onChange={(e) => updateInventory("waitingPeriod", e.target.value)}
-              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-100" 
+              className="w-full bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none focus:border-[#EB0A1E] text-slate-900" 
               placeholder="e.g. 12 Weeks" 
             />
           </div>
@@ -671,8 +671,8 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center px-4 py-3 text-sm font-bold rounded-lg mb-1 transition-all ${
                     isActive 
-                      ? "bg-red-50 text-[#EB0A1E]" 
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-100"
+                      ? "bg-white text-[#EB0A1E]" 
+                      : "text-slate-300 hover:bg-slate-800 hover:text-white"
                   }`}
                 >
                   <Icon className={`w-5 h-5 mr-3 ${isActive ? "text-[#EB0A1E]" : "text-slate-400"}`} />
@@ -743,8 +743,8 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
               <div className="flex gap-4">
                 <select
                   value={featureCategory}
-                  onChange={(e) => setFeatureCategory(e.target.value as any)}
-                  className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-100 text-xs font-bold"
+                  onChange={(e) => setFeatureCategory(e.target.value as keyof VehicleFeatures)}
+                  className="bg-slate-55 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900 text-xs font-bold"
                 >
                   <option value="safety">Safety</option>
                   <option value="interior">Interior</option>
@@ -756,7 +756,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                   placeholder="Add a product feature (e.g. Panoramic sunroof)"
                   value={newFeature}
                   onChange={(e) => setNewFeature(e.target.value)}
-                  className="flex-grow bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-100 text-xs"
+                  className="flex-grow bg-slate-50 border border-slate-200 rounded-lg px-4 py-2 outline-none text-slate-900 text-xs"
                 />
                 <button
                   onClick={addFeature}
@@ -779,7 +779,7 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
                         {list.map((item, idx) => (
                           <div key={idx} className="flex justify-between items-center p-3 border border-slate-200 rounded-lg bg-slate-50 text-xs font-semibold text-slate-800">
                             <span>{item}</span>
-                            <button onClick={() => removeFeature(cat as any, idx)} className="text-slate-400 hover:text-red-500 transition-colors">
+                            <button onClick={() => removeFeature(cat as keyof VehicleFeatures, idx)} className="text-slate-400 hover:text-red-500 transition-colors">
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
