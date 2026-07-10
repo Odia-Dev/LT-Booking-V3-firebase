@@ -43,3 +43,27 @@ export interface ToyotaSuffix {
   createdAt?: string;
   updatedAt?: string;
 }
+
+export interface PricingRecord {
+  id?: string;
+  vehicleId: string;        // reference to vehicles_master
+  vehicleName: string;      // cached display name
+  variantId: string;        // reference to variants_master
+  variantName: string;      // cached display name
+  month: string;            // e.g. "July 2025"
+  exShowroom: number;
+  roadTax: number;
+  insurance: number;
+  fastag: number;
+  tcs: number;
+  accessories: number;
+  warranty: number;
+  otherCharges: number;
+  dealerDiscount: number;
+  bookingAmount: number;
+  estimatedOnRoad: number;  // auto-calculated server-side snapshot
+  status: "Draft" | "Published" | "Archived";
+  createdAt?: string;
+  updatedAt?: string;
+  publishedAt?: string;
+}

@@ -11,7 +11,8 @@ import {
   Settings, 
   Palette, 
   QrCode, 
-  LayoutDashboard, 
+  LayoutDashboard,
+  IndianRupee,
   Loader2,
   Menu,
   X
@@ -41,6 +42,11 @@ export default function CMSLayout({
       name: "Variant Master",
       href: "/admin/cms/variant",
       icon: Settings,
+    },
+    {
+      name: "Pricing Management",
+      href: "/admin/cms/pricing",
+      icon: IndianRupee,
     },
     {
       name: "Toyota Color Master",
