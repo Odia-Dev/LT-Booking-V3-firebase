@@ -28,6 +28,11 @@ export default function CMSLayout({
 
   const menuItems = [
     {
+      name: "CMS Dashboard",
+      href: "/admin/cms",
+      icon: LayoutDashboard,
+    },
+    {
       name: "Vehicle Master",
       href: "/admin/cms/vehicle",
       icon: Car,
