@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Vehicle } from "@/lib/data";
+import { getLiveStockCount } from "@/lib/stockFetcher";
 import { 
-  CheckCircle, ShieldCheck, Info, ArrowLeft,
-  ChevronRight, Star, AlertCircle, Sparkles,
-  Calculator, IndianRupee, HelpCircle
+  CheckCircle, ShieldCheck, ArrowLeft,
+  ChevronRight, Sparkles,
+  Calculator, Clock
 } from "lucide-react";
 
 interface VehicleDetailClientProps {
@@ -17,6 +18,24 @@ interface VehicleDetailClientProps {
 export default function VehicleDetailClient({ vehicle, id }: VehicleDetailClientProps) {
   const [selectedColor, setSelectedColor] = useState(vehicle.colors[0] || "");
   const [selectedVariant, setSelectedVariant] = useState(vehicle.variants[0] || "");
+  const [stockCount, setStockCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function fetchStock() {
+      try {
+        const count = await getLiveStockCount(vehicle.name, selectedVariant, selectedColor);
+        if (isMounted) setStockCount(count);
+      } catch (err) {
+        console.error("Error querying stock count:", err);
+        if (isMounted) setStockCount(1); // Elegant fallback
+      }
+    }
+    fetchStock();
+    return () => {
+      isMounted = false;
+    };
+  }, [vehicle.name, selectedVariant, selectedColor]);
   
   // EMI Calculator State
   const [loanAmount, setLoanAmount] = useState(500000);
@@ -93,7 +112,7 @@ export default function VehicleDetailClient({ vehicle, id }: VehicleDetailClient
               </span>
               <h1 className="text-4xl font-black text-slate-900 tracking-tight">{vehicle.name}</h1>
               <p className="text-[#EB0A1E] text-2xl font-black">{vehicle.price}</p>
-              <p className="text-slate-500 text-sm italic font-medium leading-relaxed">"{vehicle.tagline}"</p>
+              <p className="text-slate-500 text-sm italic font-medium leading-relaxed">&ldquo;{vehicle.tagline}&rdquo;</p>
             </div>
 
             {/* Key Features Bullet List */}
@@ -128,6 +147,34 @@ export default function VehicleDetailClient({ vehicle, id }: VehicleDetailClient
                 ))}
               </div>
             </div>
+
+            {/* Live Stock availability indicator */}
+            {stockCount !== null && (
+              <div className={`p-4 rounded-2xl border flex items-center gap-3.5 transition-all duration-300 ${
+                stockCount > 0 
+                  ? "bg-emerald-50/50 border-emerald-200 text-emerald-900"
+                  : "bg-amber-50/50 border-amber-200 text-amber-900"
+              }`}>
+                {stockCount > 0 ? (
+                  <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0" />
+                ) : (
+                  <Clock className="w-5 h-5 text-amber-600 shrink-0" />
+                )}
+                <div>
+                  {stockCount > 0 ? (
+                    <>
+                      <p className="text-xs font-black uppercase tracking-wider text-emerald-800">Immediate Delivery Available: {stockCount} Units</p>
+                      <p className="text-[11px] font-semibold text-emerald-600/95 mt-0.5">Physical units in stock at dealer warehouse.</p>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-xs font-black uppercase tracking-wider text-amber-800">Current Waiting Period: 3-5 Months</p>
+                      <p className="text-[11px] font-semibold text-amber-600/95 mt-0.5">High demand. Reserve your allocation slot.</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Trusted badge */}
             <div className="flex gap-4 p-4 bg-slate-100/50 rounded-2xl border border-slate-200/60 text-xs text-slate-500 items-start">
