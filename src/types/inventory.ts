@@ -67,3 +67,36 @@ export interface PricingRecord {
   updatedAt?: string;
   publishedAt?: string;
 }
+
+export type OfferType =
+  | "Flat Discount"
+  | "Percentage Discount"
+  | "Free Accessory"
+  | "Free Insurance"
+  | "Extended Warranty"
+  | "Exchange Bonus"
+  | "Corporate Discount"
+  | "Other";
+
+export interface OfferRecord {
+  id?: string;
+  title: string;
+  description: string;
+  offerType: OfferType;
+  amount: number;                // INR value or percentage based on offerType
+  vehicleId: string;             // "" means "All Vehicles"
+  vehicleName: string;           // "All Vehicles" or specific vehicle name
+  variantId: string;             // "" means all variants of the vehicle
+  variantName: string;
+  priority: number;              // 1 = highest priority (shows first)
+  startDate: string;             // ISO date string e.g. "2025-07-01"
+  endDate: string;               // ISO date string e.g. "2025-07-31"
+  isActive: boolean;
+  showOnHomepage: boolean;
+  showOnVehiclePage: boolean;
+  showOnCheckout: boolean;
+  status: "Draft" | "Published" | "Archived";
+  createdAt?: string;
+  updatedAt?: string;
+  publishedAt?: string;
+}

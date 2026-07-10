@@ -13,6 +13,7 @@ import {
   QrCode, 
   LayoutDashboard,
   IndianRupee,
+  Tag,
   Loader2,
   Menu,
   X
@@ -47,6 +48,11 @@ export default function CMSLayout({
       name: "Pricing Management",
       href: "/admin/cms/pricing",
       icon: IndianRupee,
+    },
+    {
+      name: "Offers Management",
+      href: "/admin/cms/offers",
+      icon: Tag,
     },
     {
       name: "Toyota Color Master",
