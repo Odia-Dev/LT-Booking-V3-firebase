@@ -14,6 +14,7 @@ import {
   LayoutDashboard,
   IndianRupee,
   Tag,
+  ShieldCheck,
   Loader2,
   Menu,
   X
@@ -53,6 +54,11 @@ export default function CMSLayout({
       name: "Offers Management",
       href: "/admin/cms/offers",
       icon: Tag,
+    },
+    {
+      name: "Booking Rules",
+      href: "/admin/cms/booking-rules",
+      icon: ShieldCheck,
     },
     {
       name: "Toyota Color Master",

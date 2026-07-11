@@ -68,6 +68,35 @@ export interface PricingRecord {
   publishedAt?: string;
 }
 
+export type RefundPolicy =
+  | "Non-Refundable"
+  | "Fully Refundable"
+  | "Partially Refundable"
+  | "Refundable within 7 days"
+  | "Refundable within 14 days"
+  | "Refundable within 30 days";
+
+export interface BookingRule {
+  id?: string;
+  vehicleId: string;              // "" = default rule (applies to all)
+  vehicleName: string;
+  variantId: string;              // "" = applies to all variants of vehicle
+  variantName: string;
+  bookingAmount: number;          // INR collected at booking
+  refundPolicy: RefundPolicy;
+  partialRefundPercent: number;   // Used only when refundPolicy = "Partially Refundable"
+  waitingPeriodEnabled: boolean;
+  waitingPeriodWeeks: number;     // Estimated waiting in weeks shown to customer
+  waitingPeriodNote: string;      // Free-text e.g. "Subject to stock availability"
+  requiresAcknowledgement: boolean; // Customer must tick checkbox at checkout
+  acknowledgementText: string;    // Checkbox label shown at checkout
+  cancellationAllowed: boolean;
+  cancellationWindowDays: number; // Days post-booking in which cancellation is allowed
+  isDefault: boolean;             // Fallback when no variant-specific rule exists
+  status: "Active" | "Draft" | "Archived";
+  createdAt?: string;
+  updatedAt?: string;
+}
 export type OfferType =
   | "Flat Discount"
   | "Percentage Discount"
