@@ -169,3 +169,24 @@ export interface OfferRecord {
   updatedAt?: string;
   publishedAt?: string;
 }
+
+export type MediaType = "image" | "video";
+
+export interface MediaAsset {
+  id?: string;
+  fileName: string;            // Original file name
+  fileUrl: string;             // Firebase Storage download URL or external URL
+  storagePath: string;         // Firebase Storage path e.g. "media/vehicles/glanza/hero.jpg"
+  mediaType: MediaType;
+  mimeType: string;            // e.g. "image/jpeg", "video/mp4"
+  fileSizeBytes: number;
+  vehicleId: string;           // "" = general/unassigned
+  vehicleName: string;         // "General" or vehicle name
+  category: string;            // e.g. "Hero", "Gallery", "Exterior", "Interior", "Video", "Brochure"
+  altText: string;             // Accessibility alt text
+  displayOrder: number;
+  status: "Active" | "Archived";
+  uploadedBy: string;          // User email or name
+  createdAt?: string;
+  updatedAt?: string;
+}
