@@ -15,6 +15,7 @@ import {
   IndianRupee,
   Tag,
   ShieldCheck,
+  Home,
   Loader2,
   Menu,
   X
@@ -34,6 +35,11 @@ export default function CMSLayout({
       name: "CMS Dashboard",
       href: "/admin/cms",
       icon: LayoutDashboard,
+    },
+    {
+      name: "Homepage CMS",
+      href: "/admin/cms/homepage",
+      icon: Home,
     },
     {
       name: "Vehicle Master",

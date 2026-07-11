@@ -68,6 +68,46 @@ export interface PricingRecord {
   publishedAt?: string;
 }
 
+// ─── Homepage CMS ─────────────────────────────────────────────────────────────
+
+export interface HeroConfig {
+  badgeText: string;         // e.g. "Official Toyota Dealer for South Odisha"
+  headline: string;          // Main hero headline
+  subheadline: string;       // Supporting subtitle
+  ctaLabel: string;          // Button text e.g. "Explore Vehicles"
+  ctaLink: string;           // Button href e.g. "#vehicles"
+  bannerText: string;        // Top red banner text
+  videoUrl: string;          // Hero background video URL
+}
+
+export interface TrustStat {
+  label: string;             // e.g. "Toyota Deliveries"
+  value: string;             // e.g. "3000+" or "4.8★"
+  numericValue: number;      // For animated counter (0 if static text like "4.8★")
+  suffix: string;            // e.g. "+", " Years", "★" — appended to counter
+}
+
+export interface FeaturedVehicle {
+  vehicleId: string;         // Slug id e.g. "glanza"
+  name: string;
+  spec: string;              // e.g. "Smart Hatchback • 22+ km/l"
+  price: string;             // e.g. "6.81 Lakh"
+  bookingAmount: string;     // e.g. "11,000"
+  imageUrl: string;
+  badge: string;             // e.g. "Popular", "Sale", "High Demand"
+  displayOrder: number;
+}
+
+export interface HomepageCmsConfig {
+  id?: string;
+  hero: HeroConfig;
+  trustStats: TrustStat[];
+  featuredVehicles: FeaturedVehicle[];
+  status: "Draft" | "Published";
+  createdAt?: string;
+  updatedAt?: string;
+  publishedAt?: string;
+}
 export type RefundPolicy =
   | "Non-Refundable"
   | "Fully Refundable"
