@@ -16,6 +16,7 @@ import {
   Tag,
   ShieldCheck,
   Home,
+  ImageIcon,
   Loader2,
   Menu,
   X
@@ -75,6 +76,11 @@ export default function CMSLayout({
       name: "Toyota Suffix Master",
       href: "/admin/cms/suffix",
       icon: QrCode,
+    },
+    {
+      name: "Media Manager",
+      href: "/admin/cms/media",
+      icon: ImageIcon,
     },
   ];
 
