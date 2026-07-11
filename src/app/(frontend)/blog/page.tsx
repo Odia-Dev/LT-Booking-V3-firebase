@@ -36,8 +36,9 @@ export default function BlogPage() {
         {/* Blogs grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {BLOGS.map((blog) => (
-            <div
+            <Link
               key={blog.slug}
+              href={`/blog/${blog.slug}`}
               className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-md hover:shadow-xl hover:border-[#EB0A1E]/30 transition-all flex flex-col justify-between group"
             >
               <div className="relative h-44 overflow-hidden">
@@ -59,12 +60,12 @@ export default function BlogPage() {
                 </div>
 
                 <div className="pt-4 border-t border-slate-100">
-                  <button className="text-xs font-bold text-[#EB0A1E] uppercase tracking-wider flex items-center gap-1 group-hover:underline">
+                  <span className="text-xs font-bold text-[#EB0A1E] uppercase tracking-wider flex items-center gap-1 group-hover:underline">
                     Read Article <ArrowRight className="w-3.5 h-3.5" />
-                  </button>
+                  </span>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 
