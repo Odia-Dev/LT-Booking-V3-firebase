@@ -1,25 +1,10 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
-import { SlidersHorizontal, Sparkles } from "lucide-react";
+import { SlidersHorizontal, Sparkles, ShieldCheck } from "lucide-react";
 import { NAV_CATEGORIES } from "@/lib/categories";
-
-const VEHICLES = [
-  { slug: "toyota-glanza", name: "Toyota Glanza", type: "Hatchback", category: "hatchback", price: "₹6.81 Lakh", booking: "₹11,000", image: "https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-urban-cruiser-taisor", name: "Toyota Taisor", type: "Compact SUV", category: "suv", price: "₹7.74 Lakh", booking: "₹11,000", image: "https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-rumion", name: "Toyota Rumion", type: "MPV", category: "mpv", price: "₹10.44 Lakh", booking: "₹21,000", image: "https://images.unsplash.com/photo-1503376780353-7e6692767b70?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-urban-cruiser-hyryder", name: "Urban Cruiser Hyryder", type: "SUV", category: "suv", price: "₹11.14 Lakh", booking: "₹25,000", image: "https://images.unsplash.com/photo-1511919884226-fd3cad34687c?auto=format&fit=crop&q=80&w=800" },
-  { slug: "toyota-urban-cruiser-ebella", name: "Urban Cruiser Ebella", type: "Electric SUV", category: "electric", price: "₹12.00 Lakh", booking: "₹25,000", image: "https://images.unsplash.com/photo-1563720223185-11003d516935?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-innova-crysta", name: "Toyota Innova Crysta", type: "MPV", category: "mpv", price: "₹19.99 Lakh", booking: "₹50,000", image: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-innova-hycross", name: "Innova Hycross", type: "MPV", category: "mpv", price: "₹18.86 Lakh", booking: "₹50,000", image: "https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=1200" },
-  { slug: "toyota-fortuner", name: "Toyota Fortuner", type: "SUV", category: "suv", price: "₹33.43 Lakh", booking: "₹1,00,000", image: "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-fortuner-legender", name: "Toyota Fortuner Legender", type: "SUV", category: "suv", price: "₹43.66 Lakh", booking: "₹1,00,000", image: "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-hilux", name: "Toyota Hilux", type: "Utility Pickup", category: "offroad", price: "₹30.40 Lakh", booking: "₹1,00,000", image: "https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-camry", name: "Toyota Camry", type: "Luxury Sedan", category: "sedan", price: "₹46.17 Lakh", booking: "₹1,00,000", image: "https://images.unsplash.com/photo-1503376710915-18861d9a2638?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-vellfire", name: "Toyota Vellfire", type: "Luxury MPV", category: "luxury", price: "₹1.20 Crore", booking: "₹2,00,050", image: "https://images.unsplash.com/photo-1517524008436-a3851f153a77?auto=format&fit=crop&q=80&w=600" },
-  { slug: "toyota-landcruiser300", name: "Land Cruiser 300", type: "Luxury SUV", category: "luxury", price: "₹2.10 Crore", booking: "₹20,00,000", image: "https://images.unsplash.com/photo-1532581291347-9c39cf10a73c?auto=format&fit=crop&q=80&w=600" }
-];
+import { fetchLiveVehicles, LiveVehicleDisplay } from "@/lib/cmsFetcher";
 
 const CATEGORIES = [
   "All Models",
@@ -35,15 +20,38 @@ const CATEGORIES = [
 
 export default function VehiclesIndexPage() {
   const [filter, setFilter] = useState("All Models");
+  const [liveVehicles, setLiveVehicles] = useState<LiveVehicleDisplay[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      const data = await fetchLiveVehicles();
+      if (isMounted) {
+        setLiveVehicles(data);
+        setLoading(false);
+      }
+    }
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const filteredVehicles = useMemo(() => {
-    if (filter === "All Models") return VEHICLES;
+    if (filter === "All Models") return liveVehicles;
     const targetCategory = NAV_CATEGORIES.find(
       (cat) => cat.name.toLowerCase() === filter.toLowerCase()
     );
-    if (!targetCategory) return [];
-    return VEHICLES.filter((vehicle) => targetCategory.models.includes(vehicle.slug));
-  }, [filter]);
+    if (!targetCategory) {
+      return liveVehicles.filter(v => v.category.toLowerCase().includes(filter.toLowerCase()));
+    }
+    return liveVehicles.filter((v) => 
+      targetCategory.models.includes(v.slug) || 
+      targetCategory.models.includes(`toyota-${v.slug}`) ||
+      v.category.toLowerCase().includes(filter.toLowerCase())
+    );
+  }, [filter, liveVehicles]);
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 py-16 px-4 sm:px-6 lg:px-8">
@@ -107,33 +115,37 @@ export default function VehiclesIndexPage() {
               <div className="relative h-56 overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={vehicle.image}
+                  src={vehicle.heroImage}
                   alt={vehicle.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <span className="absolute top-4 left-4 bg-slate-900/90 text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded">
                   {vehicle.type}
                 </span>
+                <span className="absolute top-4 right-4 bg-[#EB0A1E] text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded shadow">
+                  {vehicle.stockBadge}
+                </span>
               </div>
 
               <div className="p-6 space-y-4 flex-1 flex flex-col justify-between">
                 <div className="space-y-1">
                   <h3 className="text-xl font-extrabold text-slate-900">{vehicle.name}</h3>
-                  <div className="flex justify-between items-baseline pt-1">
-                    <span className="text-xs text-slate-400 font-bold uppercase">Starting Ex-Showroom</span>
-                    <span className="text-lg font-black text-slate-950">{vehicle.price}</span>
+                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{vehicle.spec}</p>
+                  <div className="flex justify-between items-baseline pt-3 border-t border-slate-100 mt-2">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase">Starts Ex-Showroom</span>
+                    <span className="text-lg font-black text-slate-950">{vehicle.price.startsWith("₹") ? vehicle.price : `₹${vehicle.price}`}</span>
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-slate-100 flex gap-3 text-xs">
                   <Link
-                    href={`/vehicles/${vehicle.slug}`}
-                    className="flex-1 text-center py-3 bg-slate-100 hover:bg-slate-250 text-slate-800 rounded-xl font-bold uppercase tracking-wider transition-colors"
+                    href={`/vehicles/toyota-${vehicle.slug}`}
+                    className="flex-1 text-center py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-bold uppercase tracking-wider transition-colors"
                   >
                     View Specs
                   </Link>
                   <Link
-                    href={`/book/${vehicle.slug.replace("toyota-", "")}`}
+                    href={`/book/${vehicle.slug}`}
                     className="flex-grow flex-1 text-center py-3 bg-[#EB0A1E] hover:bg-red-700 text-white rounded-xl font-bold uppercase tracking-wider transition-colors shadow-md shadow-red-500/10"
                   >
                     Book Now

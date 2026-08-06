@@ -66,44 +66,8 @@ function AnimatedCounter({ value, duration = 2 }: { value: number; duration?: nu
   return <span>{count.toLocaleString()}</span>;
 }
 
-const VEHICLES = [
-  { 
-    id: 'glanza', 
-    name: 'Glanza', 
-    spec: 'Smart Hatchback • 22+ km/l • Perfect for City Drives', 
-    price: '6.81 Lakh', 
-    booking: '11,000', 
-    img: 'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?auto=format&fit=crop&q=80&w=800', 
-    badge: 'Sale' 
-  },
-  { 
-    id: 'hyryder', 
-    name: 'Hyryder', 
-    spec: 'Self-Charging Hybrid SUV • 27.97 km/l • Premium Family SUV', 
-    price: '11.14 Lakh', 
-    booking: '21,000', 
-    img: 'https://images.unsplash.com/photo-1621007947382-bb3c3994e3fd?auto=format&fit=crop&q=80&w=800', 
-    badge: 'Popular' 
-  },
-  { 
-    id: 'hycross', 
-    name: 'Innova Hycross', 
-    spec: 'Advanced Hybrid MPV • Spacious 7 Seater • Future Ready', 
-    price: '19.77 Lakh', 
-    booking: '50,000', 
-    img: 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?auto=format&fit=crop&q=80&w=800', 
-    badge: 'High Demand' 
-  },
-  { 
-    id: 'fortuner', 
-    name: 'Fortuner', 
-    spec: 'Legendary SUV • Command Every Road • Premium Ownership', 
-    price: '33.43 Lakh', 
-    booking: '1,00,000', 
-    img: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=800', 
-    badge: 'Iconic' 
-  },
-];
+import { fetchLiveVehicles, fetchLiveOffers, fetchHomepageCms, LiveVehicleDisplay, LiveOfferDisplay } from "@/lib/cmsFetcher";
+import { HomepageCmsConfig } from "@/types/inventory";
 
 const BRANCHES = [
   { name: 'Brahmapur (HQ)', address: 'NH-16, Haladiapadar' },
@@ -114,12 +78,6 @@ const BRANCHES = [
   { name: 'Bhawanipatna', address: 'Main Town Road' },
   { name: 'Paralakhemundi', address: 'Gajapati Palace Road' },
   { name: 'Aska', address: 'NH-59, Aska Main Road' }
-];
-
-const OFFERS = [
-  { title: 'Exchange Bonus', desc: 'Get up to ₹70,000 bonus on exchanging your old car.', valid: 'Ends in 5 days' },
-  { title: 'Hybrid Benefits', desc: 'Special warranty & benefits up to ₹1.60 Lakh on Hyryder.', valid: 'Limited Time' },
-  { title: 'Corporate Discount', desc: 'Exclusive pricing for registered corporate employees.', valid: 'Ongoing' },
 ];
 
 const FAQS = [
@@ -140,6 +98,30 @@ export default function UltimateStorefront() {
   const { user, loading, loginWithGoogle, logout } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openFaq, setOpenFaq] = useState(0);
+
+  const [liveVehicles, setLiveVehicles] = useState<LiveVehicleDisplay[]>([]);
+  const [liveOffers, setLiveOffers] = useState<LiveOfferDisplay[]>([]);
+  const [homepageCms, setHomepageCms] = useState<HomepageCmsConfig | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    async function loadCmsData() {
+      const [vData, oData, hCms] = await Promise.all([
+        fetchLiveVehicles(),
+        fetchLiveOffers(),
+        fetchHomepageCms(),
+      ]);
+      if (isMounted) {
+        setLiveVehicles(vData);
+        setLiveOffers(oData);
+        setHomepageCms(hCms);
+      }
+    }
+    loadCmsData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-white font-sans text-slate-900 selection:bg-[#EB0A1E] selection:text-white pb-20 lg:pb-0 scroll-smooth">
@@ -396,7 +378,7 @@ export default function UltimateStorefront() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {VEHICLES.map((v) => (
+          {liveVehicles.slice(0, 8).map((v) => (
             <motion.div 
               key={v.id} 
               whileHover={{ y: -8, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
@@ -405,10 +387,11 @@ export default function UltimateStorefront() {
               <div>
                 <div className="relative h-48 bg-slate-100 overflow-hidden">
                   <div className="absolute top-3 right-3 z-10 bg-[#EB0A1E] text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded">
-                    {v.badge}
+                    {v.stockBadge}
                   </div>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img 
-                    src={v.img} 
+                    src={v.heroImage} 
                     alt={v.name} 
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                   />
@@ -423,16 +406,16 @@ export default function UltimateStorefront() {
                 <div className="flex justify-between items-end mb-4 pt-4 border-t border-gray-105">
                   <div>
                     <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Starts At</p>
-                    <p className="text-sm font-bold text-slate-900">₹ {v.price}</p>
+                    <p className="text-sm font-bold text-slate-900">{v.price.startsWith("₹") ? v.price : `₹ ${v.price}`}</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[10px] text-[#EB0A1E] uppercase font-bold tracking-wider">Booking Amt.</p>
-                    <p className="text-sm font-black text-[#EB0A1E]">₹ {v.booking}</p>
+                    <p className="text-sm font-black text-[#EB0A1E]">{v.bookingAmount.startsWith("₹") ? v.bookingAmount : `₹ ${v.bookingAmount}`}</p>
                   </div>
                 </div>
                 
                 <Link 
-                  href={v.id === 'hyryder' ? '/vehicles/toyota-urban-cruiser-hyryder' : v.id === 'hycross' ? '/vehicles/toyota-innova-hycross' : `/book/${v.id}`}
+                  href={`/vehicles/toyota-${v.slug}`}
                   className="w-full bg-slate-900 text-white py-2.5 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#EB0A1E] transition-colors flex items-center justify-center"
                 >
                   Select Variant & Book
@@ -475,13 +458,14 @@ export default function UltimateStorefront() {
       <section id="offers" className="py-24 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-[48px] font-extrabold text-slate-900 mb-8 text-center tracking-tight">Exclusive Online Offers</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {OFFERS.map((offer, i) => (
-            <div key={i} className="border border-[#EB0A1E]/20 bg-red-50/30 p-6 rounded-xl relative overflow-hidden flex flex-col justify-between">
+          {liveOffers.map((offer) => (
+            <div key={offer.id} className="border border-[#EB0A1E]/20 bg-red-50/30 p-6 rounded-xl relative overflow-hidden flex flex-col justify-between">
               <div className="absolute top-0 right-0 bg-[#EB0A1E] text-white text-[9px] font-bold uppercase tracking-widest px-3 py-1 rounded-bl-lg">
-                {offer.valid}
+                {offer.badge || offer.expiryText}
               </div>
               <h3 className="text-lg font-bold text-[#EB0A1E] mb-2">{offer.title}</h3>
-              <p className="text-sm text-slate-700">{offer.desc}</p>
+              <p className="text-sm font-semibold text-slate-800 mb-1">{offer.discountText}</p>
+              <p className="text-xs text-slate-600">{offer.description}</p>
             </div>
           ))}
         </div>
