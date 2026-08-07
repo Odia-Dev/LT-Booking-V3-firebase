@@ -302,8 +302,14 @@ export async function fetchLiveOffers(): Promise<LiveOfferDisplay[]> {
 export async function fetchHomepageCms(): Promise<HomepageCmsConfig | null> {
   try {
     if (isConfigured) {
-      const docRef = doc(db, "homepage_cms", "current");
-      const snap = await getDoc(docRef);
+      let docRef = doc(db, "homepage_cms", "homepage_config");
+      let snap = await getDoc(docRef);
+      if (snap.exists()) {
+        return snap.data() as HomepageCmsConfig;
+      }
+      // Fallback check for 'current' doc ID if 'homepage_config' is not found
+      docRef = doc(db, "homepage_cms", "current");
+      snap = await getDoc(docRef);
       if (snap.exists()) {
         return snap.data() as HomepageCmsConfig;
       }
