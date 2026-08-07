@@ -309,7 +309,7 @@ export async function fetchHomepageCms(): Promise<HomepageCmsConfig | null> {
       }
     }
   } catch (err) {
-    console.error("Error fetching homepage CMS:", err);
+    console.error("🔥 FIREBASE HOMEPAGE FETCH ERROR:", err);
   }
   return null;
 }

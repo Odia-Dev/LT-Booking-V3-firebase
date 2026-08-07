@@ -110,7 +110,7 @@ export default function UltimateStorefront() {
         const [vData, oData, hCms] = await Promise.all([
           fetchLiveVehicles().catch((e) => { console.warn("Failed fetching live vehicles:", e); return []; }),
           fetchLiveOffers().catch((e) => { console.warn("Failed fetching live offers:", e); return []; }),
-          fetchHomepageCms().catch((e) => { console.warn("Failed fetching homepage CMS:", e); return null; }),
+          fetchHomepageCms().catch((e) => { console.error("🔥 FIREBASE HOMEPAGE FETCH ERROR:", e); return null; }),
         ]);
         if (isMounted) {
           setLiveVehicles(vData);
@@ -118,7 +118,7 @@ export default function UltimateStorefront() {
           setHomepageCms(hCms);
         }
       } catch (err) {
-        console.error("Critical error loading CMS homepage data, using static fallbacks:", err);
+        console.error("🔥 FIREBASE HOMEPAGE FETCH ERROR:", err);
       }
     }
     loadCmsData();
