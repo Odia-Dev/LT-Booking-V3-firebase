@@ -69,9 +69,6 @@ function AnimatedCounter({ value, duration = 2 }: { value: number; duration?: nu
 import { fetchLiveVehicles, fetchLiveOffers, fetchHomepageCms, getLiveImage, LiveVehicleDisplay, LiveOfferDisplay } from "@/lib/cmsFetcher";
 import { HomepageCmsConfig } from "@/types/inventory";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 const BRANCHES = [
   { name: 'Brahmapur (HQ)', address: 'NH-16, Haladiapadar' },
   { name: 'Jeypore', address: 'NH-26, Jeypore Main Road' },
