@@ -141,8 +141,20 @@ export default function PricingClient() {
         const rList: PricingRecord[] = [];
         pSnap.forEach((d) => rList.push({ id: d.id, ...d.data() } as PricingRecord));
 
-        const vhList: VehicleMaster[] = [];
+        let vhList: VehicleMaster[] = [];
         vhSnap.forEach((d) => vhList.push({ id: d.id, ...d.data() } as VehicleMaster));
+
+        // Fallback: If vehicles_master is empty, attempt to fetch from 'vehicles' collection
+        if (vhList.length === 0) {
+          try {
+            const vSnap = await getDocs(collection(db, "vehicles"));
+            vSnap.forEach((d) => vhList.push({ id: d.id, ...d.data() } as VehicleMaster));
+          } catch (e) {
+            console.warn("Could not query fallback 'vehicles' collection:", e);
+          }
+        }
+
+        console.log("Fetched vehicles: ", vhList);
 
         const vrList: VariantMaster[] = [];
         vrSnap.forEach((d) => vrList.push({ id: d.id, ...d.data() } as VariantMaster));
@@ -156,9 +168,11 @@ export default function PricingClient() {
         const localR = localStorage.getItem(STORAGE_KEY);
         const localVh = localStorage.getItem("lt_vehicles_master");
         const localVr = localStorage.getItem("lt_variants_master");
+        const parsedVh = localVh ? JSON.parse(localVh) : [];
+        console.log("Fetched vehicles: ", parsedVh);
         if (isMounted.current) {
           setRecords(localR ? JSON.parse(localR) : []);
-          setVehicles(localVh ? JSON.parse(localVh) : []);
+          setVehicles(parsedVh);
           setVariants(localVr ? JSON.parse(localVr) : []);
         }
       }

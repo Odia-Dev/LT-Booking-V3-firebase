@@ -66,7 +66,7 @@ function AnimatedCounter({ value, duration = 2 }: { value: number; duration?: nu
   return <span>{count.toLocaleString()}</span>;
 }
 
-import { fetchLiveVehicles, fetchLiveOffers, fetchHomepageCms, LiveVehicleDisplay, LiveOfferDisplay } from "@/lib/cmsFetcher";
+import { fetchLiveVehicles, fetchLiveOffers, fetchHomepageCms, getLiveImage, LiveVehicleDisplay, LiveOfferDisplay } from "@/lib/cmsFetcher";
 import { HomepageCmsConfig } from "@/types/inventory";
 
 const BRANCHES = [
@@ -106,15 +106,19 @@ export default function UltimateStorefront() {
   useEffect(() => {
     let isMounted = true;
     async function loadCmsData() {
-      const [vData, oData, hCms] = await Promise.all([
-        fetchLiveVehicles(),
-        fetchLiveOffers(),
-        fetchHomepageCms(),
-      ]);
-      if (isMounted) {
-        setLiveVehicles(vData);
-        setLiveOffers(oData);
-        setHomepageCms(hCms);
+      try {
+        const [vData, oData, hCms] = await Promise.all([
+          fetchLiveVehicles().catch((e) => { console.warn("Failed fetching live vehicles:", e); return []; }),
+          fetchLiveOffers().catch((e) => { console.warn("Failed fetching live offers:", e); return []; }),
+          fetchHomepageCms().catch((e) => { console.warn("Failed fetching homepage CMS:", e); return null; }),
+        ]);
+        if (isMounted) {
+          setLiveVehicles(vData);
+          setLiveOffers(oData);
+          setHomepageCms(hCms);
+        }
+      } catch (err) {
+        console.error("Critical error loading CMS homepage data, using static fallbacks:", err);
       }
     }
     loadCmsData();
@@ -128,7 +132,7 @@ export default function UltimateStorefront() {
       
       {/* 5K BONUS BANNER */}
       <div className="w-full bg-[#EB0A1E] text-white py-3 px-4 text-center text-xs font-black tracking-widest uppercase flex items-center justify-center gap-2 z-[60] relative">
-        <span>⚡ ONLINE EXCLUSIVE: Get ₹5,000 instant discount on your final invoice when you book online today.</span>
+        <span>{homepageCms?.hero?.bannerText || "⚡ ONLINE EXCLUSIVE: Get ₹5,000 instant discount on your final invoice when you book online today."}</span>
       </div>
 
 
@@ -157,7 +161,7 @@ export default function UltimateStorefront() {
                 EMI Check
               </Link>
               <Link href="/offers" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
-                Offer
+                Offers
               </Link>
               <Link href="/contact" className="text-xs font-bold uppercase tracking-widest text-slate-600 hover:text-[#EB0A1E] transition-colors">
                 Contact
@@ -237,7 +241,7 @@ export default function UltimateStorefront() {
               EMI Check
             </Link>
             <Link href="/offers" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
-              Offer
+              Offers
             </Link>
             <Link href="/contact" onClick={() => setMobileMenuOpen(false)} className="block text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-[#EB0A1E]">
               Contact
@@ -288,7 +292,7 @@ export default function UltimateStorefront() {
           playsInline 
           className="absolute inset-0 w-full h-full object-cover opacity-75 pointer-events-none"
         >
-          <source src="https://assets.mixkit.co/videos/preview/mixkit-modern-suv-car-driving-on-a-rainy-road-40292-large.mp4" type="video/mp4" />
+          <source src={homepageCms?.hero?.videoUrl || "https://assets.mixkit.co/videos/preview/mixkit-modern-suv-car-driving-on-a-rainy-road-40292-large.mp4"} type="video/mp4" />
         </video>
         
         {/* Gradient Overlay for high readability */}
@@ -302,7 +306,7 @@ export default function UltimateStorefront() {
             className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6 border border-white/10"
           >
             <ShieldCheck className="w-4 h-4 text-[#EB0A1E]" />
-            <span>Official Toyota Dealer for South Odisha</span>
+            <span>{homepageCms?.hero?.badgeText || "Official Toyota Dealer for South Odisha"}</span>
           </motion.div>
           
           <motion.h1 
@@ -311,7 +315,7 @@ export default function UltimateStorefront() {
             transition={{ duration: 0.8, delay: 0.15 }}
             className="text-[44px] sm:text-[64px] lg:text-[80px] font-black tracking-tight mb-6 leading-none text-white drop-shadow-sm"
           >
-            Reserve Your Toyota Car <br className="hidden md:inline"/>Online in Just 2 Minutes
+            {homepageCms?.hero?.headline || "Reserve Your Toyota Car Online in Just 2 Minutes"}
           </motion.h1>
           
           <motion.p 
@@ -320,7 +324,7 @@ export default function UltimateStorefront() {
             transition={{ duration: 0.8, delay: 0.3 }}
             className="text-base sm:text-lg lg:text-[18px] text-slate-200 mb-10 max-w-2xl mx-auto font-light leading-relaxed"
           >
-            Secure your preferred variant and color with an authorized Toyota dealer serving South Odisha.
+            {homepageCms?.hero?.subheadline || "Secure your preferred variant and color with an authorized Toyota dealer serving South Odisha."}
           </motion.p>
           
           <motion.div 
@@ -329,8 +333,8 @@ export default function UltimateStorefront() {
             transition={{ duration: 0.6, delay: 0.45 }}
             className="flex flex-col sm:flex-row justify-center items-center gap-4"
           >
-            <a href="#vehicles" className="w-full sm:w-auto bg-[#EB0A1E] text-white px-8 py-4 rounded text-sm font-bold shadow-lg hover:bg-red-700 transition-colors flex items-center justify-center">
-              Explore Vehicles <ChevronRight className="w-4 h-4 ml-1" />
+            <a href={homepageCms?.hero?.ctaLink || "#vehicles"} className="w-full sm:w-auto bg-[#EB0A1E] text-white px-8 py-4 rounded text-sm font-bold shadow-lg hover:bg-red-700 transition-colors flex items-center justify-center">
+              {homepageCms?.hero?.ctaLabel || "Explore Vehicles"} <ChevronRight className="w-4 h-4 ml-1" />
             </a>
           </motion.div>
         </div>
@@ -340,32 +344,46 @@ export default function UltimateStorefront() {
       <div className="bg-white border-b border-gray-100 py-10 relative z-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center">
-            <div className="flex flex-col items-center justify-center">
-              <ThumbsUp className="w-6 h-6 text-[#EB0A1E] mb-2" />
-              <p className="text-3xl font-black text-slate-900">
-                <AnimatedCounter value={3000} />+
-              </p>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Toyota Deliveries</p>
-            </div>
-            <div className="flex flex-col items-center justify-center">
-              <MapPin className="w-6 h-6 text-[#EB0A1E] mb-2" />
-              <p className="text-3xl font-black text-slate-900">
-                <AnimatedCounter value={8} />
-              </p>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Locations Across Odisha</p>
-            </div>
-            <div className="flex flex-col items-center justify-center">
-              <Star className="w-6 h-6 text-[#EB0A1E] mb-2" />
-              <p className="text-3xl font-black text-slate-900">4.8★</p>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Customer Rating</p>
-            </div>
-            <div className="flex flex-col items-center justify-center">
-              <ShieldCheck className="w-6 h-6 text-[#EB0A1E] mb-2" />
-              <p className="text-3xl font-black text-slate-900">
-                <AnimatedCounter value={4} />+ Years
-              </p>
-              <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Of Trust</p>
-            </div>
+            {homepageCms?.trustStats && homepageCms.trustStats.length > 0 ? (
+              homepageCms.trustStats.map((stat, i) => (
+                <div key={i} className="flex flex-col items-center justify-center">
+                  <ThumbsUp className="w-6 h-6 text-[#EB0A1E] mb-2" />
+                  <p className="text-3xl font-black text-slate-900">
+                    {stat.numericValue > 0 ? <AnimatedCounter value={stat.numericValue} /> : stat.value}{stat.suffix}
+                  </p>
+                  <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">{stat.label}</p>
+                </div>
+              ))
+            ) : (
+              <>
+                <div className="flex flex-col items-center justify-center">
+                  <ThumbsUp className="w-6 h-6 text-[#EB0A1E] mb-2" />
+                  <p className="text-3xl font-black text-slate-900">
+                    <AnimatedCounter value={3000} />+
+                  </p>
+                  <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Toyota Deliveries</p>
+                </div>
+                <div className="flex flex-col items-center justify-center">
+                  <MapPin className="w-6 h-6 text-[#EB0A1E] mb-2" />
+                  <p className="text-3xl font-black text-slate-900">
+                    <AnimatedCounter value={8} />
+                  </p>
+                  <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Locations Across Odisha</p>
+                </div>
+                <div className="flex flex-col items-center justify-center">
+                  <Star className="w-6 h-6 text-[#EB0A1E] mb-2" />
+                  <p className="text-3xl font-black text-slate-900">4.8★</p>
+                  <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Customer Rating</p>
+                </div>
+                <div className="flex flex-col items-center justify-center">
+                  <ShieldCheck className="w-6 h-6 text-[#EB0A1E] mb-2" />
+                  <p className="text-3xl font-black text-slate-900">
+                    <AnimatedCounter value={4} />+ Years
+                  </p>
+                  <p className="text-[10px] uppercase tracking-widest text-slate-500 font-bold mt-1">Of Trust</p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -378,51 +396,54 @@ export default function UltimateStorefront() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {liveVehicles.slice(0, 8).map((v) => (
-            <motion.div 
-              key={v.id} 
-              whileHover={{ y: -8, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
-              className="bg-white rounded-xl border border-gray-200 overflow-hidden transition-all group flex flex-col justify-between"
-            >
-              <div>
-                <div className="relative h-48 bg-slate-100 overflow-hidden">
-                  <div className="absolute top-3 right-3 z-10 bg-[#EB0A1E] text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded">
-                    {v.stockBadge}
+          {liveVehicles.slice(0, 8).map((v) => {
+            const displayImage = getLiveImage(v.heroImage, v.slug);
+            return (
+              <motion.div 
+                key={v.id} 
+                whileHover={{ y: -8, boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)" }}
+                className="bg-white rounded-xl border border-gray-200 overflow-hidden transition-all group flex flex-col justify-between"
+              >
+                <div>
+                  <div className="relative h-48 bg-slate-100 overflow-hidden">
+                    <div className="absolute top-3 right-3 z-10 bg-[#EB0A1E] text-white text-[10px] font-bold uppercase tracking-widest px-2 py-1 rounded">
+                      {v.stockBadge}
+                    </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img 
+                      src={displayImage} 
+                      alt={v.name} 
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                    />
                   </div>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img 
-                    src={v.heroImage} 
-                    alt={v.name} 
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
-                  />
-                </div>
-                <div className="p-5">
-                  <h3 className="text-[24px] font-bold text-slate-900 mb-1">{v.name}</h3>
-                  <p className="text-xs text-slate-500 mb-4 h-12 leading-relaxed">{v.spec}</p>
-                </div>
-              </div>
-              
-              <div className="p-5 pt-0">
-                <div className="flex justify-between items-end mb-4 pt-4 border-t border-gray-105">
-                  <div>
-                    <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Starts At</p>
-                    <p className="text-sm font-bold text-slate-900">{v.price.startsWith("₹") ? v.price : `₹ ${v.price}`}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] text-[#EB0A1E] uppercase font-bold tracking-wider">Booking Amt.</p>
-                    <p className="text-sm font-black text-[#EB0A1E]">{v.bookingAmount.startsWith("₹") ? v.bookingAmount : `₹ ${v.bookingAmount}`}</p>
+                  <div className="p-5">
+                    <h3 className="text-[24px] font-bold text-slate-900 mb-1">{v.name}</h3>
+                    <p className="text-xs text-slate-500 mb-4 h-12 leading-relaxed">{v.spec}</p>
                   </div>
                 </div>
                 
-                <Link 
-                  href={`/vehicles/toyota-${v.slug}`}
-                  className="w-full bg-slate-900 text-white py-2.5 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#EB0A1E] transition-colors flex items-center justify-center"
-                >
-                  Select Variant & Book
-                </Link>
-              </div>
-            </motion.div>
-          ))}
+                <div className="p-5 pt-0">
+                  <div className="flex justify-between items-end mb-4 pt-4 border-t border-gray-105">
+                    <div>
+                      <p className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Starts At</p>
+                      <p className="text-sm font-bold text-slate-900">{v.price.startsWith("₹") ? v.price : `₹ ${v.price}`}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-[#EB0A1E] uppercase font-bold tracking-wider">Booking Amt.</p>
+                      <p className="text-sm font-black text-[#EB0A1E]">{v.bookingAmount.startsWith("₹") ? v.bookingAmount : `₹ ${v.bookingAmount}`}</p>
+                    </div>
+                  </div>
+                  
+                  <Link 
+                    href={`/vehicles/toyota-${v.slug}`}
+                    className="w-full bg-slate-900 text-white py-2.5 rounded text-xs font-bold uppercase tracking-widest hover:bg-[#EB0A1E] transition-colors flex items-center justify-center"
+                  >
+                    Select Variant & Book
+                  </Link>
+                </div>
+              </motion.div>
+            );
+          })}
         </div>
       </section>
 

@@ -313,3 +313,18 @@ export async function fetchHomepageCms(): Promise<HomepageCmsConfig | null> {
   }
   return null;
 }
+
+/**
+ * Utility to resolve live CMS images:
+ * Prioritizes real Firebase Storage or custom uploaded URLs over demo placeholders.
+ */
+export function getLiveImage(cmsUrl?: string, fallbackSlug?: string): string {
+  if (cmsUrl && cmsUrl.trim().length > 0 && !cmsUrl.includes("unsplash.com")) {
+    return cmsUrl.trim();
+  }
+  if (fallbackSlug && BRANDED_TOYOTA_PLACEHOLDERS[fallbackSlug]) {
+    return BRANDED_TOYOTA_PLACEHOLDERS[fallbackSlug].image;
+  }
+  return cmsUrl || DEFAULT_BRANDED_CAR_IMAGE;
+}
+
