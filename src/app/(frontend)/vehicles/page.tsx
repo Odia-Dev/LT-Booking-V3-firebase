@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { SlidersHorizontal, Sparkles, ShieldCheck } from "lucide-react";
 import { NAV_CATEGORIES } from "@/lib/categories";
-import { fetchLiveVehicles, LiveVehicleDisplay } from "@/lib/cmsFetcher";
+import { DEFAULT_BRANDED_CAR_IMAGE, fetchLiveVehicles, LiveVehicleDisplay } from "@/lib/cmsFetcher";
 
 const CATEGORIES = [
   "All Models",
@@ -112,11 +112,14 @@ export default function VehiclesIndexPage() {
               key={vehicle.slug}
               className="bg-white border border-slate-200/80 rounded-2xl overflow-hidden shadow-md shadow-slate-100 hover:shadow-xl hover:shadow-slate-200/50 hover:border-[#EB0A1E]/30 transition-all flex flex-col justify-between group"
             >
-              <div className="relative h-56 overflow-hidden">
+              <div className="relative h-56 overflow-hidden bg-slate-100">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={vehicle.heroImage}
+                  src={vehicle.imageUrl || vehicle.heroImage || DEFAULT_BRANDED_CAR_IMAGE}
                   alt={vehicle.name}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = DEFAULT_BRANDED_CAR_IMAGE;
+                  }}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <span className="absolute top-4 left-4 bg-slate-900/90 text-white text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded">

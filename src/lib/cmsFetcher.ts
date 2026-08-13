@@ -113,6 +113,7 @@ export interface LiveVehicleDisplay {
   bookingAmount: string;
   rawBookingNumber: number;
   heroImage: string;
+  imageUrl: string;
   gallery: string[];
   spec: string;
   tagline: string;
@@ -152,16 +153,25 @@ export async function fetchLiveVehicles(): Promise<LiveVehicleDisplay[]> {
     if (isConfigured) {
       const snap = await getDocs(collection(db, "vehicles_master"));
       snap.forEach((docSnap) => {
-        const data = docSnap.data() as VehicleMaster;
-        if (data.basicInfo?.status === "Published") {
-          const rawSlug = data.basicInfo.slug || normalizeSlug(data.basicInfo.name);
+        const data = docSnap.data() as any;
+        if (data.basicInfo?.status === "Published" || !data.basicInfo?.status) {
+          const rawSlug = data.basicInfo?.slug || normalizeSlug(data.basicInfo?.name || docSnap.id);
           const fallback = BRANDED_TOYOTA_PLACEHOLDERS[rawSlug] || {
             image: DEFAULT_BRANDED_CAR_IMAGE,
-            spec: data.basicInfo.shortDesc || "Official Toyota Vehicle",
+            spec: data.basicInfo?.shortDesc || "Official Toyota Vehicle",
             price: data.pricing?.startingPrice || "Contact Dealer",
             booking: "₹" + (data.pricing?.bookingAmount || 25000).toLocaleString("en-IN"),
-            type: data.basicInfo.category || "Toyota",
+            type: data.basicInfo?.category || "Toyota",
           };
+
+          const resolvedImage =
+            data.media?.heroImage ||
+            data.media?.imageUrl ||
+            data.media?.thumbnail ||
+            data.mediaUrl ||
+            data.imageUrl ||
+            data.image ||
+            fallback.image;
 
           const totalUnits = data.inventory?.totalUnits ?? 5;
           let stockStatus: "Ready Delivery" | "Low Stock" | "Reserve Allocation" = "Ready Delivery";
@@ -178,17 +188,18 @@ export async function fetchLiveVehicles(): Promise<LiveVehicleDisplay[]> {
           result.push({
             id: docSnap.id,
             slug: rawSlug,
-            name: data.basicInfo.name,
-            type: data.basicInfo.category || fallback.type,
-            category: (data.basicInfo.category || "suv").toLowerCase(),
+            name: data.basicInfo?.name || rawSlug.toUpperCase(),
+            type: data.basicInfo?.category || fallback.type,
+            category: (data.basicInfo?.category || "suv").toLowerCase(),
             price: data.pricing?.startingPrice ? `₹${data.pricing.startingPrice}` : fallback.price,
             rawPriceNumber: parseFloat(data.pricing?.startingPrice?.replace(/[^0-9.]/g, "") || "0"),
             bookingAmount: data.pricing?.bookingAmount ? `₹${data.pricing.bookingAmount.toLocaleString("en-IN")}` : fallback.booking,
             rawBookingNumber: data.pricing?.bookingAmount || 25000,
-            heroImage: data.media?.heroImage || fallback.image,
-            gallery: data.media?.gallery && data.media.gallery.length > 0 ? data.media.gallery : [fallback.image],
-            spec: data.basicInfo.shortDesc || fallback.spec,
-            tagline: data.basicInfo.tagline || "Built for Perfection",
+            heroImage: resolvedImage,
+            imageUrl: resolvedImage,
+            gallery: data.media?.gallery && data.media.gallery.length > 0 ? data.media.gallery : [resolvedImage],
+            spec: data.basicInfo?.shortDesc || fallback.spec,
+            tagline: data.basicInfo?.tagline || "Built for Perfection",
             stockCount: totalUnits,
             stockStatus,
             stockBadge,
@@ -218,6 +229,7 @@ export async function fetchLiveVehicles(): Promise<LiveVehicleDisplay[]> {
         bookingAmount: val.booking,
         rawBookingNumber: parseInt(val.booking.replace(/[^0-9]/g, "") || "25000", 10),
         heroImage: val.image,
+        imageUrl: val.image,
         gallery: [val.image],
         spec: val.spec,
         tagline: "Toyota Quality & Assurance",
