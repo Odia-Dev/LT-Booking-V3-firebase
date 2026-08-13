@@ -52,34 +52,20 @@ export default function Navbar() {
               {/* Premium Hover Dropdown Panel (Wider, Shorter Rectangle Layout) */}
               <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-[960px] bg-zinc-900 border border-zinc-800 shadow-2xl rounded-2xl p-8 hidden group-hover:grid grid-cols-4 gap-x-8 gap-y-6 z-50 text-left">
                 {NAV_CATEGORIES.map((cat) => (
-                  <div key={cat.name} className="space-y-2.5">
-                    <h4 className="text-[#EB0A1E] text-[10px] uppercase tracking-widest font-black border-b border-zinc-800/80 pb-1">{cat.name}</h4>
-                    <div className="grid grid-cols-1 gap-2">
+                  <div key={cat.name} className="space-y-3">
+                    <h4 className="text-[#EB0A1E] text-[10px] uppercase tracking-widest font-black border-b border-zinc-800/80 pb-1.5">{cat.name}</h4>
+                    <div className="flex flex-col space-y-2">
                       {cat.models.map((modelKey) => {
                         const vehicleData = VEHICLES[modelKey];
                         if (!vehicleData) return null;
                         return (
-                          <div key={modelKey} className="flex items-center gap-2.5 group/item">
-                            {/* Small Car Image - Links to CRM/CMS Management Panel */}
-                            <Link 
-                              href="/admin/dashboard" 
-                              title="Edit in CMS"
-                              className="relative h-7 w-11 bg-zinc-950 rounded border border-zinc-800 hover:border-[#EB0A1E] transition-all shrink-0 cursor-pointer block"
-                            >
-                              <img
-                                src={vehicleData.image}
-                                alt={vehicleData.name}
-                                className="w-full h-full object-cover group-hover/item:scale-110 transition-transform duration-300"
-                              />
-                            </Link>
-                            {/* Model name - Links to Public Details Page */}
-                            <Link 
-                              href={`/vehicles/${modelKey}`} 
-                              className="text-[11px] text-zinc-400 hover:text-white transition-colors font-bold block capitalize truncate"
-                            >
-                              {vehicleData.name.replace("Toyota ", "")}
-                            </Link>
-                          </div>
+                          <Link 
+                            key={modelKey}
+                            href={`/vehicles/${modelKey}`} 
+                            className="text-xs text-zinc-400 hover:text-white hover:translate-x-1 transition-all duration-200 font-medium block capitalize py-0.5"
+                          >
+                            {vehicleData.name.replace("Toyota ", "")}
+                          </Link>
                         );
                       })}
                     </div>
@@ -192,33 +178,19 @@ export default function Navbar() {
                 {NAV_CATEGORIES.map((cat) => (
                   <div key={cat.name} className="space-y-2">
                     <h4 className="text-[#EB0A1E] text-[10px] uppercase tracking-widest font-black">{cat.name}</h4>
-                    <div className="grid grid-cols-1 gap-2">
+                    <div className="flex flex-col space-y-1.5">
                       {cat.models.map((modelKey) => {
                         const vehicleData = VEHICLES[modelKey];
                         if (!vehicleData) return null;
                         return (
-                          <div key={modelKey} className="flex items-center gap-3">
-                            {/* Small image links to CRM CMS */}
-                            <Link 
-                              href="/admin/dashboard" 
-                              onClick={() => setMobileMenuOpen(false)}
-                              className="relative h-8 w-12 bg-zinc-950 rounded border border-zinc-800 shrink-0 block"
-                            >
-                              <img
-                                src={vehicleData.image}
-                                alt={vehicleData.name}
-                                className="w-full h-full object-cover"
-                              />
-                            </Link>
-                            {/* Name links to public details */}
-                            <Link 
-                              href={`/vehicles/${modelKey}`} 
-                              onClick={() => setMobileMenuOpen(false)}
-                              className="text-xs text-zinc-400 hover:text-white font-medium"
-                            >
-                              {vehicleData.name}
-                            </Link>
-                          </div>
+                          <Link 
+                            key={modelKey}
+                            href={`/vehicles/${modelKey}`} 
+                            onClick={() => setMobileMenuOpen(false)}
+                            className="text-xs text-zinc-400 hover:text-white font-medium py-0.5 transition-colors"
+                          >
+                            {vehicleData.name}
+                          </Link>
                         );
                       })}
                     </div>
