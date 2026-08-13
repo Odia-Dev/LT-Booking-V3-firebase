@@ -2,10 +2,12 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import Papa from "papaparse";
 import { 
   Car, Settings, Image as ImageIcon, IndianRupee, MapPin, 
   FileText, CheckCircle, Save, LayoutTemplate,
-  Plus, Trash2, UploadCloud, ChevronRight, AlertCircle, Loader2
+  Plus, Trash2, UploadCloud, ChevronRight, AlertCircle, Loader2,
+  FileSpreadsheet, Download
 } from "lucide-react";
 import imageCompression from "browser-image-compression";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -132,6 +134,71 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
       return next;
     });
     setUnsavedChanges(true);
+  };
+
+  // Sample CSV Download
+  const downloadSampleCsv = () => {
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + "Variant Name,Engine (cc),Fuel Type,Transmission,Ex-Showroom Price\n"
+      + "S E-CNG,1462 cc,CNG,Manual,₹11.14 Lakh\n"
+      + "G Hybrid,1490 cc,Hybrid,Automatic,₹14.49 Lakh\n"
+      + "V AT,1490 cc,Petrol,Automatic,₹15.84 Lakh";
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `sample_variants_${basicInfo.slug || "model"}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  // Bulk Variant Spreadsheet Upload Handler
+  const handleVariantCsvUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results) => {
+        const rows = results.data as Record<string, string>[];
+        if (!rows || rows.length === 0) {
+          alert("Uploaded spreadsheet is empty or missing headers.");
+          return;
+        }
+
+        const requiredHeaders = ["Variant Name", "Ex-Showroom Price"];
+        const firstRowKeys = Object.keys(rows[0]).map(k => k.trim());
+        
+        const missing = requiredHeaders.filter(h => !firstRowKeys.some(k => k.toLowerCase() === h.toLowerCase()));
+        if (missing.length > 0) {
+          alert(`Validation Error: Spreadsheet is missing required header columns: ${missing.join(", ")}\nExpected headers: Variant Name, Engine (cc), Fuel Type, Transmission, Ex-Showroom Price`);
+          return;
+        }
+
+        const parsedVariants: VehicleVariant[] = rows.map(row => {
+          const getKey = (name: string) => {
+            const foundKey = Object.keys(row).find(k => k.trim().toLowerCase() === name.toLowerCase());
+            return foundKey ? row[foundKey]?.trim() : "";
+          };
+
+          return {
+            name: getKey("Variant Name") || "Unnamed Variant",
+            engine: getKey("Engine (cc)") || getKey("Engine") || "1490 cc",
+            fuel: getKey("Fuel Type") || getKey("Fuel") || "Petrol",
+            transmission: getKey("Transmission") || "Manual",
+            exShowroom: getKey("Ex-Showroom Price") || getKey("Ex-Showroom") || "Contact Dealer"
+          };
+        });
+
+        setVariants(parsedVariants);
+        setUnsavedChanges(true);
+        alert(`Successfully imported ${parsedVariants.length} variants! Click "Save & Sync to Live" to persist changes.`);
+      },
+      error: (err) => {
+        alert("Failed to parse CSV file: " + err.message);
+      }
+    });
   };
 
   // Colors handlers
@@ -451,14 +518,48 @@ export default function VehicleManager({ initialVehicle, vehicleId }: VehicleMan
   const renderVariants = () => (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="bg-slate-900 p-6 rounded-xl border border-slate-200 shadow-sm">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-wrap justify-between items-center gap-4 mb-6 pb-4 border-b border-slate-800">
           <div>
             <h3 className="text-lg font-bold text-slate-100">Variant Management</h3>
-            <p className="text-xs text-slate-500">Add all available trims (e.g., E MT, G Hybrid, V AT)</p>
+            <p className="text-xs text-slate-400">Manage available trim levels manually or via spreadsheet bulk import</p>
           </div>
-          <button onClick={addVariant} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-md hover:bg-slate-800 flex items-center">
-            <Plus className="w-4 h-4 mr-2" /> Add Variant
-          </button>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            <button 
+              onClick={downloadSampleCsv} 
+              className="text-xs font-bold text-slate-300 hover:text-white flex items-center bg-slate-800 px-3 py-2 rounded-lg border border-slate-700 hover:bg-slate-700 transition-all"
+              title="Download template CSV file with correct headers"
+            >
+              <Download className="w-3.5 h-3.5 mr-1.5 text-slate-400" /> Export Sample CSV
+            </button>
+
+            <label className="relative cursor-pointer bg-slate-800 hover:bg-slate-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold shadow-md transition-all flex items-center border border-slate-700">
+              <FileSpreadsheet className="w-4 h-4 mr-1.5 text-[#EB0A1E]" />
+              Bulk Upload Variants
+              <input
+                type="file"
+                accept=".csv, .xlsx, .xls"
+                onChange={handleVariantCsvUpload}
+                className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              />
+            </label>
+
+            <button 
+              onClick={addVariant} 
+              className="bg-slate-800 hover:bg-slate-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold shadow-md transition-all flex items-center border border-slate-700"
+            >
+              <Plus className="w-4 h-4 mr-1 text-slate-300" /> Add Single Variant
+            </button>
+
+            <button 
+              onClick={() => handleSave("Published")} 
+              disabled={isSaving}
+              className="bg-[#EB0A1E] hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider shadow-lg shadow-red-500/10 transition-all flex items-center disabled:opacity-50"
+            >
+              {isSaving ? <Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> : <Save className="w-4 h-4 mr-1.5" />}
+              Save & Sync to Live
+            </button>
+          </div>
         </div>
 
         {variants.length === 0 ? (
